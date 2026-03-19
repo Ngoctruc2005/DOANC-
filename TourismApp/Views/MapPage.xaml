@@ -4,9 +4,46 @@
     xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
     x:Class="TourismApp.Views.MapPage">
 
-    <maps:Map
-        x:Name="map"
-        MapType="Street"
-        IsShowingUser="True" />
+    <Grid>
+
+        <!-- MAP -->
+        <maps:Map
+            x:Name="map"
+            MapType="Street"
+            IsShowingUser="True" />
+
+        <!-- PANEL CHI TIẾT -->
+        <Frame x:Name="detailPanel"
+               BackgroundColor="White"
+               CornerRadius="20"
+               Padding="15"
+               HasShadow="True"
+               VerticalOptions="End"
+               Margin="10"
+               IsVisible="False">
+
+            <StackLayout Spacing="10">
+
+                <Label x:Name="nameLabel"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="Black"/>
+
+                <Label x:Name="descLabel"
+                       FontSize="14"
+                       TextColor="Gray"/>
+
+                <Label x:Name="bestSellerLabel"
+                       FontSize="14"
+                       TextColor="Orange"/>
+
+                <Button Text="Đóng"
+                        Clicked="OnCloseClicked"/>
+
+            </StackLayout>
+
+        </Frame>
+
+    </Grid>
 
 </ContentPage>

@@ -3,7 +3,6 @@ using Microsoft.Maui.Maps;
 using Microsoft.Maui.Devices.Sensors;
 
 using TourismApp.Models;
-using TourismApp.Views;
 
 namespace TourismApp.Views;
 
@@ -13,37 +12,45 @@ public partial class MapPage : ContentPage
     {
         new Restaurant
         {
-            Name = "Phở Hòa Pasteur",
-            Description = "Quán phở nổi tiếng lâu đời",
-            Latitude = 10.7814,
-            Longitude = 106.6919,
-
-            BestSeller = "Phở tái nạm",
-
+            Name = "Ốc Oanh",
+            Description = "Ốc nổi tiếng Vĩnh Khánh",
+            Latitude = 10.7578,
+            Longitude = 106.7039,
+            BestSeller = "Ốc len xào dừa",
             Menu = new List<string>
             {
-                "Phở tái",
-                "Phở tái nạm",
-                "Phở bò viên",
-                "Phở gân"
+                "Ốc len xào dừa",
+                "Ốc hương rang muối",
+                "Sò điệp nướng"
             }
         },
 
         new Restaurant
         {
-            Name = "Pizza 4P's",
-            Description = "Nhà hàng pizza nổi tiếng",
-            Latitude = 10.7767,
-            Longitude = 106.7030,
-
-            BestSeller = "Pizza Burrata",
-
+            Name = "Bún đậu A Chảnh",
+            Description = "Bún đậu mắm tôm",
+            Latitude = 10.7569,
+            Longitude = 106.7045,
+            BestSeller = "Bún đậu đầy đủ",
             Menu = new List<string>
             {
-                "Pizza Burrata",
-                "Pizza Salmon",
-                "Spaghetti",
-                "Lasagna"
+                "Bún đậu",
+                "Chả cốm",
+                "Nem rán"
+            }
+        },
+
+        new Restaurant
+        {
+            Name = "Phá lấu bò",
+            Description = "Phá lấu đậm đà",
+            Latitude = 10.7572,
+            Longitude = 106.7042,
+            BestSeller = "Phá lấu bánh mì",
+            Menu = new List<string>
+            {
+                "Phá lấu",
+                "Mì phá lấu"
             }
         }
     };
@@ -52,67 +59,24 @@ public partial class MapPage : ContentPage
     {
         InitializeComponent();
 
-        LoadLocation();
-
+        ShowVinhKhanh();
         LoadRestaurants();
     }
 
-    async void LoadLocation()
+    // 📍 Hiển thị khu Vĩnh Khánh Q4
+    void ShowVinhKhanh()
     {
-        var status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
-
-        if (status != PermissionStatus.Granted)
-        {
-            ShowHCM();
-            return;
-        }
-
-        try
-        {
-            var location = await Geolocation.GetLocationAsync(
-                new GeolocationRequest(
-                    GeolocationAccuracy.Best,
-                    TimeSpan.FromSeconds(10)
-                )
-            );
-
-            if (location != null)
-            {
-                var userLocation = new Location(
-                    location.Latitude,
-                    location.Longitude
-                );
-
-                map.MoveToRegion(
-                    MapSpan.FromCenterAndRadius(
-                        userLocation,
-                        Distance.FromKilometers(1)
-                    )
-                );
-            }
-            else
-            {
-                ShowHCM();
-            }
-        }
-        catch
-        {
-            ShowHCM();
-        }
-    }
-
-    void ShowHCM()
-    {
-        var hcm = new Location(10.7769, 106.7009);
+        var location = new Location(10.7575, 106.7040);
 
         map.MoveToRegion(
             MapSpan.FromCenterAndRadius(
-                hcm,
-                Distance.FromKilometers(3)
+                location,
+                Distance.FromMeters(500)
             )
         );
     }
 
+    // 🍜 Hiển thị quán ăn
     void LoadRestaurants()
     {
         foreach (var r in restaurants)
@@ -125,14 +89,29 @@ public partial class MapPage : ContentPage
                 Location = new Location(r.Latitude, r.Longitude)
             };
 
-            pin.MarkerClicked += async (s, e) =>
+            // ✅ SỬA Ở ĐÂY: KHÔNG chuyển trang nữa
+            pin.MarkerClicked += (s, e) =>
             {
-                await Navigation.PushAsync(
-                    new RestaurantDetailPage(r)
-                );
+                ShowDetail(r);
             };
 
             map.Pins.Add(pin);
         }
+    }
+
+    // 📌 Hiển thị panel chi tiết
+    void ShowDetail(Restaurant r)
+    {
+        nameLabel.Text = r.Name;
+        descLabel.Text = r.Description;
+        bestSellerLabel.Text = "Best: " + r.BestSeller;
+
+        detailPanel.IsVisible = true;
+    }
+
+    // ❌ Đóng panel
+    void OnCloseClicked(object sender, EventArgs e)
+    {
+        detailPanel.IsVisible = false;
     }
 }
