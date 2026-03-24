@@ -3,11 +3,15 @@ using Microsoft.Maui.Maps;
 using Microsoft.Maui.Devices.Sensors;
 
 using TourismApp.Models;
+using TourismApp.Services;
 
 namespace TourismApp.Views;
 
 public partial class MapPage : ContentPage
 {
+    // 👉 lưu quán đang chọn
+    Restaurant selectedRestaurant;
+
     List<Restaurant> restaurants = new()
     {
         new Restaurant
@@ -63,7 +67,7 @@ public partial class MapPage : ContentPage
         LoadRestaurants();
     }
 
-    // 📍 Hiển thị khu Vĩnh Khánh Q4
+    // 📍 Hiển thị khu Vĩnh Khánh
     void ShowVinhKhanh()
     {
         var location = new Location(10.7575, 106.7040);
@@ -76,7 +80,7 @@ public partial class MapPage : ContentPage
         );
     }
 
-    // 🍜 Hiển thị quán ăn
+    // 🍜 Load quán ăn lên map
     void LoadRestaurants()
     {
         foreach (var r in restaurants)
@@ -89,7 +93,6 @@ public partial class MapPage : ContentPage
                 Location = new Location(r.Latitude, r.Longitude)
             };
 
-            // ✅ SỬA Ở ĐÂY: KHÔNG chuyển trang nữa
             pin.MarkerClicked += (s, e) =>
             {
                 ShowDetail(r);
@@ -99,14 +102,27 @@ public partial class MapPage : ContentPage
         }
     }
 
-    // 📌 Hiển thị panel chi tiết
+    // 📌 Hiển thị chi tiết quán
     void ShowDetail(Restaurant r)
     {
+        selectedRestaurant = r; // 🔥 lưu lại quán đang chọn
+
         nameLabel.Text = r.Name;
         descLabel.Text = r.Description;
         bestSellerLabel.Text = "Best: " + r.BestSeller;
 
         detailPanel.IsVisible = true;
+    }
+
+    // ❤️ Thêm vào yêu thích
+    void OnFavoriteClicked(object sender, EventArgs e)
+    {
+        if (selectedRestaurant != null)
+        {
+            FavoriteService.Add(selectedRestaurant);
+
+            DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
+        }
     }
 
     // ❌ Đóng panel

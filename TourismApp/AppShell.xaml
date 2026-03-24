@@ -1,11 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="TourismApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:TourismApp.Views">
+    xmlns:views="clr-namespace:TourismApp.Views"
 
-    <ShellContent
-        Title="Map"
-        ContentTemplate="{DataTemplate views:MapPage}" />
+    Shell.TabBarBackgroundColor="black"
+    Shell.TabBarTitleColor="CornflowerBlue"
+    Shell.TabBarUnselectedColor="AntiqueWhite"
+    Shell.TabBarForegroundColor="CornflowerBlue">
+
+    <!-- TAB BAR DƯỚI -->
+    <TabBar>
+
+        <ShellContent
+            Title="Khám phá"
+            Icon="home.png"
+            ContentTemplate="{DataTemplate views:MapPage}" />
+
+        <ShellContent
+            Title="Yêu thích"
+            Icon="heart.png"
+            ContentTemplate="{DataTemplate views:FavoritePage}" />
+
+        <ShellContent
+            Title="Quét QR"
+            Icon="qr.png"
+            ContentTemplate="{DataTemplate views:QRPage}" />
+
+        <ShellContent
+            Title="Cài đặt"
+            Icon="settings.png"
+            ContentTemplate="{DataTemplate views:SettingsPage}" />
+
+    </TabBar>
 
 </Shell>

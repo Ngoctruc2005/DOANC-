@@ -1,0 +1,9 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TourismApp.Views.QRPage">
+
+    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+        <Label Text="📷 Quét QR" FontSize="20"/>
+    </StackLayout>
+
+</ContentPage>
