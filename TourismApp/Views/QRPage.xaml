@@ -1,9 +1,21 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TourismApp.Views.QRPage">
+﻿<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="TourismApp.Views.QRPage">
 
-    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
-        <Label Text="📷 Quét QR" FontSize="20"/>
-    </StackLayout>
+    <Grid RowDefinitions="*,Auto" RowSpacing="12" Padding="12">
+
+        <ContentView
+            x:Name="cameraHost"
+            Grid.Row="0" />
+
+        <Label
+            x:Name="resultLabel"
+            Grid.Row="1"
+            Text="Đưa camera vào mã QR để quét"
+            HorizontalOptions="Center"
+            FontSize="16" />
+
+    </Grid>
 
 </ContentPage>

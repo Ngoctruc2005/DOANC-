@@ -19,13 +19,11 @@
                     <Frame Margin="10" Padding="10" CornerRadius="10">
                         <StackLayout>
 
+                            <!-- ✅ CHỈ GIỮ LẠI TÊN QUÁN -->
                             <Label Text="{Binding Name}"
                                    FontSize="18"
-                                   FontAttributes="Bold"/>
-
-                            <Label Text="{Binding Description}"
-                                   FontSize="14"
-                                   TextColor="Gray"/>
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
 
                         </StackLayout>
                     </Frame>
