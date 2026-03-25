@@ -5,10 +5,15 @@ namespace TourismCMS.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
         {
         }
 
         public DbSet<POI> POIs { get; set; }
+
+        // ✅ THÊM 2 DÒNG NÀY
+        public DbSet<User> Users { get; set; }
+        public DbSet<PoiOwnerRegistration> PoiOwnerRegistrations { get; set; }
     }
 }

@@ -1,71 +1,138 @@
-﻿@model IEnumerable<TourismCMS.Models.POI>
+﻿@using System.Linq
+@model IEnumerable<TourismCMS.Models.POI>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý quán ăn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
+<h2>🍜 Quản lý quán ăn Vĩnh Khánh <small class="text-muted">- Admin</small></h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Latitude)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Longitude)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Radius)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImagePath)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AudioPath)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Latitude)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Longitude)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Radius)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ImagePath)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AudioPath)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a class="btn btn-success" asp-action="Create">+ Thêm quán</a>
+        <span class="badge bg-secondary ms-2">@Model?.Count() ?? 0</span>
+    </div>
+
+    <div class="d-flex">
+        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="Tìm theo tên hoặc mô tả..." />
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="poisTable" class="table table-bordered table-hover nowrap" style="width:100%">
+        <thead class="table-dark">
+            <tr>
+                <th>Tên quán</th>
+                <th>Mô tả</th>
+                <th>Vị trí</th>
+                <th>Bán kính</th>
+                <th>Ảnh</th>
+                <th>Audio</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td><b>@item.Name</b></td>
+
+                    <td style="max-width:300px; white-space:normal;">
+                        @(string.IsNullOrEmpty(item.Description) ? "-" : (item.Description.Length > 80 ? item.Description.Substring(0, 80) + "..." : item.Description))
+                    </td>
+
+                    <td>
+                        📍 @item.Latitude , @item.Longitude
+                    </td>
+
+                    <td>@item.Radius m</td>
+
+                    <td>
+                        <img src="@item.ImagePath" width="100" height="70" style="object-fit:cover; border-radius:4px;" />
+                    </td>
+
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.AudioPath))
+                        {
+                            <audio controls style="width:160px;">
+                                <source src="@item.AudioPath" type="audio/mpeg" />
+                            </audio>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Không có</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">Sửa</a>
+                        <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@item.Id">Xem</a>
+                        <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteLabel">Xác nhận xóa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- dynamically filled -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">Xóa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+    <!-- DataTables & jQuery (CDN fallbacks) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#poisTable').DataTable({
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: [4,5,6] }
+                ],
+                pageLength: 10
+            });
+
+            // global search box
+            $('#globalSearch').on('keyup', function () {
+                table.search(this.value).draw();
+            });
+
+            // delete button -> show modal
+            var deleteUrl = null;
+            $('.btn-delete').on('click', function (e) {
+                e.preventDefault();
+                deleteUrl = $(this).data('delete-url');
+                var name = $(this).data('name') || 'mục này';
+                $('#confirmDeleteModal .modal-body').text('Bạn có chắc muốn xóa "' + name + '"?');
+                var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+                modal.show();
+            });
+
+            $('#confirmDeleteConfirm').on('click', function () {
+                if (deleteUrl) {
+                    // redirect to delete action (keeps existing controller behavior)
+                    window.location.href = deleteUrl;
+                }
+            });
+        });
+    </script>
 }
-    </tbody>
-</table>
