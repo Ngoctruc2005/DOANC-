@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maui.Controls.Maps;
 using Microsoft.Maui.Maps;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Dispatching;
 
 using TourismApp.Models;
 using TourismApp.Services;
@@ -9,8 +10,13 @@ namespace TourismApp.Views;
 
 public partial class MapPage : ContentPage
 {
-    // 👉 lưu quán đang chọn
     Restaurant selectedRestaurant;
+
+    LocationService locationService = new();
+    GeofenceService geofenceService = new();
+    AudioService audioService = new();
+
+    HashSet<string> triggered = new();
 
     List<Restaurant> restaurants = new()
     {
@@ -21,14 +27,13 @@ public partial class MapPage : ContentPage
             Latitude = 10.7578,
             Longitude = 106.7039,
             BestSeller = "Ốc len xào dừa",
-            Menu = new List<string>
+            Menu = new List<string>{"Ốc len xào dừa","Ốc hương rang muối","Sò điệp nướng"},
+            AudioDescription = new Dictionary<string,string>
             {
-                "Ốc len xào dừa",
-                "Ốc hương rang muối",
-                "Sò điệp nướng"
+                {"vi","Ốc Oanh, Ốc nổi tiếng Vĩnh Khánh. Món nổi bật: Ốc len xào dừa"},
+                {"en","Oc Oanh, famous in Vinh Khanh. Best seller: Coconut stir-fried snails"}
             }
         },
-
         new Restaurant
         {
             Name = "Bún đậu A Chảnh",
@@ -36,14 +41,13 @@ public partial class MapPage : ContentPage
             Latitude = 10.7569,
             Longitude = 106.7045,
             BestSeller = "Bún đậu đầy đủ",
-            Menu = new List<string>
+            Menu = new List<string>{"Bún đậu","Chả cốm","Nem rán"},
+            AudioDescription = new Dictionary<string,string>
             {
-                "Bún đậu",
-                "Chả cốm",
-                "Nem rán"
+                {"vi","Bún đậu A Chảnh, Bún đậu mắm tôm. Món nổi bật: Bún đậu đầy đủ"},
+                {"en","Bun Dau A Chanh, fermented shrimp paste bun. Best seller: Full Bun Dau set"}
             }
         },
-
         new Restaurant
         {
             Name = "Phá lấu bò",
@@ -51,10 +55,11 @@ public partial class MapPage : ContentPage
             Latitude = 10.7572,
             Longitude = 106.7042,
             BestSeller = "Phá lấu bánh mì",
-            Menu = new List<string>
+            Menu = new List<string>{"Phá lấu","Mì phá lấu"},
+            AudioDescription = new Dictionary<string,string>
             {
-                "Phá lấu",
-                "Mì phá lấu"
+                {"vi","Phá lấu bò, Phá lấu đậm đà. Món nổi bật: Phá lấu bánh mì"},
+                {"en","Beef Pha Lau, flavorful stew. Best seller: Pha Lau with bread"}
             }
         }
     };
@@ -65,22 +70,16 @@ public partial class MapPage : ContentPage
 
         ShowVinhKhanh();
         LoadRestaurants();
+
+        StartTracking();
     }
 
-    // 📍 Hiển thị khu Vĩnh Khánh
     void ShowVinhKhanh()
     {
         var location = new Location(10.7575, 106.7040);
-
-        map.MoveToRegion(
-            MapSpan.FromCenterAndRadius(
-                location,
-                Distance.FromMeters(500)
-            )
-        );
+        map.MoveToRegion(MapSpan.FromCenterAndRadius(location, Distance.FromMeters(500)));
     }
 
-    // 🍜 Load quán ăn lên map
     void LoadRestaurants()
     {
         foreach (var r in restaurants)
@@ -93,41 +92,84 @@ public partial class MapPage : ContentPage
                 Location = new Location(r.Latitude, r.Longitude)
             };
 
-            pin.MarkerClicked += (s, e) =>
-            {
-                ShowDetail(r);
-            };
-
+            pin.MarkerClicked += (s, e) => ShowDetail(r);
             map.Pins.Add(pin);
         }
     }
 
-    // 📌 Hiển thị chi tiết quán
     void ShowDetail(Restaurant r)
     {
-        selectedRestaurant = r; // 🔥 lưu lại quán đang chọn
+        selectedRestaurant = r;
 
         nameLabel.Text = r.Name;
         descLabel.Text = r.Description;
         bestSellerLabel.Text = "Best: " + r.BestSeller;
+        menuList.ItemsSource = r.Menu;
 
         detailPanel.IsVisible = true;
     }
 
-    // ❤️ Thêm vào yêu thích
     void OnFavoriteClicked(object sender, EventArgs e)
     {
         if (selectedRestaurant != null)
         {
             FavoriteService.Add(selectedRestaurant);
-
             DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
         }
     }
 
-    // ❌ Đóng panel
     void OnCloseClicked(object sender, EventArgs e)
     {
         detailPanel.IsVisible = false;
+    }
+
+    async void OnPlayAudioClicked(object sender, EventArgs e)
+    {
+        if (selectedRestaurant != null)
+        {
+            var lang = languagePicker.SelectedItem?.ToString() ?? "vi";
+            if (selectedRestaurant.AudioDescription.TryGetValue(lang, out var text))
+            {
+                await audioService.Speak(text);
+            }
+            else
+            {
+                await audioService.Speak(selectedRestaurant.Description);
+            }
+        }
+    }
+
+    async void StartTracking()
+    {
+        while (true)
+        {
+            try
+            {
+                var location = await Geolocation.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.High));
+                if (location != null) CheckNearby(location);
+            }
+            catch { }
+            await Task.Delay(5000);
+        }
+    }
+
+    void CheckNearby(Location user)
+    {
+        foreach (var r in restaurants)
+        {
+            double distance = geofenceService.GetDistance(user.Latitude, user.Longitude, r.Latitude, r.Longitude);
+            if (distance <= 50 && !triggered.Contains(r.Name))
+            {
+                triggered.Add(r.Name);
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    var lang = languagePicker.SelectedItem?.ToString() ?? "vi";
+                    if (r.AudioDescription.TryGetValue(lang, out var text))
+                        await audioService.Speak($"Bạn đang đến {r.Name}. {text}");
+                    else
+                        await audioService.Speak($"Bạn đang đến {r.Name}");
+                });
+            }
+        }
     }
 }
