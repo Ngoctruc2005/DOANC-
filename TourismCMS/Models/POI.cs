@@ -10,5 +10,7 @@
         public int Radius { get; set; }
         public string ImagePath { get; set; }
         public string AudioPath { get; set; }
+        public int OwnerId { get; set; }
+        public string Status { get; set; } = "pending";
     }
 }

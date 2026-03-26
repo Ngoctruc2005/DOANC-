@@ -11,8 +11,6 @@ namespace TourismCMS.Data
         }
 
         public DbSet<POI> POIs { get; set; }
-
-        // ✅ THÊM 2 DÒNG NÀY
         public DbSet<User> Users { get; set; }
         public DbSet<PoiOwnerRegistration> PoiOwnerRegistrations { get; set; }
     }

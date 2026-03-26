@@ -1,0 +1,31 @@
+﻿@model List<POI>
+
+<h2>🏪 Quản lý quán</h2>
+
+<table class="table table-striped">
+    <tr>
+        <th>Tên</th>
+        <th>Trạng thái</th>
+    </tr>
+
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.Name</td>
+            <td>
+                @if (p.Status == "approved")
+                {
+                    <span class="badge bg-success">Approved</span>
+                }
+                else if (p.Status == "pending")
+                {
+                    <span class="badge bg-warning">Pending</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Rejected</span>
+                }
+            </td>
+        </tr>
+    }
+</table>
