@@ -1,45 +1,58 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Bảng điều khiển";
 }
 
-<div class="row">
+<!-- Header -->
+<div class="mb-4 p-4 text-white rounded shadow" style="background: linear-gradient(135deg, #4e73df, #224abe);">
+    <h3>📊 Bảng điều khiển quản trị</h3>
+    <p class="mb-0">Chào mừng bạn quay lại hệ thống 👋</p>
+</div>
+
+<!-- Cards thống kê -->
+<div class="row g-3">
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card shadow-sm text-center p-3 border-0">
+            <div class="fs-1">🍽️</div>
             <h6>Tổng quán ăn</h6>
-            <h3>120</h3>
+            <h3 class="text-primary">120</h3>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card shadow-sm text-center p-3 border-0">
+            <div class="fs-1">⏳</div>
             <h6>Chờ duyệt</h6>
-            <h3>15</h3>
+            <h3 class="text-warning">15</h3>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card shadow-sm text-center p-3 border-0">
+            <div class="fs-1">✅</div>
             <h6>Đã duyệt</h6>
-            <h3>98</h3>
+            <h3 class="text-success">98</h3>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card p-3 shadow">
+        <div class="card shadow-sm text-center p-3 border-0">
+            <div class="fs-1">👨‍🍳</div>
             <h6>Chủ quán</h6>
-            <h3>25</h3>
+            <h3 class="text-danger">25</h3>
         </div>
     </div>
 
 </div>
 
-<hr />
+<!-- Biểu đồ -->
+<div class="card shadow-sm mt-4 p-3 border-0">
+    <h5>📈 Thống kê truy cập</h5>
+    <canvas id="chart" height="100"></canvas>
+</div>
 
-<h5>📈 Thống kê truy cập</h5>
-<canvas id="chart"></canvas>
-
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('chart');
@@ -47,11 +60,25 @@
     new Chart(ctx, {
     type: 'bar',
     data: {
-    labels: ['T1', 'T2', 'T3', 'T4'],
+    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
     datasets: [{
     label: 'Lượt truy cập',
-    data: [12, 19, 3, 5]
+    data: [12, 19, 3, 5, 10, 15],
+    borderRadius: 6
     }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+    legend: {
+    display: false
+    }
+    },
+    scales: {
+    y: {
+    beginAtZero: true
+    }
+    }
     }
     });
 </script>

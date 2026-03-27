@@ -1,6 +1,112 @@
-﻿<h2>🏪 Owner Dashboard</h2>
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Dashboard Chủ Quán</title>
 
-<p>Chào bạn 👋</p>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-<a href="/Owner/MyRestaurants" class="btn btn-primary">Quản lý quán</a>
-<a href="/Owner/Create" class="btn btn-success">+ Thêm quán</a>
+    <style>
+            body {
+                background: #f4f6f9;
+                font-family: Arial;
+            }
+
+            .header {
+                background: linear-gradient(135deg, #ff7e5f, #feb47b);
+                color: white;
+                padding: 25px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+
+            .card-custom {
+                border: none;
+                border-radius: 12px;
+                transition: 0.3s;
+            }
+
+                .card-custom:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                }
+
+            .card-icon {
+                font-size: 30px;
+                margin-bottom: 10px;
+            }
+
+            .btn-custom {
+                width: 100%;
+                border-radius: 8px;
+            }
+    </style>
+</head>
+
+<body>
+
+    <div class="container mt-4">
+
+        <!-- Header -->
+        <div class="header text-center">
+            <h2>🏪 Dashboard Chủ Quán</h2>
+            <p>Chào mừng bạn quay trở lại 👋</p>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="row text-center mb-4">
+            <div class="col-md-4">
+                <div class="card card-custom p-3 shadow-sm">
+                    <div class="card-icon">🍽️</div>
+                    <h5>Tổng quán</h5>
+                    <h3>@ViewBag.TotalRestaurants</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card card-custom p-3 shadow-sm">
+                    <div class="card-icon">📦</div>
+                    <h5>Tổng đơn hàng</h5>
+                    <h3>@ViewBag.TotalOrders</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card card-custom p-3 shadow-sm">
+                    <div class="card-icon">⭐</div>
+                    <h5>Đánh giá</h5>
+                    <h3>@ViewBag.TotalReviews</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chức năng -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card card-custom p-4 shadow-sm text-center">
+                    <i class="fa fa-store card-icon text-primary"></i>
+                    <h5>Quản lý quán</h5>
+                    <p>Xem, sửa, xóa thông tin quán ăn của bạn</p>
+                    <a href="/Owner/MyRestaurants" class="btn btn-primary btn-custom">
+                        <i class="fa fa-list"></i> Quản lý quán
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <div class="card card-custom p-4 shadow-sm text-center">
+                    <i class="fa fa-plus-circle card-icon text-success"></i>
+                    <h5>Thêm quán mới</h5>
+                    <p>Tạo quán ăn mới để hiển thị trên hệ thống</p>
+                    <a href="/Owner/Create" class="btn btn-success btn-custom">
+                        <i class="fa fa-plus"></i> Thêm quán
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
