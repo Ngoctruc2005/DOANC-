@@ -1,26 +1,57 @@
-<h2>📊 Admin Dashboard</h2>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
 
-<div class="row mt-4">
+<div class="row">
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-3 shadow">
-            <h5>Tổng quán</h5>
-            <h3>@ViewBag.Total</h3>
+            <h6>Tổng quán ăn</h6>
+            <h3>120</h3>
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-3 shadow">
-            <h5>Chờ duyệt</h5>
-            <h3>@ViewBag.Pending</h3>
+            <h6>Chờ duyệt</h6>
+            <h3>15</h3>
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-3 shadow">
-            <h5>Đã duyệt</h5>
-            <h3>@ViewBag.Approved</h3>
+            <h6>Đã duyệt</h6>
+            <h3>98</h3>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card p-3 shadow">
+            <h6>Chủ quán</h6>
+            <h3>25</h3>
         </div>
     </div>
 
 </div>
+
+<hr />
+
+<h5>📈 Thống kê truy cập</h5>
+<canvas id="chart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('chart');
+
+    new Chart(ctx, {
+    type: 'bar',
+    data: {
+    labels: ['T1', 'T2', 'T3', 'T4'],
+    datasets: [{
+    label: 'Lượt truy cập',
+    data: [12, 19, 3, 5]
+    }]
+    }
+    });
+</script>

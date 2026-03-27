@@ -1,31 +1,29 @@
-﻿@model List<POI>
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý nhà hàng";
+}
 
-<h2>🏪 Quản lý quán</h2>
+<a href="/POIs/Create" class="btn btn-primary mb-3">+ Thêm quán</a>
 
-<table class="table table-striped">
-    <tr>
-        <th>Tên</th>
-        <th>Trạng thái</th>
-    </tr>
-
-    @foreach (var p in Model)
-    {
+<table class="table table-bordered">
+    <thead>
         <tr>
-            <td>@p.Name</td>
+            <th>Tên quán</th>
+            <th>Địa chỉ</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>Ốc Vĩnh Khánh</td>
+            <td>Quận 4</td>
+            <td><span class="badge bg-success">Đã duyệt</span></td>
             <td>
-                @if (p.Status == "approved")
-                {
-                    <span class="badge bg-success">Approved</span>
-                }
-                else if (p.Status == "pending")
-                {
-                    <span class="badge bg-warning">Pending</span>
-                }
-                else
-                {
-                    <span class="badge bg-danger">Rejected</span>
-                }
+                <a class="btn btn-sm btn-warning">Edit</a>
+                <a class="btn btn-sm btn-danger">Delete</a>
             </td>
         </tr>
-    }
+    </tbody>
 </table>
