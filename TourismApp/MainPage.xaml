@@ -1,51 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TourismApp.MainPage">
+             x:Class="TourismApp.MainPage"
+             BackgroundColor="#F5F5F5">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="30,0" Spacing="25">
+    <VerticalStackLayout Padding="20" Spacing="15">
 
-            <!-- Phần chào -->
-            <Image Source="dotnet_bot.png"
-                   HeightRequest="185"
-                   Aspect="AspectFit" />
+        <!-- Tiêu đề -->
+        <Label Text="🍜 Tourism App"
+               FontSize="28"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               TextColor="DarkRed"/>
 
-            <Label Text="Hello, World!"
-                   Style="{StaticResource Headline}" />
+        <!-- 🌍 CHỌN NGÔN NGỮ -->
+        <Label Text="🌍 Chọn ngôn ngữ" FontAttributes="Bold"/>
 
-            <Label Text="Welcome to .NET Multi-platform App UI"
-                   Style="{StaticResource SubHeadline}" />
+        <Picker x:Name="languagePicker" Title="Ngôn ngữ">
+            <Picker.Items>
+                <x:String>vi</x:String>
+                <x:String>en</x:String>
+            </Picker.Items>
+        </Picker>
 
-            <Button x:Name="CounterBtn"
-                    Text="Click me"
-                    Clicked="OnCounterClicked"
-                    HorizontalOptions="Fill" />
+        <!-- 🔊 NÚT PHÁT THUYẾT MINH -->
+        <Button Text="🔊 Nghe thuyết minh"
+                BackgroundColor="#4CAF50"
+                TextColor="White"
+                Clicked="OnSpeakClicked"/>
 
-            <!-- 👉 Danh sách quán ăn -->
-            <Label Text="Quán ăn nổi bật Vĩnh Khánh"
-                   FontAttributes="Bold"
-                   FontSize="20"
-                   TextColor="DarkRed"
-                   Margin="0,20,0,10"/>
+        <!-- 🗺️ NÚT MAP -->
+        <Button Text="🗺️ Xem bản đồ"
+                Clicked="OnOpenMapClicked"
+                BackgroundColor="#2196F3"
+                TextColor="White"/>
 
-            <CollectionView x:Name="restaurantList">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Vertical"/>
-                </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame BorderColor="LightGray" Padding="10" Margin="0,5">
-                            <VerticalStackLayout>
-                                <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="18"/>
-                                <Label Text="{Binding Description}" FontSize="14"/>
-                                <Label Text="Best: {Binding BestSeller}" TextColor="DarkGreen"/>
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+        <!-- ❤️ FAVORITE -->
+        <Button Text="❤️ Yêu thích"
+                Clicked="OnOpenFavoriteClicked"
+                BackgroundColor="#E91E63"
+                TextColor="White"/>
 
-        </VerticalStackLayout>
-    </ScrollView>
+    </VerticalStackLayout>
+
 </ContentPage>

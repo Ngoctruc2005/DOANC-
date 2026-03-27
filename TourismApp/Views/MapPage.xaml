@@ -13,92 +13,90 @@
             MapType="Street"
             IsShowingUser="True" />
 
-        <!-- 🌐 Chọn ngôn ngữ thuyết minh -->
-        <Picker x:Name="languagePicker"
-                Title="Ngôn ngữ"
-                HorizontalOptions="End"
-                VerticalOptions="Start"
-                WidthRequest="100">
-            <Picker.Items>
-                <x:String>vi</x:String>
-                <x:String>en</x:String>
-            </Picker.Items>
-        </Picker>
-
         <!-- 📄 DETAIL PANEL -->
         <Frame 
-            x:Name="detailPanel"
-            BackgroundColor="#FFFFFFDD"
-            CornerRadius="25"
-            Padding="15"
-            HasShadow="True"
-            VerticalOptions="End"
-            Margin="10"
-            IsVisible="False"
-            HeightRequest="300">
+    x:Name="detailPanel"
+    BackgroundColor="#FFFFFFDD"
+    CornerRadius="25"
+    Padding="15"
+    HasShadow="True"
+    VerticalOptions="End"
+    Margin="10"
+    IsVisible="False"
+    HeightRequest="350">
 
-            <VerticalStackLayout Spacing="10">
+            <Grid>
 
-                <!-- Tên quán -->
-                <Label 
-                    x:Name="nameLabel"
-                    FontSize="22"
-                    FontAttributes="Bold"
-                    TextColor="Black" />
+                <!-- Nội dung chính -->
+                <ScrollView>
+                    <VerticalStackLayout Spacing="10">
 
-                <!-- Mô tả -->
-                <Label 
-                    x:Name="descLabel"
-                    FontSize="14"
-                    TextColor="Gray"
-                    LineBreakMode="WordWrap" />
+                        <!-- 🌐 Ngôn ngữ -->
+                        <Picker x:Name="languagePicker"
+        Title="Ngôn ngữ"
+        IsVisible="False"
+        SelectedIndexChanged="OnLanguageChanged">
+                            <Picker.Items>
+                                <x:String>vi</x:String>
+                                <x:String>en</x:String>
+                            </Picker.Items>
+                        </Picker>
 
-                <!-- Món nổi bật -->
-                <Label 
-                    x:Name="bestSellerLabel"
-                    FontSize="14"
-                    TextColor="DarkOrange" />
+                        <!-- Tên quán -->
+                        <Label x:Name="nameLabel"
+                       FontSize="22"
+                       FontAttributes="Bold"/>
 
-                <!-- Menu quán -->
-                <CollectionView 
-                    x:Name="menuList"
-                    HeightRequest="60">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Label Text="{Binding .}" FontSize="14"/>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                        <!-- Mô tả -->
+                        <Label x:Name="descLabel"
+                       FontSize="14"
+                       TextColor="Gray"
+                       LineBreakMode="WordWrap"/>
 
-                <!-- Nút hành động -->
-                <HorizontalStackLayout Spacing="10">
+                        <!-- Món nổi bật -->
+                        <Label x:Name="bestSellerLabel"
+                       FontSize="14"
+                       TextColor="DarkOrange"/>
 
-                    <Button 
-                        Text="❤️ Yêu thích"
-                        BackgroundColor="#FF7043"
-                        TextColor="White"
-                        CornerRadius="10"
-                        Clicked="OnFavoriteClicked"/>
+                        <!-- Menu -->
+                        <CollectionView x:Name="menuList" HeightRequest="80">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding .}" FontSize="14"/>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
 
-                    <Button 
-                        Text="🔊 Nghe"
-                        BackgroundColor="#FFD700"
-                        TextColor="Black"
-                        CornerRadius="10"
-                        Clicked="OnPlayAudioClicked"/>
+                        <!-- Nút -->
+                        <HorizontalStackLayout Spacing="10">
+                            <Button Text="❤️ Yêu thích"
+                            BackgroundColor="#FF7043"
+                            TextColor="White"
+                            CornerRadius="10"
+                            Clicked="OnFavoriteClicked"/>
 
-                </HorizontalStackLayout>
+                            <Button Text="🔊 Nghe"
+                            BackgroundColor="#FFD700"
+                            TextColor="Black"
+                            CornerRadius="10"
+                            Clicked="OnPlayAudioClicked"/>
+                        </HorizontalStackLayout>
 
-                <!-- Nút đóng -->
-                <Button 
-                    Text="❌ Đóng"
-                    BackgroundColor="Gray"
-                    TextColor="White"
-                    CornerRadius="10"
-                    Clicked="OnCloseClicked"/>
+                    </VerticalStackLayout>
+                </ScrollView>
 
-            </VerticalStackLayout>
+                <!-- ❌ Nút đóng (dấu X) -->
+                <Button Text="x"
+                BackgroundColor="Transparent"
+                TextColor="Black"
+                FontSize="18"
+                WidthRequest="30"
+                HeightRequest="30"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                Clicked="OnCloseClicked"/>
+
+            </Grid>
         </Frame>
-
     </Grid>
 </ContentPage>

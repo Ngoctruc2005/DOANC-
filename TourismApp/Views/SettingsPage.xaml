@@ -2,8 +2,37 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TourismApp.Views.SettingsPage">
 
-    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
-        <Label Text="⚙️ Cài đặt" FontSize="20"/>
-    </StackLayout>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <!-- Tiêu đề -->
+            <Label Text="⚙️ Cài đặt"
+                   FontSize="24"
+                   HorizontalOptions="Center"/>
+
+            <!-- Chọn ngôn ngữ -->
+            <Frame Padding="10" CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+
+                    <Label Text="Chọn ngôn ngữ:" />
+
+                    <Picker x:Name="languagePicker">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>vi</x:String>
+                                <x:String>en</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Nút lưu -->
+            <Button Text="💾 Lưu cài đặt"
+                    Clicked="OnSaveClicked"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>
