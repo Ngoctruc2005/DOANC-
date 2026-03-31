@@ -1,11 +1,11 @@
-﻿using System.Xml;
+using System.Xml;
 using TourismApp.Models;
 
 namespace TourismApp.Views;
 
 public partial class RestaurantDetailPage : ContentPage
 {
-    public RestaurantDetailPage(Restaurant restaurant)
+    public RestaurantDetailPage(Poi restaurant)
     {
         InitializeComponent();
 
@@ -15,6 +15,6 @@ public partial class RestaurantDetailPage : ContentPage
 
         bestSellerLabel.Text = restaurant.BestSeller;
 
-        menuList.ItemsSource = restaurant.Menu;
+        // menuList.ItemsSource = restaurant.Menu;
     }
 }

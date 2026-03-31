@@ -154,4 +154,22 @@ namespace TourismCMS.Controllers
             return _context.POIs.Any(e => e.Id == id);
         }
     }
+
+    [ApiController]
+    [Route("api/pois")]
+    public class PoisApiController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public PoisApiController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
+        {
+            return await _context.POIs.ToListAsync();
+        }
+    }
 }

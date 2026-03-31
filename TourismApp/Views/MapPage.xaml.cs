@@ -9,80 +9,51 @@ namespace TourismApp.Views;
 
 public partial class MapPage : ContentPage
 {
-    // 👉 lưu quán đang chọn
-    Restaurant selectedRestaurant;
-
-    List<Restaurant> restaurants = new()
-    {
-        new Restaurant
-        {
-            Name = "Ốc Oanh",
-            Description = "Ốc nổi tiếng Vĩnh Khánh",
-            Latitude = 10.7578,
-            Longitude = 106.7039,
-            BestSeller = "Ốc len xào dừa",
-            Menu = new List<string>
-            {
-                "Ốc len xào dừa",
-                "Ốc hương rang muối",
-                "Sò điệp nướng"
-            }
-        },
-
-        new Restaurant
-        {
-            Name = "Bún đậu A Chảnh",
-            Description = "Bún đậu mắm tôm",
-            Latitude = 10.7569,
-            Longitude = 106.7045,
-            BestSeller = "Bún đậu đầy đủ",
-            Menu = new List<string>
-            {
-                "Bún đậu",
-                "Chả cốm",
-                "Nem rán"
-            }
-        },
-
-        new Restaurant
-        {
-            Name = "Phá lấu bò",
-            Description = "Phá lấu đậm đà",
-            Latitude = 10.7572,
-            Longitude = 106.7042,
-            BestSeller = "Phá lấu bánh mì",
-            Menu = new List<string>
-            {
-                "Phá lấu",
-                "Mì phá lấu"
-            }
-        }
-    };
+    private IEnumerable<Poi>? restaurants;
 
     public MapPage()
     {
         InitializeComponent();
-
-        ShowVinhKhanh();
-        LoadRestaurants();
     }
 
-    // 📍 Hiển thị khu Vĩnh Khánh
-    void ShowVinhKhanh()
+    protected override async void OnAppearing()
     {
-        var location = new Location(10.7575, 106.7040);
+        base.OnAppearing();
 
-        map.MoveToRegion(
-            MapSpan.FromCenterAndRadius(
-                location,
-                Distance.FromMeters(500)
-            )
-        );
+        try
+        {
+            // Di chuyển bản đồ đến Phố ẩm thực Vĩnh Khánh, Quận 4, TP.HCM
+            var vinhKhanhLocation = new Location(10.7607, 106.7029);
+            var mapSpan = MapSpan.FromCenterAndRadius(vinhKhanhLocation, Distance.FromKilometers(1));
+
+            // Cần đảm bảo UI đã load xong trước khi move map
+            MainThread.BeginInvokeOnMainThread(() => map.MoveToRegion(mapSpan));
+
+            var dbContext = Handler?.MauiContext?.Services.GetService<TourismCMS.Data.FoodDbContext>();
+            var apiService = new PoiApiService(dbContext);
+            var apiRestaurants = await apiService.GetAllPOIsAsync();
+
+            if (apiRestaurants != null && apiRestaurants.Any())
+            {
+                restaurants = apiRestaurants; // Gán dữ liệu sql
+                // Cập nhật UI trên Main Thread
+                MainThread.BeginInvokeOnMainThread(() => 
+                {
+                    map.Pins.Clear();
+                    LoadRestaurants(); // Hàm vẽ pin lên Map
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Lỗi MapPage] {ex.Message}");
+        }
     }
 
-    // 🍜 Load quán ăn lên map
-    void LoadRestaurants()
+    private void LoadRestaurants()
     {
+        if (restaurants == null) return;
+
         foreach (var r in restaurants)
         {
             var pin = new Pin
@@ -93,41 +64,31 @@ public partial class MapPage : ContentPage
                 Location = new Location(r.Latitude, r.Longitude)
             };
 
-            pin.MarkerClicked += (s, e) =>
+            pin.MarkerClicked += (s, args) =>
             {
-                ShowDetail(r);
+                args.HideInfoWindow = true;
+
+                nameLabel.Text = r.Name;
+                descLabel.Text = r.Description;
+                bestSellerLabel.Text = "Món nổi bật: " + (string.IsNullOrEmpty(r.BestSeller) ? "Đang cập nhật" : r.BestSeller);
+
+                detailPanel.IsVisible = true;
             };
 
             map.Pins.Add(pin);
         }
     }
 
-    // 📌 Hiển thị chi tiết quán
-    void ShowDetail(Restaurant r)
+    private void OnFavoriteClicked(object sender, EventArgs e)
     {
-        selectedRestaurant = r; // 🔥 lưu lại quán đang chọn
-
-        nameLabel.Text = r.Name;
-        descLabel.Text = r.Description;
-        bestSellerLabel.Text = "Best: " + r.BestSeller;
-
-        detailPanel.IsVisible = true;
     }
 
-    // ❤️ Thêm vào yêu thích
-    void OnFavoriteClicked(object sender, EventArgs e)
-    {
-        if (selectedRestaurant != null)
-        {
-            FavoriteService.Add(selectedRestaurant);
-
-            DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
-        }
-    }
-
-    // ❌ Đóng panel
-    void OnCloseClicked(object sender, EventArgs e)
+    private void OnCloseClicked(object sender, EventArgs e)
     {
         detailPanel.IsVisible = false;
+    }
+
+    private void OnPlayAudio(object sender, EventArgs e)
+    {
     }
 }

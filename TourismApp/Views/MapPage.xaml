@@ -10,18 +10,20 @@
         <maps:Map 
             x:Name="map"
             MapType="Street"
-            IsShowingUser="True" />
+            IsShowingUser="False" />
 
         <!-- PANEL -->
-        <Frame 
+        <Border 
             x:Name="detailPanel"
             BackgroundColor="White"
-            CornerRadius="20"
+            StrokeShape="RoundRectangle 20"
             Padding="15"
-            HasShadow="True"
             VerticalOptions="End"
             Margin="10"
             IsVisible="False">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+            </Border.Shadow>
 
             <VerticalStackLayout Spacing="10">
 
@@ -42,16 +44,17 @@
                     TextColor="Orange" />
 
                 <Button 
-                    Text="❤️ Yêu thích"
+                    Text="?? Yêu thích"
                     Clicked="OnFavoriteClicked"/>
 
                 <Button 
-                    Text="Đóng"
+                    Text="Ðóng"
                     Clicked="OnCloseClicked"/>
-
+                <Button Text="?? Nghe thuyết minh"
+        Clicked="OnPlayAudio"/>
             </VerticalStackLayout>
 
-        </Frame>
+        </Border>
 
     </Grid>
 

@@ -2,6 +2,10 @@
 using Microsoft.Maui.Hosting;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using TourismCMS.Data;
+
 namespace TourismApp;
 
 public static class MauiProgram
@@ -13,12 +17,19 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiMaps()
-            .UseBarcodeReader()
-            .ConfigureFonts(fonts =>
-            {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-            });
+            .UseBarcodeReader();
+
+        // Cấu hình chuỗi kết nối an toàn (sẽ fallback nếu không tìm thấy key)
+        string dbConnection = "Server=(localdb)\\mssqllocaldb;Database=TourismDB;Trusted_Connection=True;";
+        if (builder.Configuration != null)
+        {
+            var confString = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (!string.IsNullOrEmpty(confString)) dbConnection = confString;
+        }
+
+        builder.Services.AddDbContext<FoodDbContext>(options =>
+            options.UseSqlServer(dbConnection));
 
         return builder.Build();
     }
-} 
+}
