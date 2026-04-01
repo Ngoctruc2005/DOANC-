@@ -34,7 +34,7 @@ namespace TourismCMS.Controllers
             }
 
             var pOI = await _context.POIs
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Poiid == id);
             if (pOI == null)
             {
                 return NotFound();
@@ -54,7 +54,7 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Latitude,Longitude,Radius,ImagePath,AudioPath")] POI pOI)
+        public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Thumbnail,Status,Radius,ImagePath,AudioPath,CreatedAt,OwnerId")] POI pOI)
         {
             if (ModelState.IsValid)
             {
@@ -73,7 +73,7 @@ namespace TourismCMS.Controllers
                 return NotFound();
             }
 
-            var pOI = await _context.POIs.FindAsync(id);
+            var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Poiid == id);
             if (pOI == null)
             {
                 return NotFound();
@@ -86,9 +86,9 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Latitude,Longitude,Radius,ImagePath,AudioPath")] POI pOI)
+        public async Task<IActionResult> Edit(int id, [Bind("Poiid,Id,Name,Latitude,Longitude,Address,Description,Thumbnail,Status,Radius,ImagePath,AudioPath,CreatedAt,OwnerId")] POI pOI)
         {
-            if (id != pOI.Id)
+            if (id != pOI.Poiid)
             {
                 return NotFound();
             }
@@ -102,7 +102,7 @@ namespace TourismCMS.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!POIExists(pOI.Id))
+                    if (!POIExists(pOI.Poiid))
                     {
                         return NotFound();
                     }
@@ -125,7 +125,7 @@ namespace TourismCMS.Controllers
             }
 
             var pOI = await _context.POIs
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Poiid == id);
             if (pOI == null)
             {
                 return NotFound();
@@ -139,7 +139,7 @@ namespace TourismCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var pOI = await _context.POIs.FindAsync(id);
+            var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Poiid == id);
             if (pOI != null)
             {
                 _context.POIs.Remove(pOI);
@@ -151,7 +151,7 @@ namespace TourismCMS.Controllers
 
         private bool POIExists(int id)
         {
-            return _context.POIs.Any(e => e.Id == id);
+            return _context.POIs.Any(e => e.Poiid == id);
         }
     }
 

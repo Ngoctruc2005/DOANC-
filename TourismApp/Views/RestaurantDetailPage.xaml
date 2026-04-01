@@ -12,25 +12,34 @@
                    FontSize="24"
                    FontAttributes="Bold"/>
 
+            <HorizontalStackLayout Spacing="15">
+                <Button x:Name="btnPlayAudio" 
+                        Text="{Binding [ListenAudio]}" 
+                        Clicked="OnPlayAudioClicked" />
+
+                <Button x:Name="btnDirections"
+                        Text="Chỉ đường"
+                        Clicked="OnDirectionsClicked" 
+                        BackgroundColor="Green"
+                        TextColor="White" />
+            </HorizontalStackLayout>
+
             <Label x:Name="descriptionLabel"
                    FontSize="16"/>
 
-            <Label Text="⭐ Best Seller"
-                   FontAttributes="Bold"
-                   FontSize="18"/>
-
-            <Label x:Name="bestSellerLabel"
-                   TextColor="Red"
-                   FontSize="16"/>
-
-            <Label Text="🍜 Menu"
+            <Label Text="{Binding [Menu]}"
                    FontAttributes="Bold"
                    FontSize="18"/>
 
             <CollectionView x:Name="menuList">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Label Text="{Binding}" Margin="5"/>
+                        <Border Stroke="LightGray" StrokeShape="RoundRectangle 10" Padding="10" Margin="0,5">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="{Binding ItemName}" FontAttributes="Bold" FontSize="16" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="Red" FontSize="16" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

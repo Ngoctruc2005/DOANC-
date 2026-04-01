@@ -29,8 +29,23 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+
+    <div class="mb-3">
         <label asp-for="Radius" class="form-label"></label>
         <input asp-for="Radius" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Thumbnail" class="form-label"></label>
+        <input asp-for="Thumbnail" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <input asp-for="Status" class="form-control" />
     </div>
 
     <div class="mb-3">
@@ -41,6 +56,16 @@
     <div class="mb-3">
         <label asp-for="AudioPath" class="form-label"></label>
         <input asp-for="AudioPath" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CreatedAt" class="form-label"></label>
+        <input asp-for="CreatedAt" class="form-control" type="datetime-local" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="OwnerId" class="form-label"></label>
+        <input asp-for="OwnerId" class="form-control" />
     </div>
 
     <button type="submit" class="btn btn-primary">

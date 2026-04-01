@@ -14,22 +14,22 @@
     <TabBar>
 
         <ShellContent
-            Title="Khám phá"
+            Title="{Binding [Explore]}"
             Icon="home.png"
             ContentTemplate="{DataTemplate views:MapPage}" />
 
         <ShellContent
-            Title="Yêu thích"
+            Title="{Binding [Favorites]}"
             Icon="heart.png"
             ContentTemplate="{DataTemplate views:FavoritePage}" />
 
         <ShellContent
-            Title="Quét QR"
+            Title="{Binding [ScanQR]}"
             Icon="qr.png"
             ContentTemplate="{DataTemplate views:QRPage}" />
 
         <ShellContent
-            Title="Cài đặt"
+            Title="{Binding [Settings]}"
             Icon="settings.png"
             ContentTemplate="{DataTemplate views:SettingsPage}" />
 

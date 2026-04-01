@@ -1,14 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using TourismCMS.Data;
 using TourismCMS.Models;
 
 namespace TourismCMS.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly ApplicationDbContext _context;
+
+        public HomeController(ApplicationDbContext context)
         {
-            return View();
+            _context = context;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var pois = await _context.POIs.ToListAsync();
+            return View(pois);
         }
 
         public IActionResult Privacy()

@@ -5,7 +5,7 @@
     <StackLayout>
 
         <!-- Tiêu đề -->
-        <Label Text="❤️ Danh sách yêu thích"
+        <Label Text="{Binding [FavoriteListTitle]}"
                FontSize="20"
                HorizontalOptions="Center"
                Margin="10"/>

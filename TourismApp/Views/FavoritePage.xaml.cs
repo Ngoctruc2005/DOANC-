@@ -7,6 +7,7 @@ public partial class FavoritePage : ContentPage
     public FavoritePage()
     {
         InitializeComponent();
+        BindingContext = LocalizationService.Instance;
     }
 
     protected override void OnAppearing()

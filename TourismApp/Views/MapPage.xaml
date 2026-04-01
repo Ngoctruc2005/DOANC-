@@ -13,6 +13,33 @@
             MapType="Street"
             IsShowingUser="False" />
 
+        <!-- SEARCH CONTAINER -->
+        <VerticalStackLayout Margin="10,20,10,0" VerticalOptions="Start" Spacing="5">
+            <!-- TÌM KIẾM -->
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+                </Border.Shadow>
+                <SearchBar x:Name="searchBar" Placeholder="Tìm kiếm quán ăn..." TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
+            </Border>
+
+            <!-- KẾT QUẢ TÌM KIẾM -->
+            <Border x:Name="searchResultsBorder" IsVisible="False" BackgroundColor="White" StrokeShape="RoundRectangle 15">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+                </Border.Shadow>
+                <CollectionView x:Name="searchResults" MaximumHeightRequest="200" SelectionMode="Single" SelectionChanged="OnSearchResultSelected">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <ContentView>
+                                <Label Text="{Binding Name}" Padding="15,10" FontSize="16" TextColor="Black" />
+                            </ContentView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
+        </VerticalStackLayout>
+
         <!-- PANEL -->
         <Border 
             x:Name="detailPanel"
@@ -77,8 +104,10 @@
                     Clicked="OnCloseClicked"/>
 
             </VerticalStackLayout>
+            </ScrollView>
+            </Grid>
 
-        </Frame>
+        </Border>
 
     </Grid>
 </ContentPage>

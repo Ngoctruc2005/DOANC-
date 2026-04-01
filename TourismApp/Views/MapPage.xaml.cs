@@ -2,6 +2,9 @@
 using Microsoft.Maui.Maps;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Dispatching;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using TourismApp.Models;
 using TourismApp.Services;
@@ -10,97 +13,115 @@ namespace TourismApp.Views;
 
 public partial class MapPage : ContentPage
 {
-    // 👉 lưu quán đang chọn
-    Restaurant selectedRestaurant;
-    Restaurant selectedRestaurant;
-    Restaurant selectedRestaurant;
-    Restaurant selectedRestaurant;
-    Restaurant selectedRestaurant;
-    Restaurant selectedRestaurant;
+    private IEnumerable<Poi>? restaurants;
+    private Poi? selectedRestaurant;
 
-    List<Restaurant> restaurants = new()
-    {
-        new Restaurant
-        {
-            Name = "Ốc Oanh",
-            Description = "Ốc nổi tiếng Vĩnh Khánh",
-            Latitude = 10.7578,
-            Longitude = 106.7039,
-            BestSeller = "Ốc len xào dừa",
-            Menu = new List<string>
-            {
-                "Ốc len xào dừa",
-                "Ốc hương rang muối",
-                "Sò điệp nướng"
-            }
-        },
-
-        new Restaurant
-        {
-            Name = "Bún đậu A Chảnh",
-            Description = "Bún đậu mắm tôm",
-            Latitude = 10.7569,
-            Longitude = 106.7045,
-            BestSeller = "Bún đậu đầy đủ",
-            Menu = new List<string>
-            {
-                "Bún đậu",
-                "Chả cốm",
-                "Nem rán"
-            }
-        },
-
-        new Restaurant
-        {
-            Name = "Phá lấu bò",
-            Description = "Phá lấu đậm đà",
-            Latitude = 10.7572,
-            Longitude = 106.7042,
-            BestSeller = "Phá lấu bánh mì",
-            Menu = new List<string>
-            {
-                "Phá lấu",
-                "Mì phá lấu"
-            }
-        }
-    };
+    private AudioService audioService = new AudioService();
+    private GeofenceService geofenceService = new GeofenceService();
+    private HashSet<string> triggered = new HashSet<string>();
 
     public MapPage()
     {
         InitializeComponent();
+        BindingContext = LocalizationService.Instance;
+    }
 
-        ShowVinhKhanh();
-        LoadRestaurants();
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+        if (status != PermissionStatus.Granted)
+        {
+            status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+        }
+
+        if (status == PermissionStatus.Granted)
+        {
+            map.IsShowingUser = true;
+        }
+
+        MainThread.BeginInvokeOnMainThread(() => 
+        {
+            try { ShowVinhKhanh(); } catch { } 
+        });
+
+        // Khởi tạo ApiService lấy dữ liệu thật
+        var dbContext = Handler?.MauiContext?.Services.GetService<TourismCMS.Data.FoodDbContext>();
+        var apiService = new PoiApiService(dbContext);
+        var apiRestaurants = await apiService.GetAllPOIsAsync();
+
+        if (apiRestaurants != null && apiRestaurants.Any())
+        {
+            restaurants = apiRestaurants;
+
+            // Đợi UI map render hoàn tất trước khi thao tác ghim Pin
+            await Task.Delay(1500);
+
+            MainThread.BeginInvokeOnMainThread(() => 
+            {
+                map.Pins.Clear();
+                LoadRestaurants();
+            });
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(() => 
+            {
+                DisplayAlert("Thông báo", "Không tải được danh sách quán ăn từ Database.", "OK");
+            });
+        }
+
+        _ = StartTracking();
     }
 
     // 📍 Hiển thị khu Vĩnh Khánh
     void ShowVinhKhanh()
     {
-        var location = new Location(10.7575, 106.7040);
-
-        map.MoveToRegion(
-            MapSpan.FromCenterAndRadius(
-                location,
-                Distance.FromMeters(500)
-            )
-        );
+        var location = new Location(10.7607, 106.7029); // Phố ẩm thực Vĩnh Khánh
+        map.MoveToRegion(MapSpan.FromCenterAndRadius(location, Distance.FromMeters(1000)));
     }
 
     // 🍜 Load quán ăn lên map
     void LoadRestaurants()
     {
+        if (restaurants == null || !restaurants.Any())
+        {
+            DisplayAlert("Thông báo", "Không có dữ liệu quán ăn nào.", "OK");
+            return;
+        }
+
         foreach (var r in restaurants)
         {
+            if (r.Poiid == -1) // Bỏ qua pin lỗi API
+            {
+                DisplayAlert("Lỗi tải quán ăn", $"Có lỗi xảy ra: {r.Description}", "OK");
+
+                // Hiển thị luôn pin báo lỗi lên bản đồ cho dễ nhận diện
+                var errPin = new Pin
+                {
+                    Label = "Lỗi Kết Nối API",
+                    Address = r.Description ?? "Không rõ lỗi",
+                    Type = PinType.Generic,
+                    Location = new Location(10.7607, 106.7029)
+                };
+                map.Pins.Add(errPin);
+                continue;
+            }
+
+            if (r.Latitude == null || r.Longitude == null || r.Latitude == 0 || r.Longitude == 0) continue;
+
             var pin = new Pin
             {
-                Label = r.Name,
-                Address = r.Description,
+                Label = string.IsNullOrWhiteSpace(r.Name) ? "Chưa có tên" : r.Name,
+                Address = string.IsNullOrWhiteSpace(r.Description) ? "Chưa có mô tả" : r.Description,
                 Type = PinType.Place,
-                Location = new Location(r.Latitude, r.Longitude)
+                Location = new Location(r.Latitude.Value, r.Longitude.Value)
             };
 
             pin.MarkerClicked += (s, e) =>
             {
+                e.HideInfoWindow = true;
                 ShowDetail(r);
             };
 
@@ -109,13 +130,33 @@ public partial class MapPage : ContentPage
     }
 
     // 📌 Hiển thị chi tiết quán
-    void ShowDetail(Restaurant r)
+    async void ShowDetail(Poi r)
     {
         selectedRestaurant = r; // 🔥 lưu lại quán đang chọn
 
         nameLabel.Text = r.Name;
         descLabel.Text = r.Description;
-        bestSellerLabel.Text = "Best: " + r.BestSeller;
+        bestSellerLabel.Text = "Best: " + (r.BestSeller ?? "Đang cập nhật");
+
+        // Tải Menu thực tế từ CSDL
+        var dbContext = Handler?.MauiContext?.Services.GetService<TourismCMS.Data.FoodDbContext>();
+        var apiService = new PoiApiService(dbContext);
+        var menus = await apiService.GetMenusForPoiAsync(r.Id);
+
+        if (menus != null && menus.Any())
+        {
+            MainThread.BeginInvokeOnMainThread(() => 
+            {
+                menuList.ItemsSource = menus.Select(m => $"{m.ItemName} - {m.Price:N0} đ").ToList();
+            });
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(() => 
+            {
+                menuList.ItemsSource = new List<string> { "Đang cập nhật..." };
+            });
+        }
 
         detailPanel.IsVisible = true;
     }
@@ -126,7 +167,6 @@ public partial class MapPage : ContentPage
         if (selectedRestaurant != null)
         {
             FavoriteService.Add(selectedRestaurant);
-
             DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
         }
     }
@@ -134,6 +174,8 @@ public partial class MapPage : ContentPage
     // ❌ Đóng panel
     void OnCloseClicked(object sender, EventArgs e)
     {
+        detailPanel.IsVisible = false;
+        languagePicker.IsVisible = false;
     }
 
     // 👉 NÚT "NGHE"
@@ -149,19 +191,17 @@ public partial class MapPage : ContentPage
 
         var lang = languagePicker.SelectedItem?.ToString() ?? "vi";
 
-        if (selectedRestaurant.AudioDescription.TryGetValue(lang, out var text))
+        string textToSpeak = selectedRestaurant.Description;
+        if (lang != "vi")
         {
-            await audioService.Speak(text);
-        }
-        else
-        {
-            await audioService.Speak(selectedRestaurant.Description);
+            textToSpeak = await TTSHelper.TranslateTextAsync(selectedRestaurant.Description, lang);
         }
 
+        await audioService.Speak(textToSpeak);
         languagePicker.IsVisible = false;
     }
 
-    async void StartTracking()
+    async Task StartTracking()
     {
         while (true)
         {
@@ -181,25 +221,84 @@ public partial class MapPage : ContentPage
 
     void CheckNearby(Location user)
     {
+        if (restaurants == null) return;
+
         foreach (var r in restaurants)
         {
+            if (r.Latitude == null || r.Longitude == null) continue;
+
             double distance = geofenceService.GetDistance(
                 user.Latitude, user.Longitude,
-                r.Latitude, r.Longitude);
+                r.Latitude.Value, r.Longitude.Value);
 
-            if (distance <= 50 && !triggered.Contains(r.Name))
+            if (distance <= 50 && r.Name != null && !triggered.Contains(r.Name))
             {
                 triggered.Add(r.Name);
 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    var lang = languagePicker.SelectedItem?.ToString() ?? "vi";
-
-                    if (r.AudioDescription.TryGetValue(lang, out var text))
-                        await audioService.Speak($"Bạn đang đến {r.Name}. {text}");
-                    else
-                        await audioService.Speak($"Bạn đang đến {r.Name}");
+                    await audioService.Speak($"Bạn đang đến {r.Name}");
                 });
+            }
+        }
+    }
+
+    void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        string query = e.NewTextValue?.ToLower() ?? "";
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            searchResultsBorder.IsVisible = false;
+            searchResults.ItemsSource = null;
+        }
+        else
+        {
+            var filtered = restaurants?.Where(r => r.Name != null && r.Name.ToLower().Contains(query)).ToList();
+            if (filtered != null && filtered.Any())
+            {
+                searchResults.ItemsSource = filtered;
+                searchResultsBorder.IsVisible = true;
+            }
+            else
+            {
+                searchResultsBorder.IsVisible = false;
+            }
+        }
+    }
+
+    void OnSearchButtonPressed(object sender, EventArgs e)
+    {
+        searchBar.Unfocus();
+        searchResultsBorder.IsVisible = false;
+
+        string query = searchBar.Text?.ToLower() ?? "";
+        var firstMatch = restaurants?.FirstOrDefault(r => r.Name != null && r.Name.ToLower().Contains(query));
+
+        if (firstMatch != null && firstMatch.Latitude != null && firstMatch.Longitude != null)
+        {
+            map.MoveToRegion(MapSpan.FromCenterAndRadius(
+                new Location(firstMatch.Latitude.Value, firstMatch.Longitude.Value), 
+                Distance.FromMeters(500)));
+            ShowDetail(firstMatch);
+        }
+    }
+
+    void OnSearchResultSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is Poi selectedPoi)
+        {
+            searchBar.Text = selectedPoi.Name;
+            searchBar.Unfocus();
+            searchResultsBorder.IsVisible = false;
+            searchResults.SelectedItem = null; // Clear selection
+
+            if (selectedPoi.Latitude != null && selectedPoi.Longitude != null)
+            {
+                map.MoveToRegion(MapSpan.FromCenterAndRadius(
+                    new Location(selectedPoi.Latitude.Value, selectedPoi.Longitude.Value), 
+                    Distance.FromMeters(500)));
+                ShowDetail(selectedPoi);
             }
         }
     }

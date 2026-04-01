@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -17,6 +17,11 @@
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+		<AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+		<JavaMaximumHeapSize>2G</JavaMaximumHeapSize>
 	</PropertyGroup>
 
 	<ItemGroup>

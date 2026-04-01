@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace TourismApp.Models;
 
 public class Restaurant
 {
-    public string Name { get; set; }           // Tên quán
-    public string Description { get; set; }    // Mô tả
-    public double Latitude { get; set; }       // Vĩ độ
-    public double Longitude { get; set; }      // Kinh độ
-    public string BestSeller { get; set; }     // Món nổi bật
-    public List<string> Menu { get; set; }     // Menu quán
+    public string? Name { get; set; }           // T�n qu�n
+    public string? Description { get; set; }    // M� t?
+    public double Latitude { get; set; }       // Vi d?
+    public double Longitude { get; set; }      // Kinh d?
+    public string? BestSeller { get; set; }     // M�n n?i b?t
+    public List<string>? Menu { get; set; }     // Menu qu�n
 
-    // 🔊 Thuyết minh đa ngôn ngữ: key = "vi" hoặc "en"
+    // ?? Thuy?t minh da ng�n ng?: key = "vi" ho?c "en"
     public Dictionary<string, string> AudioDescription { get; set; } = new();
 }

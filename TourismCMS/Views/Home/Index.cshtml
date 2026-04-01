@@ -1,1 +1,115 @@
-﻿
+@model IEnumerable<TourismCMS.Models.POI>
+
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold text-primary">Khám Phá Ẩm Thực Vĩnh Khánh</h1>
+        <p class="lead text-muted">Khám phá các địa điểm ăn uống hấp dẫn quanh bạn.</p>
+    </div>
+
+    <!-- Map Container -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-body p-1">
+            <div id="map" style="height: 500px; width: 100%; border-radius: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- POI List -->
+    <h3 class="mb-4">Danh sách quán ăn</h3>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm transition-hover">
+                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                    {
+                        <img src="@item.ImagePath" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-secondary"><i class="bi bi-image" style="font-size: 3rem;"></i><br>Không có ảnh</span>
+                        </div>
+                    }
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text text-truncate-2" title="@item.Description">
+                            @(string.IsNullOrEmpty(item.Description) ? "Chưa có mô tả" : item.Description)
+                        </p>
+                        <p class="card-text mb-1">
+                            <small class="text-muted">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> @item.Latitude, @item.Longitude
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Bán kính: @item.Radius m</small>
+                        <a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .transition-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
+    }
+</style>
+
+@section Scripts {
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Initialize map
+            var map = L.map('map').setView([10.762622, 106.660172], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            var bounds = [];
+            
+            // Add markers
+            @foreach (var item in Model)
+            {
+                if (item.Latitude.HasValue && item.Longitude.HasValue)
+                {
+                    <text>
+                    var lat = @item.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    var lng = @item.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    var name = "@Html.Raw(item.Name?.Replace("\"", "\\\""))";
+                    var url = '@Url.Action("Details", "POIs", new { id = item.Poiid })';
+                    
+                    var marker = L.marker([lat, lng]).addTo(map);
+                    marker.bindPopup(`<b>${name}</b><br><a href="${url}" class="btn btn-sm btn-primary mt-2">Xem chi tiết</a>`);
+                    bounds.push([lat, lng]);
+                    </text>
+                }
+            }
+
+            // Auto-zoom to fit all markers
+            if (bounds.length > 0) {
+                map.fitBounds(bounds);
+            }
+        });
+    </script>
+}
