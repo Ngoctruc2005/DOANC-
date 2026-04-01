@@ -1,0 +1,29 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý nhà hàng";
+}
+
+<a href="/POIs/Create" class="btn btn-primary mb-3">+ Thêm quán</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Tên quán</th>
+            <th>Địa chỉ</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr>
+            <td>Ốc Vĩnh Khánh</td>
+            <td>Quận 4</td>
+            <td><span class="badge bg-success">Đã duyệt</span></td>
+            <td>
+                <a class="btn btn-sm btn-warning">Edit</a>
+                <a class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+    </tbody>
+</table>

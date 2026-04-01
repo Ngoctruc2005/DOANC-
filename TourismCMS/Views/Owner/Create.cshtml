@@ -1,0 +1,43 @@
+﻿<h2>➕ Thêm quán (Owner)</h2>
+
+<form id="createPoiForm" enctype="multipart/form-data">
+
+    <input name="Name" placeholder="Tên quán" class="form-control mb-2" required />
+
+    <textarea name="Description" placeholder="Mô tả" class="form-control mb-2"></textarea>
+
+    <!-- Upload nhiều ảnh -->
+    <input type="file" name="Images" class="form-control mb-2" multiple />
+
+    <!-- GPS -->
+    <input type="hidden" name="Latitude" id="Latitude" />
+    <input type="hidden" name="Longitude" id="Longitude" />
+
+    <button class="btn btn-success">Lưu</button>
+</form>
+
+<script>
+    // 📍 Lấy vị trí GPS
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        document.getElementById("Latitude").value = pos.coords.latitude;
+        document.getElementById("Longitude").value = pos.coords.longitude;
+    });
+
+    document.getElementById("createPoiForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:8000/poi", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+
+        const data = await res.json();
+        alert(data.message);
+    });
+</script>

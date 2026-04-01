@@ -1,0 +1,21 @@
+﻿@model List<POI>
+
+<h2>⏳ Duyệt quán</h2>
+
+<table class="table">
+    <tr>
+        <th>Tên</th>
+        <th>Hành động</th>
+    </tr>
+
+    @foreach (var p in Model)
+    {
+        <tr>
+            <td>@p.Name</td>
+            <td>
+                <a href="/Admin/Approve/@p.Id" class="btn btn-success btn-sm">✔ Duyệt</a>
+                <a href="/Admin/Reject/@p.Id" class="btn btn-danger btn-sm">❌ Từ chối</a>
+            </td>
+        </tr>
+    }
+</table>

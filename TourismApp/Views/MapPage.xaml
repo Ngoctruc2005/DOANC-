@@ -2,11 +2,12 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
-    x:Class="TourismApp.Views.MapPage">
+    x:Class="TourismApp.Views.MapPage"
+    BackgroundColor="White">
 
     <Grid>
 
-        <!-- MAP -->
+        <!-- 🗺️ MAP -->
         <maps:Map 
             x:Name="map"
             MapType="Street"
@@ -25,37 +26,59 @@
                 <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
             </Border.Shadow>
 
-            <VerticalStackLayout Spacing="10">
+            <Grid>
 
-                <Label 
-                    x:Name="nameLabel"
-                    FontSize="20"
-                    FontAttributes="Bold"
-                    TextColor="Black" />
+                <!-- Nội dung chính -->
+                <ScrollView>
+                    <VerticalStackLayout Spacing="10">
 
-                <Label 
-                    x:Name="descLabel"
-                    FontSize="14"
-                    TextColor="Gray" />
+                        <!-- 🌐 Ngôn ngữ -->
+                        <Picker x:Name="languagePicker"
+        Title="Ngôn ngữ"
+        IsVisible="False"
+        SelectedIndexChanged="OnLanguageChanged">
+                            <Picker.Items>
+                                <x:String>vi</x:String>
+                                <x:String>en</x:String>
+                            </Picker.Items>
+                        </Picker>
 
-                <Label 
-                    x:Name="bestSellerLabel"
-                    FontSize="14"
-                    TextColor="Orange" />
+                        <!-- Tên quán -->
+                        <Label x:Name="nameLabel"
+                       FontSize="22"
+                       FontAttributes="Bold"/>
+
+                        <!-- Mô tả -->
+                        <Label x:Name="descLabel"
+                       FontSize="14"
+                       TextColor="Gray"
+                       LineBreakMode="WordWrap"/>
+
+                        <!-- Món nổi bật -->
+                        <Label x:Name="bestSellerLabel"
+                       FontSize="14"
+                       TextColor="DarkOrange"/>
+
+                        <!-- Menu -->
+                        <CollectionView x:Name="menuList" HeightRequest="80">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding .}" FontSize="14"/>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
 
                 <Button 
-                    Text="?? Yêu thích"
+                    Text="❤️ Yêu thích"
                     Clicked="OnFavoriteClicked"/>
 
                 <Button 
-                    Text="Ðóng"
+                    Text="Đóng"
                     Clicked="OnCloseClicked"/>
-                <Button Text="?? Nghe thuyết minh"
-        Clicked="OnPlayAudio"/>
+
             </VerticalStackLayout>
 
-        </Border>
+        </Frame>
 
     </Grid>
-
 </ContentPage>
