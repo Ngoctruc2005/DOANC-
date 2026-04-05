@@ -169,7 +169,28 @@ namespace TourismCMS.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
         {
-            return await _context.POIs.ToListAsync();
+            var pois = await _context.POIs.ToListAsync();
+            // Trả về POIs mà đảm bảo không có lỗi null trong các trường hợp Serialize nếu có navigation property dẫn đến lỗi vòng lặp/lazy load chưa có dữ liệu.
+            return Ok(pois);
+        }
+    }
+
+    [ApiController]
+    [Route("api/menus")]
+    public class MenusApiController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public MenusApiController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Menu>>> GetMenus()
+        {
+            var menus = await _context.Menus.ToListAsync();
+            return Ok(menus);
         }
     }
 }

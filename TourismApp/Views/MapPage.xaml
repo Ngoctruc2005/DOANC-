@@ -1,47 +1,47 @@
-<ContentPage 
+<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
     x:Class="TourismApp.Views.MapPage"
     BackgroundColor="White">
 
-    <Grid>
+	<Grid>
 
-        <!-- 🗺️ MAP -->
-        <maps:Map 
+		<!-- 🗺️ MAP -->
+		<maps:Map
             x:Name="map"
             MapType="Street"
             IsShowingUser="False" />
 
-        <!-- SEARCH CONTAINER -->
-        <VerticalStackLayout Margin="10,20,10,0" VerticalOptions="Start" Spacing="5">
-            <!-- TÌM KIẾM -->
-            <Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-                </Border.Shadow>
-                <SearchBar x:Name="searchBar" Placeholder="Tìm kiếm quán ăn..." TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
-            </Border>
+		<!-- SEARCH CONTAINER -->
+		<VerticalStackLayout Margin="10,20,10,0" VerticalOptions="Start" Spacing="5">
+			<!-- TÌM KIẾM -->
+			<Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
+				<Border.Shadow>
+					<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+				</Border.Shadow>
+				<SearchBar x:Name="searchBar" Placeholder="Tìm kiếm quán ăn..." TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
+			</Border>
 
-            <!-- KẾT QUẢ TÌM KIẾM -->
-            <Border x:Name="searchResultsBorder" IsVisible="False" BackgroundColor="White" StrokeShape="RoundRectangle 15">
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-                </Border.Shadow>
-                <CollectionView x:Name="searchResults" MaximumHeightRequest="200" SelectionMode="Single" SelectionChanged="OnSearchResultSelected">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <ContentView>
-                                <Label Text="{Binding Name}" Padding="15,10" FontSize="16" TextColor="Black" />
-                            </ContentView>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </Border>
-        </VerticalStackLayout>
+			<!-- KẾT QUẢ TÌM KIẾM -->
+			<Border x:Name="searchResultsBorder" IsVisible="False" BackgroundColor="White" StrokeShape="RoundRectangle 15">
+				<Border.Shadow>
+					<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+				</Border.Shadow>
+				<CollectionView x:Name="searchResults" MaximumHeightRequest="200" SelectionMode="Single" SelectionChanged="OnSearchResultSelected">
+					<CollectionView.ItemTemplate>
+						<DataTemplate>
+							<ContentView>
+								<Label Text="{Binding Name}" Padding="15,10" FontSize="16" TextColor="Black" />
+							</ContentView>
+						</DataTemplate>
+					</CollectionView.ItemTemplate>
+				</CollectionView>
+			</Border>
+		</VerticalStackLayout>
 
-        <!-- PANEL -->
-        <Border 
+		<!-- PANEL CHI TIẾT QUÁN -->
+		<Border
             x:Name="detailPanel"
             BackgroundColor="White"
             StrokeShape="RoundRectangle 20"
@@ -49,65 +49,78 @@
             VerticalOptions="End"
             Margin="10"
             IsVisible="False">
-            <Border.Shadow>
-                <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-            </Border.Shadow>
+			<Border.Shadow>
+				<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+			</Border.Shadow>
 
-            <Grid>
+			<Grid>
+				<!-- Nội dung chính -->
+				<ScrollView>
+					<VerticalStackLayout Spacing="10">
 
-                <!-- Nội dung chính -->
-                <ScrollView>
-                    <VerticalStackLayout Spacing="10">
+						<!-- 🌐 Ngôn ngữ -->
+						<Picker x:Name="languagePicker"
+                                Title="Ngôn ngữ"
+                                IsVisible="False"
+                                SelectedIndexChanged="OnLanguageChanged">
+							<Picker.Items>
+								<x:String>vi</x:String>
+								<x:String>en</x:String>
+							</Picker.Items>
+						</Picker>
 
-                        <!-- 🌐 Ngôn ngữ -->
-                        <Picker x:Name="languagePicker"
-        Title="Ngôn ngữ"
-        IsVisible="False"
-        SelectedIndexChanged="OnLanguageChanged">
-                            <Picker.Items>
-                                <x:String>vi</x:String>
-                                <x:String>en</x:String>
-                            </Picker.Items>
-                        </Picker>
+						<!-- Tên quán -->
+						<Label x:Name="nameLabel"
+                               FontSize="22"
+                               FontAttributes="Bold"/>
 
-                        <!-- Tên quán -->
-                        <Label x:Name="nameLabel"
-                       FontSize="22"
-                       FontAttributes="Bold"/>
+						<!-- Mô tả -->
+						<Label x:Name="descLabel"
+                               FontSize="14"
+                               TextColor="Gray"
+                               LineBreakMode="WordWrap"/>
 
-                        <!-- Mô tả -->
-                        <Label x:Name="descLabel"
-                       FontSize="14"
-                       TextColor="Gray"
-                       LineBreakMode="WordWrap"/>
+						<!-- Món nổi bật -->
+						<Label x:Name="bestSellerLabel"
+                               FontSize="14"
+                               TextColor="DarkOrange"/>
 
-                        <!-- Món nổi bật -->
-                        <Label x:Name="bestSellerLabel"
-                       FontSize="14"
-                       TextColor="DarkOrange"/>
+						<!-- Menu -->
+						<CollectionView x:Name="menuList" MaximumHeightRequest="120">
+							<CollectionView.ItemTemplate>
+								<DataTemplate>
+									<Label Text="{Binding .}" FontSize="14"/>
+								</DataTemplate>
+							</CollectionView.ItemTemplate>
+						</CollectionView>
 
-                        <!-- Menu -->
-                        <CollectionView x:Name="menuList" HeightRequest="80">
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Label Text="{Binding .}" FontSize="14"/>
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
+						<!-- NHÓM CÁC NÚT TƯƠNG TÁC CHIA THÀNH LƯỚI 2 CỘT -->
+						<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">
+							<Button Grid.Row="0" Grid.Column="0"
+                                    Text="🔊 Thuyết minh"
+                                    Clicked="OnPlayAudioClicked" Padding="0"/>
 
-                <Button 
-                    Text="❤️ Yêu thích"
-                    Clicked="OnFavoriteClicked"/>
+							<Button Grid.Row="0" Grid.Column="1"
+                                    Text="📍 Chỉ đường"
+                                    Clicked="OnDirectionsClicked" Padding="0"
+                                    BackgroundColor="#2E8B57" TextColor="White"/>
 
-                <Button 
-                    Text="Đóng"
-                    Clicked="OnCloseClicked"/>
+							<Button Grid.Row="1" Grid.Column="0"
+                                    Text="❤️ Yêu thích"
+                                    Clicked="OnFavoriteClicked" Padding="0"
+                                    BackgroundColor="#FF69B4" TextColor="White"/>
 
-            </VerticalStackLayout>
-            </ScrollView>
-            </Grid>
+							<Button Grid.Row="1" Grid.Column="1"
+                                    Text="Đóng"
+                                    Clicked="OnCloseClicked" Padding="0"
+                                    BackgroundColor="#696969" TextColor="White"/>
+						</Grid>
 
-        </Border>
+					</VerticalStackLayout>
+				</ScrollView>
+			</Grid>
 
-    </Grid>
+		</Border>
+
+	</Grid>
 </ContentPage>

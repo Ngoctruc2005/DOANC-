@@ -24,7 +24,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Tạm tắt HttpsRedirection để MAUI Android Emulator gọi HTTP thuần dễ dàng hơn
+// app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthorization();
@@ -39,8 +40,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-app.MapControllerRoute(
-    name: "admin",
-    pattern: "admin/{controller=POIs}/{action=Index}/{id?}");
 
 app.Run();

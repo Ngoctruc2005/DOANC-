@@ -5,7 +5,9 @@ namespace TourismCMS.Models
 {
     public partial class POI
     {
-        public int Id { get; set; }
+        // Make these properties nullable by adding '?'
+        public int? Id { get; set; } 
+        public int? OwnerId { get; set; }
         public int Poiid { get; set; }
         public string? Name { get; set; }
         public double? Latitude { get; set; }
@@ -18,7 +20,6 @@ namespace TourismCMS.Models
         public string? ImagePath { get; set; }
         public string? AudioPath { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public int OwnerId { get; set; }
 
         public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
         public virtual ICollection<Menu> Menus { get; set; } = new List<Menu>();

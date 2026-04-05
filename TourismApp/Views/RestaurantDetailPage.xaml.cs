@@ -20,6 +20,33 @@ public partial class RestaurantDetailPage : ContentPage
 
         nameLabel.Text = _restaurant.Name;
         descriptionLabel.Text = _restaurant.Description;
+
+        // Xử lý hình ảnh (ImagePath hoặc Thumbnail)
+        string? imageUrl = !string.IsNullOrWhiteSpace(_restaurant.ImagePath) ? _restaurant.ImagePath : _restaurant.Thumbnail;
+
+        if (!string.IsNullOrWhiteSpace(imageUrl))
+        {
+            if (imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                restaurantImage.Source = ImageSource.FromUri(new Uri(imageUrl));
+            }
+            else
+            {
+                // Nếu backend ném về tên file (VD: "uploads/image.jpg")
+                // Ta nối với Base URL của server để lấy ảnh trực tiếp từ internet
+                string baseUrl = "https://nqrwpkxp-5219.asse.devtunnels.ms/"; 
+
+                // Chuẩn hóa chuỗi URL tránh bị lỗi dính 2 dấu gạch chéo
+                string fullImageUrl = baseUrl.TrimEnd('/') + "/" + imageUrl.TrimStart('/');
+
+                restaurantImage.Source = ImageSource.FromUri(new Uri(fullImageUrl));
+            }
+        }
+        else
+        {
+            // Nếu API không trả về ảnh quán, sử dụng luôn ảnh mặc định từ Internet
+            restaurantImage.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+        }
     }
 
     private async void LoadMenu()
@@ -67,6 +94,7 @@ public partial class RestaurantDetailPage : ContentPage
         }
     }
 
+
     private async void OnPlayAudioClicked(object sender, EventArgs e)
     {
         await TTSHelper.SpeakDescriptionAsync(_restaurant.Description);
@@ -91,5 +119,20 @@ public partial class RestaurantDetailPage : ContentPage
         {
             await DisplayAlert("Lỗi", $"Không thể mở bản đồ: {ex.Message}", "OK");
         }
+    }
+
+    private void OnFavoriteClicked(object sender, EventArgs e)
+    {
+        if (_restaurant != null)
+        {
+            FavoriteService.Add(_restaurant);
+            DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
+        }
+    }
+
+    // Thêm nút Back để hỗ trợ người dùng có thể quay lại tab yêu thích
+    private async void OnBackClicked(object sender, EventArgs e)
+    {
+        await Navigation.PopAsync();
     }
 }

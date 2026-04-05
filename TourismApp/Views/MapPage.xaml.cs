@@ -136,7 +136,7 @@ public partial class MapPage : ContentPage
 
         nameLabel.Text = r.Name;
         descLabel.Text = r.Description;
-        bestSellerLabel.Text = "Best: " + (r.BestSeller ?? "Đang cập nhật");
+    
 
         // Tải Menu thực tế từ CSDL
         var dbContext = Handler?.MauiContext?.Services.GetService<TourismCMS.Data.FoodDbContext>();
@@ -154,7 +154,7 @@ public partial class MapPage : ContentPage
         {
             MainThread.BeginInvokeOnMainThread(() => 
             {
-                menuList.ItemsSource = new List<string> { "Đang cập nhật..." };
+           
             });
         }
 
@@ -175,30 +175,40 @@ public partial class MapPage : ContentPage
     void OnCloseClicked(object sender, EventArgs e)
     {
         detailPanel.IsVisible = false;
-        languagePicker.IsVisible = false;
     }
 
     // 👉 NÚT "NGHE"
-    void OnPlayAudioClicked(object sender, EventArgs e)
-    {
-        languagePicker.IsVisible = true;
-    }
-
-    // 👉 CHỌN NGÔN NGỮ → PHÁT AUDIO
-    async void OnLanguageChanged(object sender, EventArgs e)
+    async void OnPlayAudioClicked(object sender, EventArgs e)
     {
         if (selectedRestaurant == null) return;
 
-        var lang = languagePicker.SelectedItem?.ToString() ?? "vi";
-
+        string lang = LocalizationService.Instance.CurrentLanguage;
         string textToSpeak = selectedRestaurant.Description;
-        if (lang != "vi")
+
+        if (lang != "vi" && !string.IsNullOrWhiteSpace(textToSpeak))
         {
-            textToSpeak = await TTSHelper.TranslateTextAsync(selectedRestaurant.Description, lang);
+            textToSpeak = await TTSHelper.TranslateTextAsync(textToSpeak, lang);
         }
 
-        await audioService.Speak(textToSpeak);
-        languagePicker.IsVisible = false;
+        _ = audioService.Speak(textToSpeak);
+    }
+
+    // 👉 NÚT CHỈ ĐƯỜNG
+    async void OnDirectionsClicked(object sender, EventArgs e)
+    {
+        if (selectedRestaurant?.Latitude == null || selectedRestaurant?.Longitude == null) return;
+
+        var location = new Location(selectedRestaurant.Latitude.Value, selectedRestaurant.Longitude.Value);
+        var options = new MapLaunchOptions { Name = selectedRestaurant.Name };
+
+        try
+        {
+            await Microsoft.Maui.ApplicationModel.Map.Default.OpenAsync(location, options);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync("Error", $"Could not open map: {ex.Message}", "OK");
+        }
     }
 
     async Task StartTracking()

@@ -12,6 +12,15 @@ public static class FavoriteService
             Favorites.Add(r);
     }
 
+    public static void Remove(Poi r)
+    {
+        var itemToRemove = Favorites.FirstOrDefault(x => x.Name == r.Name);
+        if (itemToRemove != null)
+        {
+            Favorites.Remove(itemToRemove);
+        }
+    }
+
     public static List<Poi> GetAll()
     {
         return Favorites;
