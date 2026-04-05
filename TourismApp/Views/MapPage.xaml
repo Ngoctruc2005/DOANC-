@@ -20,7 +20,8 @@
 				<Border.Shadow>
 					<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
 				</Border.Shadow>
-				<SearchBar x:Name="searchBar" Placeholder="Tìm kiếm quán ăn..." TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
+				<!-- Sửa Placeholder thành Binding -->
+				<SearchBar x:Name="searchBar" Placeholder="{Binding [SearchPlaceholder]}" TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
 			</Border>
 
 			<!-- KẾT QUẢ TÌM KIẾM -->
@@ -96,22 +97,24 @@
 
 						<!-- NHÓM CÁC NÚT TƯƠNG TÁC CHIA THÀNH LƯỚI 2 CỘT -->
 						<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">
+
+							<!-- Sửa Text thành Binding -->
 							<Button Grid.Row="0" Grid.Column="0"
-                                    Text="🔊 Thuyết minh"
+                                    Text="{Binding [ListenAudio]}"
                                     Clicked="OnPlayAudioClicked" Padding="0"/>
 
 							<Button Grid.Row="0" Grid.Column="1"
-                                    Text="📍 Chỉ đường"
+                                    Text="{Binding [Directions]}"
                                     Clicked="OnDirectionsClicked" Padding="0"
                                     BackgroundColor="#2E8B57" TextColor="White"/>
 
 							<Button Grid.Row="1" Grid.Column="0"
-                                    Text="❤️ Yêu thích"
+                                    Text="{Binding [Favorites]}"
                                     Clicked="OnFavoriteClicked" Padding="0"
                                     BackgroundColor="#FF69B4" TextColor="White"/>
 
 							<Button Grid.Row="1" Grid.Column="1"
-                                    Text="Đóng"
+                                    Text="{Binding [Close]}"
                                     Clicked="OnCloseClicked" Padding="0"
                                     BackgroundColor="#696969" TextColor="White"/>
 						</Grid>
