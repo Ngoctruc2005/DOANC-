@@ -3,35 +3,67 @@
 <head>
     <title>Tourism Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .sidebar { background-color: #1e293b; font-family: sans-serif; }
+        .sidebar a { color: #cbd5e1; text-decoration: none; padding: 12px 20px; display: block; border-radius: 5px; margin-bottom: 5px; font-weight: 500; font-size: 15px;}
+        .sidebar a:hover { background-color: #334155; color: #ffffff; text-decoration: none; }
+        .sidebar a i { width: 30px; text-align: center; }
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
     <div class="d-flex">
 
-        <!-- Sidebar -->
-        <div class="bg-dark text-white p-3" style="width:250px; min-height:100vh;">
-            <h4>🍜 Vinh Khanh</h4>
-            <hr />
+        @if (User.Identity.IsAuthenticated)
+        {
+            <!-- Sidebar -->
+            <div class="sidebar text-white p-3" style="width:250px; min-height:100vh;">
+                <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> Vĩnh Khánh</h4>
 
-            <p class="text-muted">ADMIN</p>
-            <a href="/Admin/Index" class="text-white d-block mb-2">📊Quản trị viên</a>
-   
+                @if (User.IsInRole("admin"))
+                {
+                    <a href="/Admin/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
+                    <a href="/POIs/Index"><i class="fa fa-store"></i> Quán ăn</a>
+                    <a href="/POIs/Pending"><i class="fa fa-clock"></i> Chờ duyệt</a>
+                    <a href="/POIs/Approved"><i class="fa fa-check"></i> Đã duyệt</a>
+                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                }
 
-            <hr />
-
-            <p class="text-muted">OWNER</p>
-            <a href="/Owner/Index" class="text-white d-block mb-2">🏠Chủ quán ăn</a>
-           
-        </div>
+                @if (User.IsInRole("poi_owner"))
+                {
+                    <a href="/Owner/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
+                    <a href="/POIs/Index"><i class="fa fa-store"></i> Quán của tôi</a>
+                    <a href="/POIs/Create"><i class="fa fa-plus"></i> Đăng ký quán</a>
+                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                }
+            </div>
+        }
 
         <!-- Content -->
         <div class="p-4 w-100">
 
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3>Hệ thống quản lý ẩm thực</h3>
-                <button class="btn btn-outline-danger">Logout</button>
-            </div>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Hệ thống quản lý ẩm thực</h3>
+                    <div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                <b>@User.Identity.Name</b>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item" href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
 
             @RenderBody()
         </div>

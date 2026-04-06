@@ -1,6 +1,41 @@
-﻿namespace TourismCMS.Views.Auth
-{
-    public class Login
-    {
-    }
+﻿@{
+    ViewData["Title"] = "Đăng Nhập Quản Trị";
+    Layout = "_Layout";
 }
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Đăng Nhập Quản Trị Hệ Thống</h4>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-controller="Auth" asp-action="Login">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="username">Tên đăng nhập / Username</label>
+                        <input type="text" id="username" name="username" class="form-control" required placeholder="Nhập tên đăng nhập" />
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label" for="password">Mật khẩu / Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required placeholder="Nhập mật khẩu" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Đăng Nhập</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-3">
+                    Bạn chưa có tài khoản chủ quán? <br />
+                    <a href="/Auth/Register" class="text-decoration-none">Đăng ký tài khoản ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

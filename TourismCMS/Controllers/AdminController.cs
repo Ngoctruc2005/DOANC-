@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TourismCMS.Models;
 using TourismCMS.Data;   // ✅ đặt đúng chỗ
@@ -5,6 +6,7 @@ using System.Linq;
 
 namespace TourismCMS.Controllers
 {
+    [Authorize(Roles = "admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;

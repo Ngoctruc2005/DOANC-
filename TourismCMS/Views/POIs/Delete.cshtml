@@ -1,63 +1,78 @@
 ﻿@model TourismCMS.Models.POI
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Xóa quán ăn";
+    if (User.IsInRole("admin"))
+    {
+        ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
+    }
 }
 
-<h1>Delete</h1>
+<div class="container mt-4">
+    <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> Xác nhận xóa quán ăn</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title text-danger">Bạn có chắc chắn muốn xóa quán ăn này?</h5>
+            <p class="text-muted">Hành động này sẽ xóa dữ liệu vĩnh viễn khỏi hệ thống.</p>
+            <hr />
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>POI</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Latitude)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Latitude)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Longitude)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Longitude)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Radius)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Radius)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ImagePath)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ImagePath)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AudioPath)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AudioPath)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+            <dl class="row">
+                <dt class="col-sm-3 text-end">
+                    @Html.DisplayNameFor(model => model.Name)
+                </dt>
+                <dd class="col-sm-9 fw-bold text-dark">
+                    @Html.DisplayFor(model => model.Name)
+                </dd>
+
+                <dt class="col-sm-3 text-end">
+                    @Html.DisplayNameFor(model => model.Description)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Description)
+                </dd>
+
+                <dt class="col-sm-3 text-end">
+                    Tọa độ
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Latitude), @Html.DisplayFor(model => model.Longitude)
+                </dd>
+
+                <dt class="col-sm-3 text-end">
+                    @Html.DisplayNameFor(model => model.Radius)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Radius) (m)
+                </dd>
+
+                @if(!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <dt class="col-sm-3 text-end">Hình ảnh</dt>
+                    <dd class="col-sm-9">
+                        <img src="@Model.ImagePath" alt="@Model.Name" class="img-thumbnail" style="max-height: 150px; max-width: 100%; object-fit: cover;" />
+                    </dd>
+                }
+
+                @if(!string.IsNullOrEmpty(Model.AudioPath))
+                {
+                    <dt class="col-sm-3 text-end">Âm thanh</dt>
+                    <dd class="col-sm-9">
+                        <audio controls class="w-100">
+                            <source src="@Model.AudioPath" type="audio/mpeg">
+                        </audio>
+                    </dd>
+                }
+            </dl>
+        </div>
+        <div class="card-footer text-end bg-light">
+            <form asp-action="Delete" onsubmit="return confirm('Xác nhận: Bạn sẽ xóa vĩnh viễn dữ liệu này ra khỏi hệ thống. Tiếp tục?');">
+                <input type="hidden" asp-for="Id" />
+                <!-- Try binding with Poiid as well if the backend requires it inside the entity, but Id is likely what the delete method expects if it's the route value -->
+                <a class="btn btn-secondary me-2" asp-action="Index"><i class="fa fa-arrow-left"></i> Quay lại</a>
+                <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Xóa vĩnh viễn</button>
+            </form>
+        </div>
+    </div>
 </div>

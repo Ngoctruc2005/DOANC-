@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Đăng Ký Chủ Quán";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0">Đăng Ký Tài Khoản Chủ Quán</h4>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.Error
+                    </div>
+                }
+                @if (ViewBag.Success != null)
+                {
+                    <div class="alert alert-success">
+                        @ViewBag.Success <br/><a href="/Auth/Login" class="fw-bold">Bấm vào đây để đăng nhập</a>
+                    </div>
+                }
+
+                <form method="post" asp-controller="Auth" asp-action="Register">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="username">Tên đăng nhập / Username</label>
+                        <input type="text" id="username" name="username" class="form-control" required placeholder="Nhập tên đăng nhập" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="password">Mật khẩu / Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required placeholder="Nhập mật khẩu" />
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label" for="confirmPassword">Nhập lại mật khẩu</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required placeholder="Nhập lại mật khẩu" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">Đăng Ký</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="/Auth/Login" class="text-decoration-none">Đã có tài khoản? Quay về đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

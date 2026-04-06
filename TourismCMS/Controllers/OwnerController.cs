@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TourismCMS.Data;
 using TourismCMS.Models;
 
+[Authorize(Roles = "poi_owner")]
 public class OwnerController : Controller
 {
     private readonly ApplicationDbContext _context;

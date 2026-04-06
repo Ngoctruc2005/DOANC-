@@ -1,14 +1,25 @@
 ﻿@model IEnumerable<TourismCMS.Models.POI>
 
 @{
-    ViewData["Title"] = "Index";
+    if (ViewData["Layout"] != null)
+    {
+        Layout = ViewData["Layout"].ToString();
+    }
+
+    if (ViewData["Title"] == null)
+    {
+        ViewData["Title"] = "Danh sách quán ăn";
+    }
 }
 
-<h1>Index</h1>
+<h1>@ViewData["Title"]</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+@if (!User.IsInRole("admin"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus"></i> Đăng ký quán mới</a>
+    </p>
+}
 
 <!-- Thêm div để hiển thị bản đồ -->
 <div id="map" style="height: 400px; width: 100%; margin-bottom: 20px;"></div>
@@ -30,6 +41,9 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Radius)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Status)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ImagePath)
@@ -59,6 +73,24 @@
                 @Html.DisplayFor(modelItem => item.Radius)
             </td>
             <td>
+                @if(item.Status == "Đã duyệt" || string.IsNullOrEmpty(item.Status) || item.Status == "Open")
+                {
+                    <span class="badge bg-success">Open</span>
+                }
+                else if (item.Status == "Chờ duyệt")
+                {
+                    <span class="badge bg-warning text-dark">@item.Status</span>
+                }
+                else if (item.Status == "Đã xóa")
+                {
+                    <span class="badge bg-danger">@item.Status</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">@item.Status</span>
+                }
+            </td>
+            <td>
                 @if (!string.IsNullOrEmpty(item.ImagePath))
                 {
                     <img src="@item.ImagePath" alt="@item.Name" style="max-width: 100px; max-height: 100px; object-fit: cover;" />
@@ -68,9 +100,30 @@
                 @Html.DisplayFor(modelItem => item.AudioPath)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (ViewData["Title"]?.ToString() != "Danh sách chờ duyệt")
+                {
+                    <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                    <a class="btn btn-danger btn-sm me-1" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+
+                    @if (User.IsInRole("admin") && item.Status == "Chờ duyệt")
+                    {
+
+                    }
+                }
+
+                @if (User.IsInRole("admin") && item.Status == "Chờ duyệt")
+                {
+                    <form asp-action="Approve" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-sm btn-success">Duyệt</button>
+                    </form>
+                    <span>|</span>
+                    <form asp-action="Reject" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn hủy yêu cầu duyệt này không?');">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-sm btn-danger">Hủy</button>
+                    </form>
+                }
             </td>
         </tr>
 }
@@ -95,7 +148,8 @@
             var pois = [
                 @foreach (var item in Model)
                 {
-                    if (item.Latitude.HasValue && item.Longitude.HasValue)
+                    // Lấy tất cả các điểm có tọa độ để hiển thị trên bản đồ quản lý
+                    if ((item.Status != "Chờ duyệt") && (item.Status != "Đã xóa") && item.Latitude.HasValue && item.Longitude.HasValue)
                     {
                         <text>
                         {
