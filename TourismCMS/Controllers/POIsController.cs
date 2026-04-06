@@ -1,7 +1,10 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -16,10 +19,12 @@ namespace TourismCMS.Controllers
     public class POIsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public POIsController(ApplicationDbContext context)
+        public POIsController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: POIs
@@ -30,16 +35,16 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                query = query.Where(p => p.OwnerId == userId);
+                query = query.Where(p => p.OwnerId == userId && p.Status != "ƒê√£ x√≥a" && p.Status != "√ê√£ x√≥a");
             }
             else if (User.IsInRole("admin"))
             {
                 // Admin page index only shows approved by default
-                query = query.Where(p => p.Status != "Ch? duy?t" && p.Status != "–? xÛa");
+                query = query.Where(p => p.Status != "Ch? duy?t" && p.Status != "ƒê? x√≥a");
                 ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             }
 
-            ViewData["Title"] = "Danh s·ch qu·n „n";
+            ViewData["Title"] = "Danh s√°ch qu√°n ƒÉn";
             return View("Index", await query.ToListAsync());
         }
 
@@ -48,7 +53,7 @@ namespace TourismCMS.Controllers
         public async Task<IActionResult> Pending()
         {
             var query = _context.POIs.Where(p => p.Status == "Ch? duy?t");
-            ViewData["Title"] = "Danh s·ch ch? duy?t";
+            ViewData["Title"] = "Danh s√°ch ch? duy?t";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -57,8 +62,8 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approved()
         {
-            var query = _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "–? xÛa");
-            ViewData["Title"] = "Danh s·ch ? duy?t";
+            var query = _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "ƒê? x√≥a");
+            ViewData["Title"] = "Danh s√°ch ƒë? duy?t";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -81,10 +86,6 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                if (pOI.OwnerId != userId)
-                {
-                    return Forbid();
-                }
             }
 
             return View(pOI);
@@ -101,32 +102,54 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Thumbnail,Status,Radius,ImagePath,AudioPath,CreatedAt,OwnerId")] POI pOI)
+        public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Status,ImagePath,CreatedAt")] POI pOI, IFormFile? ImageFile)
         {
-            // Lo?i b? ki?m tra c·c navigation property & collection kh?i ModelState
+            // Lo?i b? ki?m tra c√°c navigation property & collection kh?i ModelState
             ModelState.Remove("Categories");
             ModelState.Remove("Menus");
             ModelState.Remove("VisitLogs");
             ModelState.Remove("Poiid");
             ModelState.Remove("Status");
             ModelState.Remove("OwnerId");
+            ModelState.Remove("ImageFile"); // Ignore validation for IFormFile
 
             if (ModelState.IsValid)
             {
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(fileStream);
+                    }
+                    pOI.ImagePath = "/images/pois/" + uniqueFileName;
+                }
+
                 if (User.IsInRole("poi_owner"))
                 {
                     pOI.OwnerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                    pOI.Status = "Ch? duy?t"; // Ch? qu·n „ng k? s? ? tr?ng th·i ch? duy?t
+                    pOI.Status = "Ch? duy?t"; // Ch? qu√°n ƒëƒÉng k? s? ? tr?ng th√°i ch? duy?t
                 }
                 else if (User.IsInRole("admin"))
                 {
-                    pOI.Status = "–? duy?t"; // Admin „ng k? th? duy?t auto
+                    pOI.Status = "ƒê? duy?t"; // Admin ƒëƒÉng k? th? duy?t auto
                 }
 
                 pOI.CreatedAt = DateTime.Now;
+                pOI.Id = 0; // Fix: Kh·ªüi t·∫°o gi√° tr·ªã t·∫°m th·ªùi ƒë·ªÉ tr√°nh l·ªói kh√¥ng cho ph√©p null
 
                 _context.Add(pOI);
                 await _context.SaveChangesAsync();
+
+                // C·∫≠p nh·∫≠t Id b·∫±ng v·ªõi Poiid ƒë·ªÉ ƒë·ªìng b·ªô kh√≥a ch√≠nh
+                pOI.Id = pOI.Poiid;
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(pOI);
@@ -149,10 +172,6 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                if (pOI.OwnerId != userId)
-                {
-                    return Forbid();
-                }
             }
 
             return View(pOI);
@@ -163,7 +182,7 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Poiid,Id,Name,Latitude,Longitude,Address,Description,Thumbnail,Status,Radius,ImagePath,AudioPath,CreatedAt,OwnerId")] POI pOI)
+        public async Task<IActionResult> Edit(int id, [Bind("Poiid,Id,Name,Latitude,Longitude,Address,Description,Status,ImagePath,CreatedAt")] POI pOI, IFormFile? ImageFile)
         {
             if (id != pOI.Poiid)
             {
@@ -173,16 +192,38 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                // –?m b?o khÙng cho phÈp s?a OwnerId
+                // ƒê·∫£m b·∫£o kh√¥ng cho ph√©p s·ª≠a OwnerId
                 pOI.OwnerId = userId;
             }
 
             ModelState.Remove("Categories");
             ModelState.Remove("Menus");
             ModelState.Remove("VisitLogs");
+            ModelState.Remove("OwnerId");
+            ModelState.Remove("ImageFile");
+
+            if (pOI.Id == null || pOI.Id == 0)
+            {
+                pOI.Id = pOI.Poiid;
+            }
 
             if (ModelState.IsValid)
             {
+                if (ImageFile != null && ImageFile.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await ImageFile.CopyToAsync(fileStream);
+                    }
+                    pOI.ImagePath = "/images/pois/" + uniqueFileName;
+                }
+
                 try
                 {
                     _context.Update(pOI);
@@ -222,10 +263,6 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                if (pOI.OwnerId != userId)
-                {
-                    return Forbid();
-                }
             }
 
             return View(pOI);
@@ -244,14 +281,10 @@ namespace TourismCMS.Controllers
                 if (User.IsInRole("poi_owner"))
                 {
                     var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                    if (pOI.OwnerId != userId)
-                    {
-                        return Forbid();
-                    }
                 }
 
-                // Chuy?n sang tr?ng th·i "–? xÛa" thay v? xÛa c?ng kh?i CSDL
-                pOI.Status = "–? xÛa";
+                // Chuy?n sang tr?ng th√°i "ƒê? x√≥a" thay v? x√≥a c?ng kh?i CSDL
+                pOI.Status = "ƒê? x√≥a";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
             }
@@ -264,15 +297,22 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approve(int id)
         {
-            // Ki?m tra c? Id v‡ Poiid do m?t s? record c? cÛ s? kh·c bi?t gi?a khÛa
+            // Ki?m tra c? Id v√† Poiid do m?t s? record c? c√≥ s? kh√°c bi?t gi?a kh√≥a
             var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
             if (pOI != null)
             {
-                // Khi ? duy?t xong th? set tr?ng th·i v? Open ? hi?n th? th‡nh "M?" ho?c "Open"
+                // Khi ƒë? duy?t xong th? set tr?ng th√°i v? Open ƒë? hi?n th? th√†nh "M?" ho?c "Open"
                 pOI.Status = "Open";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
             }
+
+            var referer = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referer) && referer.Contains("/POIs/Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             return RedirectRequestUrl();
         }
 
@@ -282,18 +322,12 @@ namespace TourismCMS.Controllers
         public async Task<IActionResult> Reject(int id)
         {
             var pOI = await _context.POIs
-                .Include(p => p.Menus)
-                .Include(p => p.VisitLogs)
-                .Include(p => p.Categories)
                 .FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
 
             if (pOI != null)
             {
-                if (pOI.Menus.Any()) _context.Menus.RemoveRange(pOI.Menus);
-                if (pOI.VisitLogs.Any()) _context.VisitLogs.RemoveRange(pOI.VisitLogs);
-                if (pOI.Categories.Any()) pOI.Categories.Clear();
-
-                _context.POIs.Remove(pOI);
+                pOI.Status = "ƒê√£ h·ªßy";
+                _context.Update(pOI);
                 await _context.SaveChangesAsync();
             }
             return RedirectRequestUrl();
@@ -329,8 +363,8 @@ namespace TourismCMS.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
         {
-            // B? qua c·c record ang ch? duy?t ho?c ? b? xÛa
-            return await _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "–? xÛa").ToListAsync();
+            // B? qua c√°c record ƒëang ch? duy?t ho?c ƒë? b? x√≥a
+            return await _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "ƒê? x√≥a").ToListAsync();
         }
     }
 }

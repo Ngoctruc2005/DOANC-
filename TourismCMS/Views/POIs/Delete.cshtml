@@ -1,7 +1,7 @@
-﻿@model TourismCMS.Models.POI
+@model TourismCMS.Models.POI
 
 @{
-    ViewData["Title"] = "Xóa quán ăn";
+    ViewData["Title"] = "X&#243;a qu&#225;n &#259;n";
     if (User.IsInRole("admin"))
     {
         ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
@@ -11,11 +11,11 @@
 <div class="container mt-4">
     <div class="card shadow-sm border-danger">
         <div class="card-header bg-danger text-white">
-            <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> Xác nhận xóa quán ăn</h4>
+            <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> X&#225;c nh&#7853;n x&#243;a qu&#225;n &#259;n</h4>
         </div>
         <div class="card-body">
-            <h5 class="card-title text-danger">Bạn có chắc chắn muốn xóa quán ăn này?</h5>
-            <p class="text-muted">Hành động này sẽ xóa dữ liệu vĩnh viễn khỏi hệ thống.</p>
+            <h5 class="card-title text-danger">B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n x&#243;a qu&#225;n &#259;n n&#224;y?</h5>
+            <p class="text-muted">H&#224;nh &#273;&#7897;ng n&#224;y s&#7869; x&#243;a d&#7919; li&#7879;u v&#297;nh vi&#7877;n kh&#7887;i h&#7879; th&#7889;ng.</p>
             <hr />
 
             <dl class="row">
@@ -34,44 +34,32 @@
                 </dd>
 
                 <dt class="col-sm-3 text-end">
-                    Tọa độ
+                    T&#7885;a &#273;&#7897;
                 </dt>
                 <dd class="col-sm-9">
                     @Html.DisplayFor(model => model.Latitude), @Html.DisplayFor(model => model.Longitude)
                 </dd>
 
                 <dt class="col-sm-3 text-end">
-                    @Html.DisplayNameFor(model => model.Radius)
                 </dt>
                 <dd class="col-sm-9">
-                    @Html.DisplayFor(model => model.Radius) (m)
                 </dd>
 
                 @if(!string.IsNullOrEmpty(Model.ImagePath))
                 {
-                    <dt class="col-sm-3 text-end">Hình ảnh</dt>
+                    <dt class="col-sm-3 text-end">H&#236;nh &#7843;nh</dt>
                     <dd class="col-sm-9">
-                        <img src="@Model.ImagePath" alt="@Model.Name" class="img-thumbnail" style="max-height: 150px; max-width: 100%; object-fit: cover;" />
                     </dd>
                 }
 
-                @if(!string.IsNullOrEmpty(Model.AudioPath))
-                {
-                    <dt class="col-sm-3 text-end">Âm thanh</dt>
-                    <dd class="col-sm-9">
-                        <audio controls class="w-100">
-                            <source src="@Model.AudioPath" type="audio/mpeg">
-                        </audio>
-                    </dd>
-                }
             </dl>
         </div>
         <div class="card-footer text-end bg-light">
-            <form asp-action="Delete" onsubmit="return confirm('Xác nhận: Bạn sẽ xóa vĩnh viễn dữ liệu này ra khỏi hệ thống. Tiếp tục?');">
+            <form asp-action="Delete" onsubmit="return confirm('X&#225;c nh&#7853;n: B&#7841;n s&#7869; x&#243;a v&#297;nh vi&#7877;n d&#7919; li&#7879;u n&#224;y ra kh&#7887;i h&#7879; th&#7889;ng. Ti&#7871;p t&#7909;c?');">
                 <input type="hidden" asp-for="Id" />
                 <!-- Try binding with Poiid as well if the backend requires it inside the entity, but Id is likely what the delete method expects if it's the route value -->
-                <a class="btn btn-secondary me-2" asp-action="Index"><i class="fa fa-arrow-left"></i> Quay lại</a>
-                <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Xóa vĩnh viễn</button>
+                <a class="btn btn-secondary me-2" asp-action="Index"><i class="fa fa-arrow-left"></i> Quay l&#7841;i</a>
+                <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> X&#243;a v&#297;nh vi&#7877;n</button>
             </form>
         </div>
     </div>

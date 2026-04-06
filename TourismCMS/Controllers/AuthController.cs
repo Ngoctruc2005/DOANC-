@@ -52,13 +52,22 @@ namespace TourismCMS.Controllers
                 Username = username,
                 Password = password, // (Thực tế nên mã hoá mật khẩu)
                 Role = "poi_owner",
-                IsVerified = true // Gán true để demo có thể đăng nhập ngay mà không cần đợi admin duyệt
+                IsVerified = false // Không gán true nữa, yêu cầu admin duyệt
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            ViewBag.Success = "Đăng ký thành công! Bạn có thể đăng nhập ngay.";
+            // Lưu yêu cầu đăng ký vào bảng PoiOwnerRegistrations để admin thấy trong phần Danh sách chờ duyệt
+            var registration = new PoiOwnerRegistration
+            {
+                UserId = user.Id,
+                Status = "pending"
+            };
+            _context.PoiOwnerRegistrations.Add(registration);
+            await _context.SaveChangesAsync();
+
+            ViewBag.Success = "Đăng ký thành công! Vui lòng chờ Admin duyệt tài khoản của bạn.";
             return View();
         }
 
@@ -67,7 +76,49 @@ namespace TourismCMS.Controllers
         {
             var claims = new List<Claim>();
 
-            // 1. Kiểm tra trong bảng AdminUsers trước (dành cho Admin)
+            // Chỉ kiểm tra trong bảng Users (dành cho chủ quán và user bình thường)
+            var user = _context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
+            if (user == null)
+            {
+                ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không đúng.";
+                return View();
+            }
+
+            if (user.Role == "poi_owner" && !user.IsVerified)
+            {
+                ViewBag.Error = "Tài khoản của bạn chưa được admin duyệt.";
+                return View();
+            }
+
+            claims.Add(new Claim(ClaimTypes.Name, user.Username));
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
+            claims.Add(new Claim(ClaimTypes.Role, user.Role)); // "poi_owner" hoặc "user"
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var authProperties = new AuthenticationProperties { IsPersistent = false }; 
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
+            if (claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "poi_owner"))
+            {
+                return RedirectToAction("Index", "Owner");
+            }
+
+            return RedirectToAction("Index", "POIs");
+        }
+
+        [HttpGet]
+        public IActionResult AdminLogin()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AdminLogin(string username, string password)
+        {
+            var claims = new List<Claim>();
+
+            // Chỉ kiểm tra trong bảng AdminUsers 
             var adminUser = _context.AdminUsers.FirstOrDefault(a => a.Username == username && a.Password == password);
             if (adminUser != null)
             {
@@ -77,40 +128,16 @@ namespace TourismCMS.Controllers
             }
             else
             {
-                // 2. Nếu không phải admin, kiểm tra trong bảng Users (dành cho chủ quán)
-                var user = _context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
-                if (user == null)
-                {
-                    ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không đúng.";
-                    return View();
-                }
-
-                if (user.Role == "poi_owner" && !user.IsVerified)
-                {
-                    ViewBag.Error = "Tài khoản của bạn chưa được admin duyệt.";
-                    return View();
-                }
-
-                claims.Add(new Claim(ClaimTypes.Name, user.Username));
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-                claims.Add(new Claim(ClaimTypes.Role, user.Role)); // "poi_owner" hoặc "user"
+                ViewBag.Error = "Tên đăng nhập hoặc mật khẩu quản trị không đúng.";
+                return View();
             }
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties { IsPersistent = false }; // Tắt lưu session vĩnh viễn để bắt đăng nhập lại khi tắt/mở web
+            var authProperties = new AuthenticationProperties { IsPersistent = false }; 
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-            if (claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "admin"))
-            {
-                return RedirectToAction("Index", "Admin");
-            }
-            if (claims.Any(c => c.Type == ClaimTypes.Role && c.Value == "poi_owner"))
-            {
-                return RedirectToAction("Index", "Owner");
-            }
-
-            return RedirectToAction("Index", "POIs");
+            return RedirectToAction("Index", "Admin");
         }
 
         [HttpGet]

@@ -31,21 +31,27 @@ namespace TourismApp.Services
             // Ưu tiên localhost cục bộ trước để chạy cực nhanh nếu đang chạy Backend ở cùng máy tính
             if (DeviceInfo.DeviceType == DeviceType.Physical)
             {
-                // Thiết bị thật cắm vào máy tính, cần lấy IP mạng LAN của máy
-                yield return "http://192.168.1.191:5219/api/";
-                yield return "https://192.168.1.191:7141/api/";
+                // Cập nhật lại IP hiện tại của máy tính
+                yield return "http://10.10.20.153:5219/api/";
+                yield return "https://10.10.20.153:7141/api/";
+                yield return "http://10.10.20.153:5219/";
+                yield return "https://10.10.20.153:7141/";
             }
             else if (DeviceInfo.Platform == DevicePlatform.Android)
             {
-                // Máy ảo Android truy cập localhost của máy tính thông qua IP 10.0.2.2
+                // Android emulator -> host localhost via 10.0.2.2
                 yield return "http://10.0.2.2:5219/api/";
+                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
+                yield return "http://10.0.2.2:5000/api/";
                 yield return "https://10.0.2.2:7141/api/";
+                yield return "https://10.0.2.2:5001/api/";
             }
             else
             {
-                // Máy ảo Windows / Thiết bị khác
-                yield return "http://localhost:5219/api/";
                 yield return "https://localhost:7141/api/";
+                yield return "http://localhost:5219/api/";
+                yield return "https://localhost:5001/api/";
+                yield return "http://localhost:5000/api/";
             }
 
             // Sau đó mới đến URL của Dev Tunnels

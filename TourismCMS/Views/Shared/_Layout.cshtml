@@ -1,7 +1,8 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Tourism Admin</title>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - V&#297;nh Kh&#225;nh</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
@@ -23,23 +24,24 @@
         {
             <!-- Sidebar -->
             <div class="sidebar text-white p-3" style="width:250px; min-height:100vh;">
-                <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> Vĩnh Khánh</h4>
+                <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> V&#297;nh Kh&#225;nh</h4>
 
                 @if (User.IsInRole("admin"))
                 {
-                    <a href="/Admin/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
-                    <a href="/POIs/Index"><i class="fa fa-store"></i> Quán ăn</a>
-                    <a href="/POIs/Pending"><i class="fa fa-clock"></i> Chờ duyệt</a>
-                    <a href="/POIs/Approved"><i class="fa fa-check"></i> Đã duyệt</a>
-                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                    <a href="/Admin/Index"><i class="fa fa-chart-line"></i> B&#7843;ng &#273;i&#7873;u khi&#7875;n</a>
+                    <a href="/Admin/Registrations"><i class="fa fa-users-cog"></i> Duy&#7879;t ch&#7911; qu&#225;n</a>
+                    <a href="/POIs/Index"><i class="fa fa-store"></i> Qu&#225;n &#259;n</a>
+                    <a href="/POIs/Pending"><i class="fa fa-clock"></i> Ch&#7901; duy&#7879;t</a>
+                    <a href="/POIs/Approved"><i class="fa fa-check"></i> &#272;&#227; duy&#7879;t</a>
+                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> &#272;&#259;ng xu&#7845;t</a>
                 }
 
                 @if (User.IsInRole("poi_owner"))
                 {
-                    <a href="/Owner/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
-                    <a href="/POIs/Index"><i class="fa fa-store"></i> Quán của tôi</a>
-                    <a href="/POIs/Create"><i class="fa fa-plus"></i> Đăng ký quán</a>
-                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+                    <a href="/Owner/Index"><i class="fa fa-chart-line"></i> B&#7843;ng &#273;i&#7873;u khi&#7875;n</a>
+                    <a href="/POIs/Index"><i class="fa fa-store"></i> Qu&#225;n c&#7911;a t&#244;i</a>
+                    <a href="/POIs/Create"><i class="fa fa-plus"></i> &#272;&#259;ng k&#253; qu&#225;n</a>
+                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> &#272;&#259;ng xu&#7845;t</a>
                 }
             </div>
         }
@@ -51,14 +53,14 @@
             {
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3>Hệ thống quản lý ẩm thực</h3>
+                    <h3>H&#7879; th&#7889;ng qu&#7843;n l&#253; &#7849;m th&#7921;c</h3>
                     <div>
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
                                 <b>@User.Identity.Name</b>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                                <li><a class="dropdown-item" href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Logout</a></li>
+                                <li><a class="dropdown-item" href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> &#272;&#259;ng xu&#7845;t</a></li>
                             </ul>
                         </div>
                     </div>

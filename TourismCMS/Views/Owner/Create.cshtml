@@ -1,23 +1,23 @@
-﻿<h2>➕ Thêm quán (Owner)</h2>
+<h2>? Th�m qu�n (Owner)</h2>
 
 <form id="createPoiForm" enctype="multipart/form-data">
 
-    <input name="Name" placeholder="Tên quán" class="form-control mb-2" required />
+    <input name="Name" placeholder="T�n qu�n" class="form-control mb-2" required />
 
-    <textarea name="Description" placeholder="Mô tả" class="form-control mb-2"></textarea>
+    <textarea name="Description" placeholder="M� t?" class="form-control mb-2"></textarea>
 
-    <!-- Upload nhiều ảnh -->
+    <!-- Upload nhi?u ?nh -->
     <input type="file" name="Images" class="form-control mb-2" multiple />
 
     <!-- GPS -->
     <input type="hidden" name="Latitude" id="Latitude" />
     <input type="hidden" name="Longitude" id="Longitude" />
 
-    <button class="btn btn-success">Lưu</button>
+    <button class="btn btn-success">Luu</button>
 </form>
 
 <script>
-    // 📍 Lấy vị trí GPS
+    // ?? L?y v? tr� GPS
     navigator.geolocation.getCurrentPosition(function(pos) {
         document.getElementById("Latitude").value = pos.coords.latitude;
         document.getElementById("Longitude").value = pos.coords.longitude;

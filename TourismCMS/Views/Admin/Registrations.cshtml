@@ -1,0 +1,55 @@
+@model IEnumerable<TourismCMS.Models.PoiOwnerRegistration>
+@{
+    ViewData["Title"] = "Phê duyệt chủ quán";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Danh sách đăng ký chủ quán chờ duyệt</h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Mã đăng ký</th>
+                        <th>Mã User (UserID)</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>@item.UserId</td>
+                                <td><span class="badge bg-warning text-dark">@item.Status</span></td>
+                                <td class="text-center">
+                                    <a asp-action="Approve" asp-route-id="@item.Id" class="btn btn-sm btn-success">
+                                        <i class="fa fa-check"></i> Duyệt
+                                    </a>
+                                    <a asp-action="Reject" asp-route-id="@item.Id" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Bạn có chắc chắn muốn từ chối đăng ký này?');">
+                                        <i class="fa fa-times"></i> Từ chối
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                <em>Không có đăng ký nào đang chờ duyệt.</em>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
