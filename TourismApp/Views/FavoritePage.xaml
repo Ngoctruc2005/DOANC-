@@ -1,32 +1,56 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:services="clr-namespace:TourismApp.Services"
              x:Class="TourismApp.Views.FavoritePage">
 
-    <StackLayout>
+    <StackLayout BackgroundColor="#F5F5F5">
 
         <!-- Tiêu đề -->
         <Label Text="{Binding [FavoriteListTitle]}"
-               FontSize="20"
+               FontSize="24"
+               FontAttributes="Bold"
                HorizontalOptions="Center"
-               Margin="10"/>
+               TextColor="#333"
+               Margin="0,20,0,10"/>
 
         <!-- Danh sách quán -->
-        <CollectionView x:Name="list">
+        <CollectionView x:Name="list" SelectionMode="None">
 
             <CollectionView.ItemTemplate>
                 <DataTemplate>
 
-                    <Frame Margin="10" Padding="10" CornerRadius="10">
-                        <StackLayout>
+                    <Border Margin="15,8" Padding="15" StrokeShape="RoundRectangle 15" BackgroundColor="White" Stroke="Transparent">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Opacity="0.1" Radius="5" />
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer CommandParameter="{Binding .}" Tapped="OnRestaurantTapped" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="*, Auto">
 
-                            <!-- ✅ CHỈ GIỮ LẠI TÊN QUÁN -->
-                            <Label Text="{Binding Name}"
+                            <!-- TÊN QUÁN -->
+                            <Label Grid.Column="0" 
+                                   Text="{Binding Name}"
                                    FontSize="18"
                                    FontAttributes="Bold"
-                                   HorizontalOptions="Center"/>
+                                   TextColor="#333"
+                                   VerticalOptions="Center"
+                                   VerticalTextAlignment="Center"/>
 
-                        </StackLayout>
-                    </Frame>
+                            <!-- NÚT XÓA -->
+                            <Button Grid.Column="1" 
+                                    Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Delete]}" 
+                                    TextColor="White"
+                                    BackgroundColor="#FF3B30"
+                                    FontAttributes="Bold"
+                                    Padding="15,5"
+                                    CornerRadius="8"
+                                    HeightRequest="40"
+                                    CommandParameter="{Binding .}"
+                                    Clicked="OnDeleteClicked"/>
+
+                        </Grid>
+                    </Border>
 
                 </DataTemplate>
             </CollectionView.ItemTemplate>

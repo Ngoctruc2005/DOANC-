@@ -40,7 +40,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Tạm tắt HttpsRedirection để MAUI Android Emulator gọi HTTP thuần dễ dàng hơn
+// app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseAuthentication();

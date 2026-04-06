@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TourismApp.Models;
 using TourismCMS.Data;
+using Microsoft.Maui.Storage;
 
 namespace TourismApp.Services
 {
@@ -10,31 +11,71 @@ namespace TourismApp.Services
         private readonly HttpClient _httpClient;
         private readonly FoodDbContext? _dbContext;
 
-        // Use appropriate URL for emulator / physical device
-        // Android emulator: 10.0.2.2 points to 127.0.0.1 on the host machine
-        // Nếu chạy trên thiết bị thật, hãy dùng địa chỉ IP LAN của máy tính (VD: 10.10.31.246)
-        private string BaseUrl => DeviceInfo.Platform == DevicePlatform.Android
-            ? "http://10.0.2.2:5219/api/" // Dùng 10.0.2.2 để Emulator gọi được localhost của máy tính
-            : "https://localhost:7141/api/"; 
+        // Can override from Settings/Preferences: Preferences.Set("api_base_url", "http://10.0.2.2:5219/api/")
+        private string? CustomBaseUrl => Preferences.Get("api_base_url", string.Empty);
+
+        IEnumerable<string> GetApiBaseUrls()
+        {
+            if (!string.IsNullOrWhiteSpace(CustomBaseUrl))
+            {
+                yield return EnsureApiSuffix(CustomBaseUrl!);
+            }
+
+            // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
+            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
+                
+            // IP Wi-Fi c?a máy tính b?n hi?n t?i (10.10.31.145) đ? đi?n tho?i th?t k?t n?i đư?c!
+            if (DeviceInfo.DeviceType == DeviceType.Physical)
+            {
+                // Cập nhật lại IP hiện tại của máy tính
+                yield return "http://10.10.20.153:5219/api/";
+                yield return "https://10.10.20.153:7141/api/";
+                yield return "http://10.10.20.153:5219/";
+                yield return "https://10.10.20.153:7141/";
+            }
+            else if (DeviceInfo.Platform == DevicePlatform.Android)
+            {
+                // Android emulator -> host localhost via 10.0.2.2
+                yield return "http://10.0.2.2:5219/api/";
+                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
+                yield return "http://10.0.2.2:5000/api/";
+                yield return "https://10.0.2.2:7141/api/";
+                yield return "https://10.0.2.2:5001/api/";
+            }
+            else
+            {
+                yield return "https://localhost:7141/api/";
+                yield return "http://localhost:5219/api/";
+                yield return "https://localhost:5001/api/";
+                yield return "http://localhost:5000/api/";
+            }
+        }
+
+        static string EnsureApiSuffix(string baseUrl)
+        {
+            var url = baseUrl.Trim();
+            if (!url.EndsWith("/")) url += "/";
+            // Ép đuôi api/ (Đ? t?t)
+            // if (!url.EndsWith("api/", StringComparison.OrdinalIgnoreCase)) url += "api/";
+            return url;
+        }
 
         public PoiApiService(FoodDbContext? dbContext = null)
         {
-            // Bypass SSL certificate path errors trên Android Emulator
             var handler = new HttpClientHandler();
-#if ANDROID
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
-            // Nếu bạn dùng HTTP thì có thể cho phép cleartext traffic
-#endif
-            _httpClient = new HttpClient(handler);
+
+            _httpClient = new HttpClient(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(15) // Tăng lên 15s để tránh Timeout trên máy ảo hoặc mạng chậm
+            };
             _dbContext = dbContext;
-            // _httpClient.BaseAddress = new Uri(BaseUrl);
         }
 
         public async Task<List<Poi>> GetAllPOIsAsync()
         {
             try
             {
-                // Thử lấy dữ liệu từ database cục bộ nếu có thể kết nối (Chỉ áp dụng trên Windows vì Android không thể chạy LocalDB)
                 if (_dbContext != null && DeviceInfo.Platform == DevicePlatform.WinUI)
                 {
                     bool canConnect = await _dbContext.Database.CanConnectAsync();
@@ -50,49 +91,58 @@ namespace TourismApp.Services
             }
             catch (Exception dbEx)
             {
-                System.Diagnostics.Debug.WriteLine($"[LỖI DB LẤY QUÁN ĂN] {dbEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"[L?I DB L?Y QUÁN ĂN] {dbEx.Message}");
             }
 
-            try
+            var options = new System.Text.Json.JsonSerializerOptions
             {
-                var options = new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
-                };
-                var pois = await _httpClient.GetFromJsonAsync<List<Poi>>($"{BaseUrl}pois", options);
-                return pois ?? new List<Poi>();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[LỖI GỌI API] {ex.Message}");
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
+            };
 
-                // Thay vì danh sách rỗng, chèn 1 pin báo lỗi để biết lý do
-                return new List<Poi>
+            Exception? lastException = null;
+            foreach (var baseUrl in GetApiBaseUrls().Distinct())
+            {
+                try
                 {
-                    new Poi
+                    var endpoint = $"{baseUrl}pois";
+                    var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(endpoint, options);
+                    if (pois != null)
                     {
-                        Poiid = -1,
-                        Name = "Lỗi API",
-                        Description = ex.Message + " " + ex.InnerException?.Message,
-                        Latitude = 10.7607,
-                        Longitude = 106.7029
+                        System.Diagnostics.Debug.WriteLine($"[API OK] {endpoint}");
+                        return pois;
                     }
-                };
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    System.Diagnostics.Debug.WriteLine($"[API FAIL] {baseUrl}pois -> {ex.Message}");
+                }
             }
+
+            return new List<Poi>
+            {
+                new Poi
+                {
+                    Poiid = -1,
+                    Name = "L?i API",
+                    Description = lastException?.Message ?? "Connection failure",
+                    Latitude = 10.7607,
+                    Longitude = 106.7029
+                }
+            };
         }
 
         public async Task<List<Menu>> GetMenusForPoiAsync(string poiId)
         {
             try
             {
-                // Thử lấy dữ liệu từ database cục bộ nếu có thể kết nối (Chỉ áp dụng trên Windows vì Android không thể chạy LocalDB)
                 if (_dbContext != null && DeviceInfo.Platform == DevicePlatform.WinUI)
                 {
                     bool canConnect = await _dbContext.Database.CanConnectAsync();
                     if (canConnect)
                     {
-                        var dbMenus = await _dbContext.Menus.Where(m => m.PoiId == poiId).ToListAsync();
+                        var dbMenus = await _dbContext.Menus.Where(m => m.IntPoiId.ToString() == poiId).ToListAsync();
                         if (dbMenus != null && dbMenus.Any())
                         {
                             return dbMenus;
@@ -102,24 +152,33 @@ namespace TourismApp.Services
             }
             catch (Exception dbEx)
             {
-                System.Diagnostics.Debug.WriteLine($"[LỖI DB LẤY MENU] {dbEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"[L?I DB L?Y MENU] {dbEx.Message}");
             }
 
-            try
+            var options = new System.Text.Json.JsonSerializerOptions
             {
-                var options = new System.Text.Json.JsonSerializerOptions
+                PropertyNameCaseInsensitive = true,
+                NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
+            };
+
+            foreach (var baseUrl in GetApiBaseUrls().Distinct())
+            {
+                try
                 {
-                    PropertyNameCaseInsensitive = true,
-                    NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals
-                };
-                var menus = await _httpClient.GetFromJsonAsync<List<Menu>>($"{BaseUrl}menus", options);
-                return menus?.Where(m => m.PoiId == poiId).ToList() ?? new List<Menu>();
+                    var endpoint = $"{baseUrl}menus";
+                    var menus = await _httpClient.GetFromJsonAsync<List<Menu>>(endpoint, options);
+                    if (menus != null)
+                    {
+                        return menus.Where(m => m.PoiId != null && m.PoiId.Equals(poiId)).ToList();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[API MENU FAIL] {baseUrl}menus -> {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[LỖI GỌI API MENU] {ex.Message}");
-                return new List<Menu>();
-            }
+
+            return new List<Menu>();
         }
     }
 }

@@ -7,12 +7,7 @@ public partial class MainPage : ContentPage
     public MainPage()
     {
         InitializeComponent();
-    }
-
-    // 👉 Hiện / ẩn chọn ngôn ngữ
-    private void OnPlayAudioClicked(object sender, EventArgs e)
-    {
-        languagePicker.IsVisible = !languagePicker.IsVisible;
+        BindingContext = TourismApp.Services.LocalizationService.Instance;
     }
 
     // 👉 Phát thuyết minh

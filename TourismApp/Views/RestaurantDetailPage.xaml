@@ -2,42 +2,76 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="TourismApp.Views.RestaurantDetailPage"
-    Title="Chi tiết quán">
+    Title="{Binding [RestaurantDetailTitle]}">
 
     <ScrollView>
 
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-            <Label x:Name="nameLabel"
-                   FontSize="24"
-                   FontAttributes="Bold"/>
+           
 
-            <HorizontalStackLayout Spacing="15">
-                <Button x:Name="btnPlayAudio" 
+            <!-- Hình ảnh quán ăn -->
+            <Border x:Name="imageContainer" Stroke="Transparent" StrokeShape="RoundRectangle 15" BackgroundColor="LightGray" HeightRequest="200">
+                <Image x:Name="restaurantImage" 
+                       Aspect="AspectFill" 
+                       HorizontalOptions="FillAndExpand" />
+            </Border>
+
+            <!-- Card Header -->
+            <Border BackgroundColor="GhostWhite" Stroke="Transparent" StrokeShape="RoundRectangle 15" Padding="20">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="nameLabel"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="#DEB887"
+                           HorizontalTextAlignment="Center"/>
+                    <BoxView HeightRequest="1" Color="LightGray" Margin="0,5,0,5"/>
+                    <Label x:Name="descriptionLabel"
+                           FontSize="16"
+                           TextColor="DarkSlateGray"
+                           LineBreakMode="WordWrap"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Nút tương tác chia thành lưới 2 cột -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="15" RowSpacing="15" Margin="0,10,0,10">
+                <Button Grid.Row="0" Grid.Column="0" 
+                        x:Name="btnPlayAudio"
                         Text="{Binding [ListenAudio]}" 
-                        Clicked="OnPlayAudioClicked" />
+                        Clicked="OnPlayAudioClicked" Padding="0"
+                        BackgroundColor="#87CEEB" TextColor="White"/>
 
-                <Button x:Name="btnDirections"
-                        Text="Chỉ đường"
-                        Clicked="OnDirectionsClicked" 
-                        BackgroundColor="Green"
-                        TextColor="White" />
-            </HorizontalStackLayout>
+                <Button Grid.Row="0" Grid.Column="1" 
+                        x:Name="btnDirections"
+                        Text="{Binding [Directions]}" 
+                        Clicked="OnDirectionsClicked" Padding="0"
+                        BackgroundColor="#2E8B57" TextColor="White"/>
 
-            <Label x:Name="descriptionLabel"
-                   FontSize="16"/>
+                <Button Grid.Row="1" Grid.Column="Span 2" 
+                        Text="{Binding [Favorites]}" 
+                        Clicked="OnFavoriteClicked" Padding="0" 
+                        BackgroundColor="#FF69B4" TextColor="White"
+                        HeightRequest="45"/>
+            </Grid>
 
+            <!-- Tiêu đề Menu -->
             <Label Text="{Binding [Menu]}"
                    FontAttributes="Bold"
-                   FontSize="18"/>
+                   FontSize="20"
+                   TextColor="#DEB887"
+                   Margin="0,10,0,0"/>
 
+            <!-- Danh sách món ăn -->
             <CollectionView x:Name="menuList">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border Stroke="LightGray" StrokeShape="RoundRectangle 10" Padding="10" Margin="0,5">
+                        <Border Stroke="#E0E0E0" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" Margin="0,5">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,2" Opacity="0.1" Radius="2" />
+                            </Border.Shadow>
                             <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="{Binding ItemName}" FontAttributes="Bold" FontSize="16" VerticalOptions="Center"/>
-                                <Label Grid.Column="1" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="Red" FontSize="16" VerticalOptions="Center"/>
+                                <Label Grid.Column="0" Text="{Binding ItemName}" FontAttributes="Bold" FontSize="16" TextColor="#333333" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="#E53935" FontAttributes="Bold" FontSize="16" VerticalOptions="Center"/>
                             </Grid>
                         </Border>
                     </DataTemplate>

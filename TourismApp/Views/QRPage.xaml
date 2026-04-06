@@ -12,7 +12,7 @@
         <Label
             x:Name="resultLabel"
             Grid.Row="1"
-            Text="Đưa camera vào mã QR để quét"
+            Text="{Binding [ScanQRInstruction]}"
             HorizontalOptions="Center"
             FontSize="16" />
 

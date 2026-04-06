@@ -11,6 +11,7 @@ public partial class QRPage : ContentPage
     public QRPage()
     {
         InitializeComponent();
+        BindingContext = TourismApp.Services.LocalizationService.Instance;
 
         _camera.BarcodesDetected += OnDetected;
         cameraHost.Content = _camera;
