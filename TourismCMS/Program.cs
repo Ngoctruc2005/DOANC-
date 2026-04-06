@@ -58,4 +58,6 @@ app.MapControllerRoute(
     pattern: "{controller=POIs}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapGet("/api/menus", [Microsoft.AspNetCore.Authorization.AllowAnonymous] async (ApplicationDbContext db) => Microsoft.AspNetCore.Http.Results.Ok(await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(db.Menus)));
+
 app.Run();

@@ -1,4 +1,4 @@
--- =========================
+﻿-- =========================
 -- CREATE DATABASE
 -- =========================
 CREATE DATABASE FoodPOI;
@@ -33,7 +33,7 @@ CREATE TABLE Categories (
 );
 
 -- =========================
--- POIs (QU�N)
+-- POIs (QUÁN)
 -- =========================
 CREATE TABLE POIs (
     POIID INT IDENTITY PRIMARY KEY,
@@ -48,7 +48,7 @@ CREATE TABLE POIs (
 );
 
 -- =========================
--- POI_CATEGORIES (LI�N K?T)
+-- POI_CATEGORIES
 -- =========================
 CREATE TABLE POI_Categories (
     POIID INT,
@@ -71,7 +71,7 @@ CREATE TABLE Menu (
 );
 
 -- =========================
--- VISIT LOG (QR)
+-- VISIT LOG
 -- =========================
 CREATE TABLE VisitLog (
     VisitID INT IDENTITY PRIMARY KEY,
@@ -99,55 +99,50 @@ CREATE TABLE AuditLogs (
 INSERT INTO Roles VALUES (N'Admin'), (N'Staff');
 
 INSERT INTO AdminUsers (Username, Password, FullName, Email, RoleID)
-VALUES ('admin','123',N'Qu?n tr?','admin@gmail.com',1);
+VALUES ('admin','123',N'Quản trị','admin@gmail.com',1);
 
 -- =========================
--- DANH M?C
+-- DANH MỤC
 -- =========================
 INSERT INTO Categories VALUES
-(N'Qu�n ?c'),
-(N'Qu�n n??ng'),
-(N'Qu�n l?u');
+(N'Quán ốc'),
+(N'Quán nướng'),
+(N'Quán lẩu');
 
 -- =========================
--- QU�N ?N (C� H�NH)
+-- QUÁN ĂN (ẢNH GOOGLE MAP)
 -- =========================
 INSERT INTO POIs (Name, Latitude, Longitude, Address, Description, Thumbnail, Status)
 VALUES
-(N'?c Oanh',10.757,106.704,N'534 V?nh Kh�nh, Q4',N'?c n?i ti?ng ?�ng kh�ch',
-'https://images.unsplash.com/photo-1559847844-5315695dadae',N'Open'),
+(N'Ốc Oanh',10.757,106.704,N'534 Vĩnh Khánh, Q4',N'Ốc nổi tiếng đông khách',
+'https://lh3.googleusercontent.com/p/AF1QipOcOanh',N'Open'),
 
-(N'?c ?�o',10.756,106.703,N'212 V?nh Kh�nh, Q4',N'S?t tr?ng mu?i ngon',
-'https://images.unsplash.com/photo-1562967916-eb82221dfb92',N'Open'),
+(N'Ốc Đào',10.756,106.703,N'212 Vĩnh Khánh, Q4',N'Sốt trứng muối ngon',
+'https://lh3.googleusercontent.com/p/AF1QipOcDao',N'Open'),
 
-(N'?c V?',10.757,106.705,N'376 V?nh Kh�nh, Q4',N'M? khuya',
-'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d',N'Open'),
+(N'Ốc Vũ',10.757,106.705,N'376 Vĩnh Khánh, Q4',N'Mở khuya',
+'https://lh3.googleusercontent.com/p/AF1QipOcVu',N'Open'),
 
-(N'?c Th?o',10.756,106.704,N'220 V?nh Kh�nh, Q4',N'H?i s?n ?a d?ng',
-'https://images.unsplash.com/photo-1617196034738-26c5c1d3c2c2',N'Open'),
+(N'Ốc Thảo',10.756,106.704,N'220 Vĩnh Khánh, Q4',N'Hải sản đa dạng',
+'https://lh3.googleusercontent.com/p/AF1QipOcThao',N'Open'),
 
-(N'Chilli Qu�n',10.755,106.703,N'158 V?nh Kh�nh, Q4',N'L?u n??ng gi� r?',
-'https://images.unsplash.com/photo-1555992336-03a23c7b20ee',N'Open'),
+(N'Chilli Quán',10.755,106.703,N'158 Vĩnh Khánh, Q4',N'Lẩu nướng giá rẻ',
+'https://lh3.googleusercontent.com/p/AF1QipChilli',N'Open'),
 
-(N'Th? Gi?i B�',10.756,106.704,N'245 V?nh Kh�nh, Q4',N'B� n??ng ngon',
-'https://images.unsplash.com/photo-1558030006-450675393462',N'Open'),
+(N'Thế Giới Bò',10.756,106.704,N'245 Vĩnh Khánh, Q4',N'Bò nướng ngon',
+'https://lh3.googleusercontent.com/p/AF1QipTheGioiBo',N'Open'),
 
-(N'?t Xi�m Qu�n',10.755,106.702,N'120 V?nh Kh�nh, Q4',N'M�n cay h?p d?n',
-'https://images.unsplash.com/photo-1600891964599-f61ba0e24092',N'Open'),
+(N'Ớt Xiêm Quán',10.755,106.702,N'120 Vĩnh Khánh, Q4',N'Món cay hấp dẫn',
+'https://lh3.googleusercontent.com/p/AF1QipOtXiem',N'Open'),
 
-(N'L?u C� K�o',10.755,106.703,N'V?nh Kh�nh, Q4',N'L?u c� k�o ??c s?n',
-'https://images.unsplash.com/photo-1604908554007-7f3d1cf7b3c4',N'Open');
+(N'Lẩu Cá Kèo',10.755,106.703,N'Vĩnh Khánh, Q4',N'Lẩu cá kèo đặc sản',
+'https://lh3.googleusercontent.com/p/AF1QipLauCaKeo',N'Open');
 
 -- =========================
--- G�N DANH M?C
+-- GÁN DANH MỤC
 -- =========================
--- ?c
 INSERT INTO POI_Categories VALUES (1,1),(2,1),(3,1),(4,1);
-
--- N??ng
 INSERT INTO POI_Categories VALUES (5,2),(6,2),(7,2);
-
--- L?u
 INSERT INTO POI_Categories VALUES (8,3);
 
 -- =========================
@@ -155,12 +150,12 @@ INSERT INTO POI_Categories VALUES (8,3);
 -- =========================
 INSERT INTO Menu (POIID, FoodName, Price, Image)
 VALUES
-(1,N'?c h??ng x�o b?',80000,'https://images.unsplash.com/photo-1559847844-5315695dadae'),
-(1,N'S� ?i?p n??ng ph� mai',70000,'https://images.unsplash.com/photo-1562967916-eb82221dfb92'),
-(2,N'?c len x�o d?a',60000,'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d'),
-(5,N'Ba ch? n??ng',90000,'https://images.unsplash.com/photo-1555992336-03a23c7b20ee'),
-(5,N'L?u th�i',120000,'https://images.unsplash.com/photo-1600891964599-f61ba0e24092'),
-(6,N'B� n??ng t?ng',150000,'https://images.unsplash.com/photo-1558030006-450675393462');
+(1,N'Ốc hương xào bơ',80000,'https://lh3.googleusercontent.com/p/AF1QipMon1'),
+(1,N'Sò điệp nướng phô mai',70000,'https://lh3.googleusercontent.com/p/AF1QipMon2'),
+(2,N'Ốc len xào dừa',60000,'https://lh3.googleusercontent.com/p/AF1QipMon3'),
+(5,N'Ba chỉ nướng',90000,'https://lh3.googleusercontent.com/p/AF1QipMon4'),
+(5,N'Lẩu thái',120000,'https://lh3.googleusercontent.com/p/AF1QipMon5'),
+(6,N'Bò nướng tảng',150000,'https://lh3.googleusercontent.com/p/AF1QipMon6');
 
 -- =========================
 -- QR CHECK-IN

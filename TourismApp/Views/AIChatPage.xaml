@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TourismApp.Views.AIChatPage"
+             Title="Trợ lý AI 🤖">
+
+    <Grid RowDefinitions="*, Auto">
+        <!-- Danh sách tin nhắn Chat -->
+        <CollectionView x:Name="chatList" Grid.Row="0" Margin="10,10,10,0">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <HorizontalStackLayout HorizontalOptions="{Binding Alignment}" Margin="0,5">
+                        <Frame BackgroundColor="{Binding BgColor}"
+                               HasShadow="False"
+                               CornerRadius="15"
+                               Padding="15"
+                               MaximumWidthRequest="300">
+                            <Label Text="{Binding Text}" 
+                                   TextColor="{Binding TextColor}" 
+                                   FontSize="15" 
+                                   LineBreakMode="WordWrap" />
+                        </Frame>
+                    </HorizontalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Khung nhập tin nhắn -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Padding="10,10,10,20" BackgroundColor="#F9F9F9">
+            <Border Grid.Column="0" 
+                    Stroke="LightGray" 
+                    StrokeShape="RoundRectangle 20" 
+                    BackgroundColor="White" 
+                    Padding="15,0">
+                <Entry x:Name="messageEntry" 
+                       Placeholder="Hỏi AI tư vấn..." 
+                       ReturnType="Send" 
+                       Completed="OnSendClicked" 
+                       ClearButtonVisibility="WhileEditing"/>
+            </Border>
+            
+            <Button Grid.Column="1" 
+                    Text="Gửi" 
+                    Clicked="OnSendClicked" 
+                    BackgroundColor="#9370DB" 
+                    TextColor="White" 
+                    CornerRadius="20"
+                    Margin="10,0,0,0"/>
+        </Grid>
+    </Grid>
+</ContentPage>

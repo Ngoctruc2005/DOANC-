@@ -11,12 +11,14 @@ namespace TourismApp.Views;
 public partial class RestaurantDetailPage : ContentPage
 {
     private Poi _restaurant;
+    private bool _autoPlayDescription;
 
-    public RestaurantDetailPage(Poi restaurant)
+    public RestaurantDetailPage(Poi restaurant, bool autoPlayDescription = false)
     {
         InitializeComponent();
         BindingContext = LocalizationService.Instance;
         _restaurant = restaurant;
+        _autoPlayDescription = autoPlayDescription;
 
         nameLabel.Text = _restaurant.Name;
         descriptionLabel.Text = _restaurant.Description;
@@ -26,8 +28,10 @@ public partial class RestaurantDetailPage : ContentPage
 
         if (!string.IsNullOrWhiteSpace(imageUrl))
         {
+            imageUrl = imageUrl.Trim();
             if (imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
+                // Phải dùng ImageSource.FromUri để MAUI hiểu đây là link cấu hình mạng thay vì file cục bộ
                 restaurantImage.Source = ImageSource.FromUri(new Uri(imageUrl));
             }
             else
@@ -83,14 +87,24 @@ public partial class RestaurantDetailPage : ContentPage
         base.OnAppearing();
         LoadMenu(); // Tải menu khi trang hiển thị để đảm bảo Handler không null
         var lang = Microsoft.Maui.Storage.Preferences.Get("language", "vi");
+
+        string finalDescription = _restaurant.Description;
+
         if (lang != "vi")
         {
             descriptionLabel.Text = LocalizationService.Instance["Loading"];
             string translatedDesc = await TTSHelper.TranslateTextAsync(_restaurant.Description, lang);
+            finalDescription = translatedDesc;
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 descriptionLabel.Text = translatedDesc;
             });
+        }
+
+        if (_autoPlayDescription && !string.IsNullOrWhiteSpace(finalDescription))
+        {
+            _autoPlayDescription = false; // Chỉ phát 1 lần khi mới quét QR xong
+            _ = TTSHelper.SpeakDescriptionAsync(finalDescription);
         }
     }
 

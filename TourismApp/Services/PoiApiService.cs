@@ -14,41 +14,42 @@ namespace TourismApp.Services
         // Can override from Settings/Preferences: Preferences.Set("api_base_url", "http://10.0.2.2:5219/api/")
         private string? CustomBaseUrl => Preferences.Get("api_base_url", string.Empty);
 
+        private static string? _successfulBaseUrl = null;
+
         IEnumerable<string> GetApiBaseUrls()
         {
+            if (!string.IsNullOrWhiteSpace(_successfulBaseUrl))
+            {
+                yield return _successfulBaseUrl;
+            }
+
             if (!string.IsNullOrWhiteSpace(CustomBaseUrl))
             {
                 yield return EnsureApiSuffix(CustomBaseUrl!);
             }
 
-            // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
-            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
-                
-            // IP Wi-Fi c?a máy tính b?n hi?n t?i (10.10.31.145) đ? đi?n tho?i th?t k?t n?i đư?c!
+            // Ưu tiên localhost cục bộ trước để chạy cực nhanh nếu đang chạy Backend ở cùng máy tính
             if (DeviceInfo.DeviceType == DeviceType.Physical)
             {
-                // Cập nhật lại IP hiện tại của máy tính
-                yield return "http://10.10.20.153:5219/api/";
-                yield return "https://10.10.20.153:7141/api/";
-                yield return "http://10.10.20.153:5219/";
-                yield return "https://10.10.20.153:7141/";
+                // Thiết bị thật cắm vào máy tính, cần lấy IP mạng LAN của máy
+                yield return "http://192.168.1.191:5219/api/";
+                yield return "https://192.168.1.191:7141/api/";
             }
             else if (DeviceInfo.Platform == DevicePlatform.Android)
             {
-                // Android emulator -> host localhost via 10.0.2.2
+                // Máy ảo Android truy cập localhost của máy tính thông qua IP 10.0.2.2
                 yield return "http://10.0.2.2:5219/api/";
-                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
-                yield return "http://10.0.2.2:5000/api/";
                 yield return "https://10.0.2.2:7141/api/";
-                yield return "https://10.0.2.2:5001/api/";
             }
             else
             {
-                yield return "https://localhost:7141/api/";
+                // Máy ảo Windows / Thiết bị khác
                 yield return "http://localhost:5219/api/";
-                yield return "https://localhost:5001/api/";
-                yield return "http://localhost:5000/api/";
+                yield return "https://localhost:7141/api/";
             }
+
+            // Sau đó mới đến URL của Dev Tunnels
+            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
         }
 
         static string EnsureApiSuffix(string baseUrl)
@@ -67,7 +68,8 @@ namespace TourismApp.Services
 
             _httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(15) // Tăng lên 15s để tránh Timeout trên máy ảo hoặc mạng chậm
+                // 🔥 Giảm thời gian Timeout xuống 2s để API test nhanh các URL
+                Timeout = TimeSpan.FromSeconds(2) 
             };
             _dbContext = dbContext;
         }
@@ -109,6 +111,7 @@ namespace TourismApp.Services
                     var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(endpoint, options);
                     if (pois != null)
                     {
+                        _successfulBaseUrl = baseUrl;
                         System.Diagnostics.Debug.WriteLine($"[API OK] {endpoint}");
                         return pois;
                     }
@@ -169,6 +172,7 @@ namespace TourismApp.Services
                     var menus = await _httpClient.GetFromJsonAsync<List<Menu>>(endpoint, options);
                     if (menus != null)
                     {
+                        _successfulBaseUrl = baseUrl;
                         return menus.Where(m => m.PoiId != null && m.PoiId.Equals(poiId)).ToList();
                     }
                 }
@@ -179,6 +183,44 @@ namespace TourismApp.Services
             }
 
             return new List<Menu>();
+        }
+
+        // Tích hợp AI
+        public async Task<string> ChatWithAI(string prompt)
+        {
+            try
+            {
+                var requestBody = new { prompt = prompt };
+
+                // Lấy danh sách URL base, tìm đến route AI
+                foreach(var baseUrl in GetApiBaseUrls().Distinct())
+                {
+                    try
+                    {
+                        var endpoint = $"{baseUrl}ai/chat"; 
+                        var response = await _httpClient.PostAsJsonAsync(endpoint, requestBody);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            _successfulBaseUrl = baseUrl;
+                            var result = await response.Content.ReadAsStringAsync();
+                            // Loại bỏ dấu ngoặc kép thừa ở kết quả trả về từ API/JSON
+                            return result?.Trim('"', ' ');
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[API AI FAIL] {baseUrl}ai/chat -> {ex.Message}");
+                        // Thử endpoint khác
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                 System.Diagnostics.Debug.WriteLine($"[AI Tổng Lỗi] -> {ex.Message}");
+            }
+
+            return string.Empty; // Trả về lỗi rỗng nếu gọi API thất bại toàn bộ
         }
     }
 }

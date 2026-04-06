@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Maui.Storage;
 
@@ -70,6 +70,18 @@ public class LocalizationService : INotifyPropertyChanged
         "RestaurantDetailTitle" => "Chi tiết quán",
         "ScanQRInstruction" => "Đưa camera vào mã QR để quét",
         "Delete" => "🗑️ Xóa",
+        "SearchingRestaurant" => "Đang tìm quán ăn...",
+        "ApiError" => "Lỗi API",
+        "ConnectionError" => "Lỗi kết nối",
+        "BackendErrorMsg" => "Không thể lấy dữ liệu từ Backend:\n",
+        "OpeningRestaurant" => "Đang mở ",
+        "RestaurantNotFound" => "Không tìm thấy quán ăn...",
+        "Notice" => "Thông báo",
+        "RestaurantNotFoundWithId" => "Không tìm thấy thông tin quán ăn với mã: ",
+        "InvalidQRCode" => "Mã QR không hợp lệ",
+        "InvalidQRFormat" => "Định dạng QR không hợp lệ: ",
+        "RequireScanRestaurant" => "Yêu cầu quét mã số quán ăn.",
+        "OK" => "OK",
         _ => key
     };
 
@@ -96,6 +108,18 @@ public class LocalizationService : INotifyPropertyChanged
         "RestaurantDetailTitle" => "Restaurant Details",
         "ScanQRInstruction" => "Point camera at QR code to scan",
         "Delete" => "🗑️ Delete",
+        "SearchingRestaurant" => "Searching for restaurant...",
+        "ApiError" => "API Error",
+        "ConnectionError" => "Connection Error",
+        "BackendErrorMsg" => "Could not retrieve data from Backend:\n",
+        "OpeningRestaurant" => "Opening ",
+        "RestaurantNotFound" => "Restaurant not found...",
+        "Notice" => "Notice",
+        "RestaurantNotFoundWithId" => "Could not find restaurant with ID: ",
+        "InvalidQRCode" => "Invalid QR Code",
+        "InvalidQRFormat" => "Invalid QR format: ",
+        "RequireScanRestaurant" => "Please scan a valid restaurant QR.",
+        "OK" => "OK",
         _ => key
     };
 
@@ -122,6 +146,18 @@ public class LocalizationService : INotifyPropertyChanged
         "RestaurantDetailTitle" => "餐厅详情",
         "ScanQRInstruction" => "将相机对准二维码进行扫描",
         "Delete" => "🗑️ 删除",
+        "SearchingRestaurant" => "正在寻找餐厅...",
+        "ApiError" => "API错误",
+        "ConnectionError" => "连接错误",
+        "BackendErrorMsg" => "无法从后端获取数据:\n",
+        "OpeningRestaurant" => "正在打开 ",
+        "RestaurantNotFound" => "找不到餐厅...",
+        "Notice" => "通知",
+        "RestaurantNotFoundWithId" => "找不到此代码的餐厅信息: ",
+        "InvalidQRCode" => "二维码无效",
+        "InvalidQRFormat" => "二维码格式无效: ",
+        "RequireScanRestaurant" => "请扫描餐厅二维码。",
+        "OK" => "确定",
         _ => key
     };
 
@@ -148,6 +184,18 @@ public class LocalizationService : INotifyPropertyChanged
         "RestaurantDetailTitle" => "レストランの詳細",
         "ScanQRInstruction" => "カメラをQRコードに向けてスキャン",
         "Delete" => "🗑️ 削除",
+        "SearchingRestaurant" => "レストランを探しています...",
+        "ApiError" => "API エラー",
+        "ConnectionError" => "接続エラー",
+        "BackendErrorMsg" => "バックエンドからデータを取得できませんでした:\n",
+        "OpeningRestaurant" => "開いています ",
+        "RestaurantNotFound" => "レストランが見つかりません...",
+        "Notice" => "通知",
+        "RestaurantNotFoundWithId" => "次のコードのレストラン情報が見つかりません: ",
+        "InvalidQRCode" => "無効なQRコード",
+        "InvalidQRFormat" => "無効なQRフォーマット: ",
+        "RequireScanRestaurant" => "レストランのQRをスキャンしてください。",
+        "OK" => "OK",
         _ => key
     };
 
@@ -174,6 +222,18 @@ public class LocalizationService : INotifyPropertyChanged
         "RestaurantDetailTitle" => "레스토랑 세부 정보",
         "ScanQRInstruction" => "카메라를 QR 코드에 맞춰 스캔하세요",
         "Delete" => "🗑️ 삭제",
+        "SearchingRestaurant" => "레스토랑 찾는 중...",
+        "ApiError" => "API 오류",
+        "ConnectionError" => "연결 오류",
+        "BackendErrorMsg" => "백엔드에서 데이터를 가져올 수 없습니다:\n",
+        "OpeningRestaurant" => "여는 중 ",
+        "RestaurantNotFound" => "레스토랑을 찾을 수 없습니다...",
+        "Notice" => "알림",
+        "RestaurantNotFoundWithId" => "해당 코드의 레스토랑 정보를 찾을 수 없습니다: ",
+        "InvalidQRCode" => "잘못된 QR 코드",
+        "InvalidQRFormat" => "잘못된 QR 형식: ",
+        "RequireScanRestaurant" => "레스토랑 코드를 스캔하세요.",
+        "OK" => "확인",
         _ => key
     };
 
