@@ -106,15 +106,13 @@ public partial class ApplicationDbContext : DbContext
             entity.ToTable("POIs");
 
             entity.Property(e => e.Poiid).HasColumnName("POIID");
+            entity.Property(e => e.OwnerId).HasDefaultValue(0);
             entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Name).HasMaxLength(150);
             entity.Property(e => e.Status).HasMaxLength(50);
-            entity.Property(e => e.Thumbnail)
-                .HasMaxLength(500)
-                .IsUnicode(false);
 
             entity.HasMany(d => d.Categories).WithMany(p => p.POIs)
                 .UsingEntity<Dictionary<string, object>>(

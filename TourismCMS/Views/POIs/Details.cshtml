@@ -1,4 +1,4 @@
-﻿@model TourismCMS.Models.POI
+@model TourismCMS.Models.POI
 
 @{
     ViewData["Title"] = "Details";
@@ -9,7 +9,7 @@
 <div>
     <h4>POI</h4>
     <hr />
-    <!-- Thêm div để hiển thị bản đồ nhỏ cho POI này -->
+    <!-- Th�m div d? hi?n th? b?n d? nh? cho POI n�y -->
     <div id="map" style="height: 300px; width: 100%; margin-bottom: 20px;"></div>
 
     <dl class="row">
@@ -38,10 +38,8 @@
             @Html.DisplayFor(model => model.Longitude)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Radius)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Radius)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.ImagePath)
@@ -50,10 +48,8 @@
             @Html.DisplayFor(model => model.ImagePath)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AudioPath)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AudioPath)
         </dd>
     </dl>
 </div>
@@ -63,7 +59,7 @@
 </div>
 
 @section Scripts {
-    <!-- Thư viện Leaflet CSS & JS -->
+    <!-- Thu vi?n Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -87,8 +83,8 @@
             else
             {
                 <text>
-                // Thay thế bằng tọa độ mặc định nếu không có
-                document.getElementById('map').innerHTML = '<p>Bản đồ chưa khả dụng: Không có vĩ độ/kinh độ</p>';
+                // Thay th? b?ng t?a d? m?c d?nh n?u kh�ng c�
+                document.getElementById('map').innerHTML = '<p>B?n d? chua kh? d?ng: Kh�ng c� vi d?/kinh d?</p>';
                 </text>
             }
         });

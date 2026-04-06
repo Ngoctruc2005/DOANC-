@@ -23,31 +23,26 @@ namespace TourismApp.Services
 
             // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
             yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
-                
-            // IP Wi-Fi c?a máy tính b?n hi?n t?i (10.10.31.145) đ? đi?n tho?i th?t k?t n?i đư?c!
+
+            // IP Wi-Fi của máy tính bạn hiện tại để điện thoại thật kết nối được!
             if (DeviceInfo.DeviceType == DeviceType.Physical)
             {
-                // Cập nhật lại IP hiện tại của máy tính
-                yield return "http://10.10.20.153:5219/api/";
+                // Thay bằng IP của máy tính (vd: 10.10.20.153)
                 yield return "https://10.10.20.153:7141/api/";
-                yield return "http://10.10.20.153:5219/";
-                yield return "https://10.10.20.153:7141/";
+                yield return "http://10.10.20.153:5219/api/";
             }
             else if (DeviceInfo.Platform == DevicePlatform.Android)
             {
                 // Android emulator -> host localhost via 10.0.2.2
-                yield return "http://10.0.2.2:5219/api/";
-                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
-                yield return "http://10.0.2.2:5000/api/";
+                // Ưu tiên đúng port 7141 (HTTPS) hoặc 5219 (HTTP) mà Kestrel/IIS Express đang chạy
                 yield return "https://10.0.2.2:7141/api/";
-                yield return "https://10.0.2.2:5001/api/";
+                yield return "http://10.0.2.2:5219/api/";
             }
             else
             {
+                // Cho Windows App (WinUI)
                 yield return "https://localhost:7141/api/";
                 yield return "http://localhost:5219/api/";
-                yield return "https://localhost:5001/api/";
-                yield return "http://localhost:5000/api/";
             }
         }
 

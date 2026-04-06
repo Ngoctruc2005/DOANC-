@@ -7,18 +7,15 @@ namespace TourismCMS.Models
     {
         // Make these properties nullable by adding '?'
         public int? Id { get; set; } 
-        public int? OwnerId { get; set; }
         public int Poiid { get; set; }
+        public int OwnerId { get; set; }
         public string? Name { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string? Address { get; set; }
         public string? Description { get; set; }
-        public string? Thumbnail { get; set; }
         public string? Status { get; set; }
-        public double? Radius { get; set; }
         public string? ImagePath { get; set; }
-        public string? AudioPath { get; set; }
         public DateTime? CreatedAt { get; set; }
 
         public virtual ICollection<Category> Categories { get; set; } = new List<Category>();

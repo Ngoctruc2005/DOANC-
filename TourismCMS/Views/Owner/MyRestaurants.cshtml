@@ -1,13 +1,13 @@
-﻿@model List<POI>
+@model List<POI>
 
-<h2>🍽 Quán của tôi</h2>
+<h2>?? Qu�n c?a t�i</h2>
 
-<a href="/Owner/Create" class="btn btn-success mb-3">+ Thêm quán</a>
+<a href="/Owner/Create" class="btn btn-success mb-3">+ Th�m qu�n</a>
 
 <table class="table table-bordered">
     <tr>
-        <th>Tên</th>
-        <th>Trạng thái</th>
+        <th>T�n</th>
+        <th>Tr?ng th�i</th>
     </tr>
 
     @foreach (var p in Model)
@@ -17,15 +17,15 @@
             <td>
                 @if (p.Status == "pending")
                 {
-                    <span class="badge bg-warning">Chờ duyệt</span>
+                    <span class="badge bg-warning">Ch? duy?t</span>
                 }
                 else if (p.Status == "approved")
                 {
-                    <span class="badge bg-success">Đã duyệt</span>
+                    <span class="badge bg-success">�� duy?t</span>
                 }
                 else
                 {
-                    <span class="badge bg-danger">Từ chối</span>
+                    <span class="badge bg-danger">T? ch?i</span>
                 }
             </td>
         </tr>

@@ -1,21 +1,21 @@
-Ôªø@using System.Linq
+@using System.Linq
 @model IEnumerable<TourismCMS.Models.POI>
 
 @{
-    ViewData["Title"] = "Qu·∫£n l√Ω qu√°n ƒÉn";
+    ViewData["Title"] = "Qu?n l˝ qu·n an";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>üçú Qu·∫£n l√Ω qu√°n ƒÉn Vƒ©nh Kh√°nh <small class="text-muted">- Admin</small></h2>
+<h2>?? Qu?n l˝ qu·n an Vinh Kh·nh <small class="text-muted">- Admin</small></h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <a class="btn btn-success" asp-action="Create">+ Th√™m qu√°n</a>
+        <a class="btn btn-success" asp-action="Create">+ ThÍm qu·n</a>
         <span class="badge bg-secondary ms-2">@Model?.Count() ?? 0</span>
     </div>
 
     <div class="d-flex">
-        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="T√¨m theo t√™n ho·∫∑c m√¥ t·∫£..." />
+        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="TÏm theo tÍn ho?c mÙ t?..." />
     </div>
 </div>
 
@@ -23,13 +23,13 @@
     <table id="poisTable" class="table table-bordered table-hover nowrap" style="width:100%">
         <thead class="table-dark">
             <tr>
-                <th>T√™n qu√°n</th>
-                <th>M√¥ t·∫£</th>
-                <th>V·ªã tr√≠</th>
-                <th>B√°n k√≠nh</th>
-                <th>·∫¢nh</th>
+                <th>TÍn qu·n</th>
+                <th>MÙ t?</th>
+                <th>V? trÌ</th>
+                <th>B·n kÌnh</th>
+                <th>?nh</th>
                 <th>Audio</th>
-                <th>H√†nh ƒë·ªông</th>
+                <th>H‡nh d?ng</th>
             </tr>
         </thead>
         <tbody>
@@ -43,32 +43,28 @@
                     </td>
 
                     <td>
-                        üìç @item.Latitude , @item.Longitude
+                        ?? @item.Latitude , @item.Longitude
                     </td>
 
-                    <td>@item.Radius m</td>
 
                     <td>
-                        <img src="@item.ImagePath" width="100" height="70" style="object-fit:cover; border-radius:4px;" />
                     </td>
 
                     <td>
-                        @if (!string.IsNullOrEmpty(item.AudioPath))
                         {
                             <audio controls style="width:160px;">
-                                <source src="@item.AudioPath" type="audio/mpeg" />
                             </audio>
                         }
                         else
                         {
-                            <span class="text-muted">Kh√¥ng c√≥</span>
+                            <span class="text-muted">KhÙng cÛ</span>
                         }
                     </td>
 
                     <td>
-                        <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">S·ª≠a</a>
+                        <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">S?a</a>
                         <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@item.Id">Xem</a>
-                        <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">X√≥a</a>
+                        <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">XÛa</a>
                     </td>
                 </tr>
             }
@@ -81,15 +77,15 @@
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmDeleteLabel">X√°c nh·∫≠n x√≥a</h5>
+        <h5 class="modal-title" id="confirmDeleteLabel">X·c nh?n xÛa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- dynamically filled -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">H·ªßy</button>
-        <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">X√≥a</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">H?y</button>
+        <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">XÛa</button>
       </div>
     </div>
   </div>
@@ -121,8 +117,8 @@
             $('.btn-delete').on('click', function (e) {
                 e.preventDefault();
                 deleteUrl = $(this).data('delete-url');
-                var name = $(this).data('name') || 'm·ª•c n√†y';
-                $('#confirmDeleteModal .modal-body').text('B·∫°n c√≥ ch·∫Øc mu·ªën x√≥a "' + name + '"?');
+                var name = $(this).data('name') || 'm?c n‡y';
+                $('#confirmDeleteModal .modal-body').text('B?n cÛ ch?c mu?n xÛa "' + name + '"?');
                 var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
                 modal.show();
             });

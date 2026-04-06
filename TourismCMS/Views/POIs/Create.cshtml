@@ -6,7 +6,7 @@
 
 <h2>Create POI</h2>
 
-<form asp-action="Create">
+<form asp-action="Create" enctype="multipart/form-data">
 
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
@@ -34,28 +34,16 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Radius" class="form-label"></label>
-        <input asp-for="Radius" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Thumbnail" class="form-label"></label>
-        <input asp-for="Thumbnail" class="form-control" />
-    </div>
-
-    <div class="mb-3">
         <label asp-for="Status" class="form-label"></label>
-        <input asp-for="Status" class="form-control" />
+        <select asp-for="Status" class="form-control">
+            <option value="Open">Open</option>
+            <option value="Close">Close</option>
+        </select>
     </div>
 
     <div class="mb-3">
-        <label asp-for="ImagePath" class="form-label"></label>
-        <input asp-for="ImagePath" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="AudioPath" class="form-label"></label>
-        <input asp-for="AudioPath" class="form-control" />
+        <label class="form-label">Tải ảnh lên (ImagePath)</label>
+        <input type="file" name="ImageFile" class="form-control" accept="image/*" />
     </div>
 
     <div class="mb-3">
@@ -63,12 +51,7 @@
         <input asp-for="CreatedAt" class="form-control" type="datetime-local" />
     </div>
 
-    <div class="mb-3">
-        <label asp-for="OwnerId" class="form-label"></label>
-        <input asp-for="OwnerId" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary">
+    <button type="submit" class="btn btn-primary mt-2">
         Create
     </button>
 

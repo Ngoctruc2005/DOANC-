@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Đăng Nhập Quản Trị";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white text-center">
+                <h4 class="mb-0">Đăng Nhập Hệ Thống Quản Trị</h4>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-controller="Auth" asp-action="AdminLogin">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="username">Tên đăng nhập / Username Admin</label>
+                        <input type="text" id="username" name="username" class="form-control border-danger" required placeholder="Nhập tên đăng nhập quản trị" />
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label" for="password">Mật khẩu / Password</label>
+                        <input type="password" id="password" name="password" class="form-control border-danger" required placeholder="Nhập mật khẩu" />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg">Đăng Nhập (Admin)</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-3">
+                    <hr />
+                    <a href="/Auth/Login" class="text-secondary text-decoration-none">← Quay lại trang đăng nhập Chủ quán</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
