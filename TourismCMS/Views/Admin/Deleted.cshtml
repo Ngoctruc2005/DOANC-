@@ -1,0 +1,82 @@
+@model IEnumerable<TourismCMS.Models.POI>
+@{
+    ViewData["Title"] = "Danh sách đã xóa";
+    Layout = "_Layout";
+    var deletedOwners = ViewBag.DeletedOwners as IEnumerable<TourismCMS.Models.OwnerListItemViewModel>;
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-3">Tài khoản chủ quán đã xóa</h2>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Mã User</th>
+                        <th>Họ tên</th>
+                        <th>SĐT</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Số quán</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (deletedOwners != null && deletedOwners.Any())
+                    {
+                        foreach (var owner in deletedOwners)
+                        {
+                            <tr>
+                                <td>@owner.UserId</td>
+                                <td>@(string.IsNullOrWhiteSpace(owner.FullName) ? owner.Username : owner.FullName)</td>
+                                <td>@owner.PhoneNumber</td>
+                                <td>@owner.Username</td>
+                                <td>@owner.RestaurantCount</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted"><em>Không có tài khoản chủ quán đã xóa.</em></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2 class="mb-3">Quán ăn đã xóa </h2>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Mã quán</th>
+                        <th>Tên quán</th>
+                        <th>Địa chỉ</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var poi in Model)
+                        {
+                            <tr>
+                                <td>@poi.Poiid</td>
+                                <td>@poi.Name</td>
+                                <td>@poi.Address</td>
+                                <td><span class="badge bg-secondary">@poi.Status</span></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted"><em>Không có quán ăn đã xóa/đã hủy.</em></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

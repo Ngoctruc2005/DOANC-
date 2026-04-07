@@ -33,22 +33,20 @@
         <input asp-for="Address" class="form-control" />
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Status" class="form-label"></label>
-        <select asp-for="Status" class="form-control">
-            <option value="Open">Open</option>
-            <option value="Close">Close</option>
-        </select>
-    </div>
+    @if (User.IsInRole("admin"))
+    {
+        <div class="mb-3">
+            <label asp-for="Status" class="form-label"></label>
+            <select asp-for="Status" class="form-control">
+                <option value="Open">Open</option>
+                <option value="Close">Close</option>
+            </select>
+        </div>
+    }
 
     <div class="mb-3">
         <label class="form-label">Tải ảnh lên (ImagePath)</label>
         <input type="file" name="ImageFile" class="form-control" accept="image/*" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="CreatedAt" class="form-label"></label>
-        <input asp-for="CreatedAt" class="form-control" type="datetime-local" />
     </div>
 
     <button type="submit" class="btn btn-primary mt-2">

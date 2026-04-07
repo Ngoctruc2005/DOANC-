@@ -16,7 +16,7 @@
         <div class="card shadow-sm text-center p-3 border-0">
             <div class="fs-1">🍽️</div>
             <h6>Tổng quán ăn</h6>
-            <h3 class="text-primary">120</h3>
+            <h3 class="text-primary">@(ViewBag.TotalRestaurants ?? 0)</h3>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
         <div class="card shadow-sm text-center p-3 border-0">
             <div class="fs-1">⏳</div>
             <h6>Chờ duyệt</h6>
-            <h3 class="text-warning">15</h3>
+            <h3 class="text-warning">@(ViewBag.PendingRestaurants ?? 0)</h3>
         </div>
     </div>
 
@@ -32,7 +32,7 @@
         <div class="card shadow-sm text-center p-3 border-0">
             <div class="fs-1">✅</div>
             <h6>Đã duyệt</h6>
-            <h3 class="text-success">98</h3>
+            <h3 class="text-success">@(ViewBag.ApprovedRestaurants ?? 0)</h3>
         </div>
     </div>
 
@@ -40,44 +40,9 @@
         <div class="card shadow-sm text-center p-3 border-0">
             <div class="fs-1">👨‍🍳</div>
             <h6>Chủ quán</h6>
-            <h3 class="text-danger">25</h3>
+            <h3 class="text-danger">@(ViewBag.TotalOwners ?? 0)</h3>
         </div>
     </div>
 
 </div>
 
-<!-- Biểu đồ -->
-<div class="card shadow-sm mt-4 p-3 border-0">
-    <h5>📈 Thống kê truy cập</h5>
-    <canvas id="chart" height="100"></canvas>
-</div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('chart');
-
-    new Chart(ctx, {
-    type: 'bar',
-    data: {
-    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
-    datasets: [{
-    label: 'Lượt truy cập',
-    data: [12, 19, 3, 5, 10, 15],
-    }]
-    },
-    options: {
-    responsive: true,
-    plugins: {
-    legend: {
-    display: false
-    }
-    },
-    scales: {
-    y: {
-    beginAtZero: true
-    }
-    }
-    }
-    });
-</script>

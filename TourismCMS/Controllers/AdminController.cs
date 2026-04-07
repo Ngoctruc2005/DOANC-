@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TourismCMS.Models;
 using TourismCMS.Data;   // ✅ đặt đúng chỗ
 using System.Linq;
@@ -18,8 +19,20 @@ namespace TourismCMS.Controllers
         }
 
         // 🎛️ Dashboard
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            ViewBag.TotalRestaurants = await _context.POIs
+                .CountAsync(p => p.Status != "Chờ duyệt" && p.Status != "Đã hủy" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+
+            ViewBag.PendingRestaurants = await _context.POIs
+                .CountAsync(p => p.Status == "Chờ duyệt");
+
+            ViewBag.ApprovedRestaurants = await _context.POIs
+                .CountAsync(p => p.Status != "Chờ duyệt" && p.Status != "Đã hủy" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+
+            ViewBag.TotalOwners = await _context.Users
+                .CountAsync(u => u.Role == "poi_owner" && u.IsVerified);
+
             return View();
         }
 
@@ -35,11 +48,11 @@ namespace TourismCMS.Controllers
 
         // 🔑 Đổi mật khẩu
         [HttpPost("/admin/auth/change-password")]
-        public IActionResult ChangePassword(string currentPassword, string newPassword)
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
             var username = User.Identity?.Name;
 
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null)
                 return Unauthorized();
@@ -48,7 +61,7 @@ namespace TourismCMS.Controllers
                 return BadRequest("Sai mật khẩu hiện tại");
 
             user.Password = newPassword;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(new { success = true });
         }
@@ -58,39 +71,189 @@ namespace TourismCMS.Controllers
         {
             var list = _context.PoiOwnerRegistrations
                 .Where(r => r.Status == "pending")
+                .Join(_context.Users,
+                    r => r.UserId,
+                    u => u.Id,
+                    (r, u) => new OwnerRegistrationViewModel
+                    {
+                        RegistrationId = r.Id,
+                        UserId = u.Id,
+                        FullName = u.FullName,
+                        PhoneNumber = u.PhoneNumber,
+                        Username = u.Username,
+                        Status = r.Status
+                    })
                 .ToList();
 
             return View(list);
         }
 
-        // ✅ Duyệt owner
-        public IActionResult Approve(int id)
+        public IActionResult Owners()
         {
-            var reg = _context.PoiOwnerRegistrations.Find(id);
+            var owners = _context.Users
+                .Where(u => u.Role == "poi_owner" && u.IsVerified
+                    && !string.IsNullOrWhiteSpace(u.FullName)
+                    && !string.IsNullOrWhiteSpace(u.PhoneNumber))
+                .Select(u => new OwnerListItemViewModel
+                {
+                    UserId = u.Id,
+                    FullName = u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Username = u.Username,
+                    RestaurantCount = _context.POIs.Count(p => p.OwnerId == u.Id)
+                })
+                .ToList();
+
+            return View(owners);
+        }
+
+        public IActionResult Cancelled()
+        {
+            var cancelledOwners = _context.PoiOwnerRegistrations
+                .Where(r => r.Status == "rejected")
+                .Join(_context.Users,
+                    r => r.UserId,
+                    u => u.Id,
+                    (r, u) => new OwnerRegistrationViewModel
+                    {
+                        RegistrationId = r.Id,
+                        UserId = u.Id,
+                        FullName = u.FullName,
+                        PhoneNumber = u.PhoneNumber,
+                        Username = u.Username,
+                        Status = r.Status
+                    })
+                .ToList();
+
+            var cancelledRestaurants = _context.POIs
+                .Where(p => p.Status == "Đã hủy")
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+
+            ViewBag.CancelledOwners = cancelledOwners;
+            return View(cancelledRestaurants);
+        }
+
+        public IActionResult Deleted()
+        {
+            var deletedOwners = _context.Users
+                .Where(u => u.Role == "deleted_owner")
+                .Select(u => new OwnerListItemViewModel
+                {
+                    UserId = u.Id,
+                    FullName = u.FullName,
+                    PhoneNumber = u.PhoneNumber,
+                    Username = u.Username,
+                    RestaurantCount = _context.POIs.Count(p => p.OwnerId == u.Id)
+                })
+                .ToList();
+
+            var deletedRestaurants = _context.POIs
+                .Where(p => p.Status == "Đã xóa" || p.Status == "Đã bị admin xóa" || p.Status == "Đã hủy")
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+
+            ViewBag.DeletedOwners = deletedOwners;
+            return View(deletedRestaurants);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteOldOwners()
+        {
+            var oldOwnerIds = await _context.Users
+                .Where(u => u.Role == "poi_owner" && u.IsVerified
+                    && (string.IsNullOrWhiteSpace(u.FullName) || string.IsNullOrWhiteSpace(u.PhoneNumber)))
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            if (oldOwnerIds.Any())
+            {
+                var regs = await _context.PoiOwnerRegistrations.Where(r => oldOwnerIds.Contains(r.UserId)).ToListAsync();
+                if (regs.Any())
+                {
+                    _context.PoiOwnerRegistrations.RemoveRange(regs);
+                }
+
+                var users = await _context.Users.Where(u => oldOwnerIds.Contains(u.Id)).ToListAsync();
+                _context.Users.RemoveRange(users);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Owners));
+        }
+
+        public IActionResult OwnerRestaurants(int id)
+        {
+            var owner = _context.Users.FirstOrDefault(u => u.Id == id && u.Role == "poi_owner");
+            if (owner == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.OwnerName = string.IsNullOrWhiteSpace(owner.FullName) ? owner.Username : owner.FullName;
+            ViewBag.OwnerPhone = owner.PhoneNumber;
+
+            var restaurants = _context.POIs
+                .Where(p => p.OwnerId == id)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToList();
+
+            return View(restaurants);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteOwner(int id)
+        {
+            var owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == "poi_owner");
+            if (owner == null)
+            {
+                return NotFound();
+            }
+
+            owner.Role = "deleted_owner";
+            owner.IsVerified = false;
+
+            var ownerRestaurants = await _context.POIs.Where(p => p.OwnerId == id).ToListAsync();
+            foreach (var poi in ownerRestaurants)
+            {
+                poi.Status = "Đã bị admin xóa";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Owners));
+        }
+
+        // ✅ Duyệt owner
+        public async Task<IActionResult> Approve(int id)
+        {
+            var reg = await _context.PoiOwnerRegistrations.FindAsync(id);
             if (reg == null) return NotFound();
 
             reg.Status = "approved";
 
-            var user = _context.Users.Find(reg.UserId);
+            var user = await _context.Users.FindAsync(reg.UserId);
             if (user != null)
             {
                 user.IsVerified = true;
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Registrations");
         }
 
         // ❌ Từ chối owner
-        public IActionResult Reject(int id)
+        public async Task<IActionResult> Reject(int id)
         {
-            var reg = _context.PoiOwnerRegistrations.Find(id);
+            var reg = await _context.PoiOwnerRegistrations.FindAsync(id);
             if (reg == null) return NotFound();
 
             reg.Status = "rejected";
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Registrations");
         }

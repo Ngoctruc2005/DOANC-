@@ -1,4 +1,4 @@
-@model IEnumerable<TourismCMS.Models.PoiOwnerRegistration>
+@model IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>
 @{
     ViewData["Title"] = "Phê duyệt chủ quán";
     Layout = "_Layout";
@@ -15,7 +15,10 @@
                 <thead class="table-primary">
                     <tr>
                         <th>Mã đăng ký</th>
-                        <th>Mã User (UserID)</th>
+                        <th>Mã User</th>
+                        <th>Họ tên</th>
+                        <th>SĐT</th>
+                        <th>Tên đăng nhập</th>
                         <th>Trạng thái</th>
                         <th class="text-center">Thao tác</th>
                     </tr>
@@ -26,14 +29,21 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td>@item.Id</td>
+                                <td>@item.RegistrationId</td>
                                 <td>@item.UserId</td>
-                                <td><span class="badge bg-warning text-dark">@item.Status</span></td>
+                                <td>@item.FullName</td>
+                                <td>@item.PhoneNumber</td>
+                                <td>@item.Username</td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        @(string.Equals(item.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "Chờ duyệt" : item.Status)
+                                    </span>
+                                </td>
                                 <td class="text-center">
-                                    <a asp-action="Approve" asp-route-id="@item.Id" class="btn btn-sm btn-success">
+                                    <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-sm btn-success">
                                         <i class="fa fa-check"></i> Duyệt
                                     </a>
-                                    <a asp-action="Reject" asp-route-id="@item.Id" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Bạn có chắc chắn muốn từ chối đăng ký này?');">
+                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Bạn có chắc chắn muốn từ chối đăng ký này?');">
                                         <i class="fa fa-times"></i> Từ chối
                                     </a>
                                 </td>
@@ -43,7 +53,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 <em>Không có đăng ký nào đang chờ duyệt.</em>
                             </td>
                         </tr>

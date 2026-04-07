@@ -32,8 +32,21 @@ namespace TourismCMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(string username, string password, string confirmPassword)
+        public async Task<IActionResult> Register(string fullName, string phoneNumber, string username, string password, string confirmPassword)
         {
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                ViewBag.Error = "Vui lòng nhập đầy đủ họ tên và số điện thoại.";
+                return View();
+            }
+
+            var normalizedPhone = phoneNumber.Trim();
+            if (normalizedPhone.Length != 10 || normalizedPhone.Any(c => !char.IsDigit(c)))
+            {
+                ViewBag.Error = "Số điện thoại phải đúng 10 chữ số.";
+                return View();
+            }
+
             if (password != confirmPassword)
             {
                 ViewBag.Error = "Mật khẩu nhập lại không khớp.";
@@ -49,6 +62,8 @@ namespace TourismCMS.Controllers
 
             var user = new User
             {
+                FullName = fullName.Trim(),
+                PhoneNumber = normalizedPhone,
                 Username = username,
                 Password = password, // (Thực tế nên mã hoá mật khẩu)
                 Role = "poi_owner",
@@ -87,6 +102,12 @@ namespace TourismCMS.Controllers
             if (user.Role == "poi_owner" && !user.IsVerified)
             {
                 ViewBag.Error = "Tài khoản của bạn chưa được admin duyệt.";
+                return View();
+            }
+
+            if (user.Role == "deleted_owner")
+            {
+                ViewBag.Error = "Tài khoản chủ quán của bạn đã bị xóa.";
                 return View();
             }
 
@@ -144,6 +165,10 @@ namespace TourismCMS.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            Response.Cookies.Delete("TourismCMSAuth");
+            Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
             return RedirectToAction("Login", "Auth");
         }
 

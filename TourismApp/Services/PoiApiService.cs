@@ -11,18 +11,52 @@ namespace TourismApp.Services
         private readonly HttpClient _httpClient;
         private readonly FoodDbContext? _dbContext;
 
+        static bool IsTimeoutError(Exception ex)
+        {
+            if (ex is TaskCanceledException || ex is OperationCanceledException)
+                return true;
+
+            var msg = ex.Message ?? string.Empty;
+            if (msg.Contains("HttpClient.Timeout", StringComparison.OrdinalIgnoreCase) ||
+                msg.Contains("timed out", StringComparison.OrdinalIgnoreCase) ||
+                msg.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (ex.InnerException != null)
+                return IsTimeoutError(ex.InnerException);
+
+            return false;
+        }
+
+        static string BuildFriendlyApiError(Exception? ex)
+        {
+            if (ex == null)
+                return "Không thể kết nối API.";
+
+            if (IsTimeoutError(ex))
+                return "Kết nối API bị quá thời gian chờ. Hãy kiểm tra backend và mạng.";
+
+            if (ex is HttpRequestException)
+                return "Không thể kết nối tới máy chủ API. Hãy kiểm tra URL và backend.";
+
+            return "Không thể tải dữ liệu từ API.";
+        }
+
         // Can override from Settings/Preferences: Preferences.Set("api_base_url", "http://10.0.2.2:5219/api/")
         private string? CustomBaseUrl => Preferences.Get("api_base_url", string.Empty);
+        private string? DebugBaseUrl => Environment.GetEnvironmentVariable("TOURISM_API_BASE_URL");
 
         IEnumerable<string> GetApiBaseUrls()
         {
+            if (!string.IsNullOrWhiteSpace(DebugBaseUrl))
+            {
+                yield return EnsureApiSuffix(DebugBaseUrl!);
+            }
+
             if (!string.IsNullOrWhiteSpace(CustomBaseUrl))
             {
                 yield return EnsureApiSuffix(CustomBaseUrl!);
             }
-
-            // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
-            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
 
             // IP Wi-Fi của máy tính bạn hiện tại để điện thoại thật kết nối được!
             if (DeviceInfo.DeviceType == DeviceType.Physical)
@@ -44,14 +78,16 @@ namespace TourismApp.Services
                 yield return "https://localhost:7141/api/";
                 yield return "http://localhost:5219/api/";
             }
+
+            // Dev tunnel để cuối cùng để tránh chờ timeout lâu khi tunnel đã hết hạn
+            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/";
         }
 
         static string EnsureApiSuffix(string baseUrl)
         {
             var url = baseUrl.Trim();
             if (!url.EndsWith("/")) url += "/";
-            // Ép đuôi api/ (Đ? t?t)
-            // if (!url.EndsWith("api/", StringComparison.OrdinalIgnoreCase)) url += "api/";
+            if (!url.EndsWith("api/", StringComparison.OrdinalIgnoreCase)) url += "api/";
             return url;
         }
 
@@ -62,7 +98,7 @@ namespace TourismApp.Services
 
             _httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(15) // Tăng lên 15s để tránh Timeout trên máy ảo hoặc mạng chậm
+                Timeout = TimeSpan.FromSeconds(10)
             };
             _dbContext = dbContext;
         }
@@ -101,7 +137,8 @@ namespace TourismApp.Services
                 try
                 {
                     var endpoint = $"{baseUrl}pois";
-                    var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(endpoint, options);
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                    var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(endpoint, options, cts.Token);
                     if (pois != null)
                     {
                         System.Diagnostics.Debug.WriteLine($"[API OK] {endpoint}");
@@ -120,8 +157,8 @@ namespace TourismApp.Services
                 new Poi
                 {
                     Poiid = -1,
-                    Name = "L?i API",
-                    Description = lastException?.Message ?? "Connection failure",
+                    Name = "Lỗi API",
+                    Description = BuildFriendlyApiError(lastException),
                     Latitude = 10.7607,
                     Longitude = 106.7029
                 }
@@ -161,7 +198,8 @@ namespace TourismApp.Services
                 try
                 {
                     var endpoint = $"{baseUrl}menus";
-                    var menus = await _httpClient.GetFromJsonAsync<List<Menu>>(endpoint, options);
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                    var menus = await _httpClient.GetFromJsonAsync<List<Menu>>(endpoint, options, cts.Token);
                     if (menus != null)
                     {
                         return menus.Where(m => m.PoiId != null && m.PoiId.Equals(poiId)).ToList();
