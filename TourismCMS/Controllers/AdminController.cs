@@ -21,14 +21,21 @@ namespace TourismCMS.Controllers
         // 🎛️ Dashboard
         public async Task<IActionResult> Index()
         {
-            ViewBag.TotalRestaurants = await _context.POIs
-                .CountAsync(p => p.Status != "Chờ duyệt" && p.Status != "Đã hủy" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+            var pendingStatuses = new[] { "Chờ duyệt", "Ch? duy?t", "Cho duyet" };
+            var cancelledStatuses = new[] { "Đã hủy", "?ã h?y", "Ðã h?y", "Ðã hủy", "Da h?y" };
+            var deletedStatuses = new[] { "Đã xóa", "?ã xóa", "Ðã xóa", "Đã bị admin xóa", "Da b? admin xóa" };
+            var approvedStatuses = new[] { "Open", "Approved", "Đã duyệt", "?ã duy?t", "Ðã duy?t", "Da duyet" };
 
             ViewBag.PendingRestaurants = await _context.POIs
-                .CountAsync(p => p.Status == "Chờ duyệt");
+                .CountAsync(p => pendingStatuses.Contains(p.Status ?? string.Empty));
 
             ViewBag.ApprovedRestaurants = await _context.POIs
-                .CountAsync(p => p.Status != "Chờ duyệt" && p.Status != "Đã hủy" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+                .CountAsync(p => approvedStatuses.Contains(p.Status ?? string.Empty));
+
+            ViewBag.TotalRestaurants = await _context.POIs
+                .CountAsync(p => !pendingStatuses.Contains(p.Status ?? string.Empty)
+                                 && !cancelledStatuses.Contains(p.Status ?? string.Empty)
+                                 && !deletedStatuses.Contains(p.Status ?? string.Empty));
 
             ViewBag.TotalOwners = await _context.Users
                 .CountAsync(u => u.Role == "poi_owner" && u.IsVerified);
@@ -149,7 +156,7 @@ namespace TourismCMS.Controllers
                 .ToList();
 
             var deletedRestaurants = _context.POIs
-                .Where(p => p.Status == "Đã xóa" || p.Status == "Đã bị admin xóa" || p.Status == "Đã hủy")
+                .Where(p => p.Status == "Đã xóa" || p.Status == "Đã bị admin xóa")
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList();
 

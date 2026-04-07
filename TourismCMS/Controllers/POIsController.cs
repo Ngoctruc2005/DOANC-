@@ -35,12 +35,12 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                query = query.Where(p => p.OwnerId == userId && (p.Status != "Đã xóa" && p.Status != "Ðã xóa" || p.Status == "Đã bị admin xóa"));
+                query = query.Where(p => p.OwnerId == userId);
             }
             else if (User.IsInRole("admin"))
             {
                 // Admin page index only shows approved by default
-                query = query.Where(p => p.Status != "Ch? duy?t" && p.Status != "Đ? xóa");
+                query = query.Where(p => p.Status != "Chờ duyệt" && p.Status != "Ch? duy?t" && p.Status != "Đã xóa" && p.Status != "Ðã xóa");
                 ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             }
 
@@ -52,8 +52,8 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Pending()
         {
-            var query = _context.POIs.Where(p => p.Status == "Ch? duy?t");
-            ViewData["Title"] = "Danh sách ch? duy?t";
+            var query = _context.POIs.Where(p => p.Status == "Chờ duyệt" || p.Status == "Ch? duy?t");
+            ViewData["Title"] = "Danh sách chờ duyệt";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -368,22 +368,4 @@ namespace TourismCMS.Controllers
         }
     }
 
-    [ApiController]
-    [Route("api/pois")]
-    public class PoisApiController : ControllerBase
-    {
-        private readonly ApplicationDbContext _context;
-
-        public PoisApiController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
-        {
-            // Bỏ qua các record đang chờ duyệt hoặc đã bị xóa
-            return await _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa").ToListAsync();
-        }
-    }
 }
