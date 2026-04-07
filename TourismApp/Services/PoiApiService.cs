@@ -46,41 +46,43 @@ namespace TourismApp.Services
         private string? CustomBaseUrl => Preferences.Get("api_base_url", string.Empty);
         private string? DebugBaseUrl => Environment.GetEnvironmentVariable("TOURISM_API_BASE_URL");
 
+        private static string? _successfulBaseUrl = null;
+
         IEnumerable<string> GetApiBaseUrls()
         {
-            if (!string.IsNullOrWhiteSpace(DebugBaseUrl))
-            {
-                yield return EnsureApiSuffix(DebugBaseUrl!);
-            }
-
             if (!string.IsNullOrWhiteSpace(CustomBaseUrl))
             {
                 yield return EnsureApiSuffix(CustomBaseUrl!);
             }
 
+            // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
+            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
+
             // IP Wi-Fi của máy tính bạn hiện tại để điện thoại thật kết nối được!
             if (DeviceInfo.DeviceType == DeviceType.Physical)
             {
-                // Thay bằng IP của máy tính (vd: 10.10.20.153)
-                yield return "https://10.10.20.153:7141/api/";
+                // Cập nhật lại IP hiện tại của máy tính
                 yield return "http://10.10.20.153:5219/api/";
+                yield return "https://10.10.20.153:7141/api/";
+                yield return "http://10.10.20.153:5219/";
+                yield return "https://10.10.20.153:7141/";
             }
             else if (DeviceInfo.Platform == DevicePlatform.Android)
             {
                 // Android emulator -> host localhost via 10.0.2.2
-                // Ưu tiên đúng port 7141 (HTTPS) hoặc 5219 (HTTP) mà Kestrel/IIS Express đang chạy
-                yield return "https://10.0.2.2:7141/api/";
                 yield return "http://10.0.2.2:5219/api/";
+                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
+                yield return "http://10.0.2.2:5000/api/";
+                yield return "https://10.0.2.2:7141/api/";
+                yield return "https://10.0.2.2:5001/api/";
             }
             else
             {
-                // Cho Windows App (WinUI)
                 yield return "https://localhost:7141/api/";
                 yield return "http://localhost:5219/api/";
+                yield return "https://localhost:5001/api/";
+                yield return "http://localhost:5000/api/";
             }
-
-            // Dev tunnel để cuối cùng để tránh chờ timeout lâu khi tunnel đã hết hạn
-            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/";
         }
 
         static string EnsureApiSuffix(string baseUrl)
@@ -98,7 +100,7 @@ namespace TourismApp.Services
 
             _httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(10)
+                Timeout = TimeSpan.FromSeconds(15) // Tăng lên 15s để tránh Timeout trên máy ảo hoặc mạng chậm
             };
             _dbContext = dbContext;
         }
@@ -141,6 +143,7 @@ namespace TourismApp.Services
                     var pois = await _httpClient.GetFromJsonAsync<List<Poi>>(endpoint, options, cts.Token);
                     if (pois != null)
                     {
+                        _successfulBaseUrl = baseUrl;
                         System.Diagnostics.Debug.WriteLine($"[API OK] {endpoint}");
                         return pois;
                     }
@@ -202,6 +205,7 @@ namespace TourismApp.Services
                     var menus = await _httpClient.GetFromJsonAsync<List<Menu>>(endpoint, options, cts.Token);
                     if (menus != null)
                     {
+                        _successfulBaseUrl = baseUrl;
                         return menus.Where(m => m.PoiId != null && m.PoiId.Equals(poiId)).ToList();
                     }
                 }
@@ -212,6 +216,44 @@ namespace TourismApp.Services
             }
 
             return new List<Menu>();
+        }
+
+        // Tích hợp AI
+        public async Task<string> ChatWithAI(string prompt)
+        {
+            try
+            {
+                var requestBody = new { prompt = prompt };
+
+                // Lấy danh sách URL base, tìm đến route AI
+                foreach(var baseUrl in GetApiBaseUrls().Distinct())
+                {
+                    try
+                    {
+                        var endpoint = $"{baseUrl}ai/chat"; 
+                        var response = await _httpClient.PostAsJsonAsync(endpoint, requestBody);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            _successfulBaseUrl = baseUrl;
+                            var result = await response.Content.ReadAsStringAsync();
+                            // Loại bỏ dấu ngoặc kép thừa ở kết quả trả về từ API/JSON
+                            return result?.Trim('"', ' ');
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[API AI FAIL] {baseUrl}ai/chat -> {ex.Message}");
+                        // Thử endpoint khác
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                 System.Diagnostics.Debug.WriteLine($"[AI Tổng Lỗi] -> {ex.Message}");
+            }
+
+            return string.Empty; // Trả về lỗi rỗng nếu gọi API thất bại toàn bộ
         }
     }
 }

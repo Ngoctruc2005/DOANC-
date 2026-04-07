@@ -40,7 +40,7 @@ namespace TourismCMS.Controllers
             else if (User.IsInRole("admin"))
             {
                 // Admin page index only shows approved by default
-                query = query.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+                query = query.Where(p => p.Status != "Ch? duy?t" && p.Status != "Đ? xóa");
                 ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             }
 
@@ -52,8 +52,8 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Pending()
         {
-            var query = _context.POIs.Where(p => p.Status == "Chờ duyệt");
-            ViewData["Title"] = "Danh sách chờ duyệt";
+            var query = _context.POIs.Where(p => p.Status == "Ch? duy?t");
+            ViewData["Title"] = "Danh sách ch? duy?t";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -62,7 +62,7 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approved()
         {
-            var query = _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa" && p.Status != "Đã bị admin xóa");
+            var query = _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa");
             ViewData["Title"] = "Danh sách đã duyệt";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
@@ -104,7 +104,7 @@ namespace TourismCMS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Status,ImagePath")] POI pOI, IFormFile? ImageFile)
         {
-            // Loại bỏ kiểm tra các navigation property & collection khỏi ModelState
+            // Lo?i b? ki?m tra các navigation property & collection kh?i ModelState
             ModelState.Remove("Categories");
             ModelState.Remove("Menus");
             ModelState.Remove("VisitLogs");
@@ -133,12 +133,12 @@ namespace TourismCMS.Controllers
                 if (User.IsInRole("poi_owner"))
                 {
                     pOI.OwnerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                    pOI.Status = "Chờ duyệt"; // Chủ quán đăng ký sẽ ở trạng thái chờ duyệt
+                    pOI.Status = "Ch? duy?t"; // Ch? quán đăng k? s? ? tr?ng thái ch? duy?t
                 }
                 else if (User.IsInRole("admin"))
                 {
                     pOI.OwnerId = 0;
-                    pOI.Status = string.IsNullOrWhiteSpace(pOI.Status) ? "Open" : pOI.Status;
+                    pOI.Status = "Đã duyệt"; // Admin đăng ký thì duyệt auto
                 }
 
                 pOI.CreatedAt = DateTime.Now;
@@ -193,6 +193,8 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                // Đảm bảo không cho phép sửa OwnerId
+                pOI.OwnerId = userId;
             }
 
             ModelState.Remove("Categories");
@@ -300,8 +302,8 @@ namespace TourismCMS.Controllers
                     var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
                 }
 
-                // Xóa mềm: admin xóa thì chủ quán vẫn nhìn thấy trạng thái; chủ quán tự xóa thì ẩn khỏi danh sách của họ
-                pOI.Status = User.IsInRole("admin") ? "Đã bị admin xóa" : "Đã xóa";
+                // Chuyển sang trạng thái "Đã xóa" thay vì xóa cứng khỏi CSDL
+                pOI.Status = "Đã xóa";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
             }
@@ -314,11 +316,11 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approve(int id)
         {
-            // Kiểm tra cả Id và Poiid do một số record cũ có sự khác biệt giữa khóa
+            // Ki?m tra c? Id và Poiid do m?t s? record c? có s? khác bi?t gi?a khóa
             var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
             if (pOI != null)
             {
-                // Khi đã duyệt xong thì set trạng thái về Open để hiển thị thành "Mở" hoặc "Open"
+                // Khi đ? duy?t xong th? set tr?ng thái v? Open đ? hi?n th? thành "M?" ho?c "Open"
                 pOI.Status = "Open";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
@@ -363,6 +365,25 @@ namespace TourismCMS.Controllers
         private bool POIExists(int id)
         {
             return _context.POIs.Any(e => e.Poiid == id);
+        }
+    }
+
+    [ApiController]
+    [Route("api/pois")]
+    public class PoisApiController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+
+        public PoisApiController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
+        {
+            // Bỏ qua các record đang chờ duyệt hoặc đã bị xóa
+            return await _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa").ToListAsync();
         }
     }
 }

@@ -20,7 +20,7 @@ public static class MauiProgram
             .UseBarcodeReader();
 
         // Cấu hình chuỗi kết nối an toàn (sẽ fallback nếu không tìm thấy key)
-        string dbConnection = "Server=(localdb)\\mssqllocaldb;Database=TourismDB;Trusted_Connection=True;";
+        string dbConnection = "Server=.\\SQLEXPRESS;Database=FoodPOI;Trusted_Connection=True;TrustServerCertificate=True";
         if (builder.Configuration != null)
         {
             var confString = builder.Configuration.GetConnectionString("DefaultConnection");

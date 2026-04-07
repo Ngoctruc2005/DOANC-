@@ -1,9 +1,13 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace TourismCMS.Controllers
 {
+    public class ChatRequest { public string? prompt { get; set; } }
+
+    [AllowAnonymous]
     public class AiController : Controller
     {
         private readonly IMemoryCache _cache;
@@ -13,19 +17,23 @@ namespace TourismCMS.Controllers
             _cache = cache;
         }
 
+        [AllowAnonymous]
+        [HttpPost("/api/ai/chat")]
+        [HttpPost("/ai/chat")]
+        public IActionResult Chat([FromBody] ChatRequest req)
+        {
+            return Ok("Dạ, AI hiện đang được bảo trì nhưng cảm ơn bạn đã hỏi: " + req?.prompt);
+        }
+
+        [AllowAnonymous]
         [HttpPost("/ai/enhance-description")]
         public async Task<IActionResult> EnhanceDescription([FromForm] string text, [FromForm] string role)
         {
-            // Simple placeholder: append a short positive adjective if allowed
-            // Rate limiting: owner = 10/day, admin = unlimited
-            // For demo, we won't enforce per-user limits here; implement using cache or DB in production
-
             if (string.IsNullOrWhiteSpace(text))
             {
                 return BadRequest(new { error = "Text is required" });
             }
 
-            // Simulate AI processing with a short delay
             await Task.Delay(500);
 
             var enhanced = text;

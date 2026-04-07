@@ -1,4 +1,4 @@
-using ZXing.Net.Maui;
+ï»¿using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 
 namespace TourismApp.Views;
@@ -7,6 +7,7 @@ public partial class QRPage : ContentPage
 {
     readonly CameraBarcodeReaderView _camera = new();
     bool _isHandlingScan;
+    private bool _isAnimating = false;
 
     public QRPage()
     {
@@ -15,6 +16,32 @@ public partial class QRPage : ContentPage
 
         _camera.BarcodesDetected += OnDetected;
         cameraHost.Content = _camera;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isAnimating = true;
+        _camera.IsDetecting = true;
+        AnimateScanLine();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isAnimating = false;
+        _camera.IsDetecting = false;
+    }
+
+    private async void AnimateScanLine()
+    {
+        while (_isAnimating && scanLine != null)
+        {
+            // Di chuy?n tia laser t? trï¿½n xu?ng dï¿½?i
+            await scanLine.TranslateTo(0, 252, 1200, Easing.Linear);
+            // Kï¿½o ngï¿½?c l?i t? dï¿½?i lï¿½n trï¿½n
+            await scanLine.TranslateTo(0, 0, 1200, Easing.Linear);
+        }
     }
 
     void OnDetected(object? sender, BarcodeDetectionEventArgs e)
@@ -35,7 +62,8 @@ public partial class QRPage : ContentPage
         MainThread.BeginInvokeOnMainThread(async () => 
         {
             _camera.IsDetecting = false;
-            resultLabel.Text = "Ðang tìm quán an...";
+            var loc = TourismApp.Services.LocalizationService.Instance;
+            resultLabel.Text = loc["SearchingRestaurant"];
 
             if (int.TryParse(result, out int poiId))
             {
@@ -43,12 +71,12 @@ public partial class QRPage : ContentPage
                 var apiService = new TourismApp.Services.PoiApiService(dbContext);
                 var pois = await apiService.GetAllPOIsAsync();
 
-                // Ki?m tra xem danh sách có tr? v? l?i API không
+                // Ki?m tra xem danh sï¿½ch cï¿½ tr? v? l?i API khï¿½ng
                 var apiErrorPoi = pois.FirstOrDefault(p => p.Poiid == -1);
                 if (apiErrorPoi != null)
                 {
-                    resultLabel.Text = "L?i API";
-                    await DisplayAlert("L?i k?t n?i", $"Không th? l?y d? li?u t? Backend:\n{apiErrorPoi.Description}", "OK");
+                    resultLabel.Text = loc["ApiError"];
+                    await DisplayAlert(loc["ConnectionError"], $"{loc["BackendErrorMsg"]}{apiErrorPoi.Description}", loc["OK"]);
 
                     _camera.IsDetecting = true;
                     _isHandlingScan = false;
@@ -58,19 +86,19 @@ public partial class QRPage : ContentPage
                 var restaurant = pois.FirstOrDefault(p => p.Poiid == poiId);
                 if (restaurant != null)
                 {
-                    resultLabel.Text = result;
-                    await Navigation.PushAsync(new RestaurantDetailPage(restaurant));
+                    resultLabel.Text = $"{loc["OpeningRestaurant"]}{restaurant.Name}...";
+                    await Navigation.PushAsync(new RestaurantDetailPage(restaurant, autoPlayDescription: true));
                 }
                 else
                 {
-                    resultLabel.Text = "Không tìm th?y quán an";
-                    await DisplayAlert("Thông báo", $"Không tìm th?y thông tin quán an v?i mã: {result}", "OK");
+                    resultLabel.Text = loc["RestaurantNotFound"];
+                    await DisplayAlert(loc["Notice"], $"{loc["RestaurantNotFoundWithId"]}{result}", loc["OK"]);
                 }
             }
             else
             {
-                resultLabel.Text = "Mã QR không h?p l?";
-                await DisplayAlert("Thông báo", $"Ð?nh d?ng QR không h?p l?: {result}.\nYêu c?u quét mã s? quán an.", "OK");
+                resultLabel.Text = loc["InvalidQRCode"];
+                await DisplayAlert(loc["Notice"], $"{loc["InvalidQRFormat"]}{result}.\n{loc["RequireScanRestaurant"]}", loc["OK"]);
             }
 
             _camera.IsDetecting = true;

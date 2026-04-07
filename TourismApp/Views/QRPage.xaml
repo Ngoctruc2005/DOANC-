@@ -5,9 +5,31 @@
 
     <Grid RowDefinitions="*,Auto" RowSpacing="12" Padding="12">
 
-        <ContentView
-            x:Name="cameraHost"
-            Grid.Row="0" />
+        <!-- Grid chứa Camera và khung lưới đè lên -->
+        <Grid Grid.Row="0">
+            <ContentView
+                x:Name="cameraHost" />
+
+            <!-- Khung vuông định vị vùng quét -->
+            <Border WidthRequest="260"
+                    HeightRequest="260"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Stroke="#FFD700"
+                    StrokeThickness="4"
+                    BackgroundColor="Transparent">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+
+                <!-- Vạch ngang mờ mô phỏng tia laser -->
+                <BoxView x:Name="scanLine"
+                         HeightRequest="3"
+                         BackgroundColor="#CCFFD700"
+                         VerticalOptions="Start"
+                         HorizontalOptions="Fill" />
+            </Border>
+        </Grid>
 
         <Label
             x:Name="resultLabel"
