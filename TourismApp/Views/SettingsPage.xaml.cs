@@ -20,6 +20,8 @@ public partial class SettingsPage : ContentPage
             case "ko": languagePicker.SelectedItem = "한국어 (ko)"; break;
             default: languagePicker.SelectedItem = "Tiếng Việt (vi)"; break;
         }
+
+        apiBaseUrlEntry.Text = Preferences.Get("api_base_url", string.Empty);
     }
 
     private void OnSaveClicked(object sender, EventArgs e)
@@ -31,9 +33,12 @@ public partial class SettingsPage : ContentPage
         else if (selectedItem.Contains("ja")) lang = "ja";
         else if (selectedItem.Contains("ko")) lang = "ko";
 
+        var apiBaseUrl = (apiBaseUrlEntry.Text ?? string.Empty).Trim();
+        Preferences.Set("api_base_url", apiBaseUrl);
+
         // Vừa cập nhật Preference vừa cập nhật Global Service
         LocalizationService.Instance.CurrentLanguage = lang;
 
-        DisplayAlert("Thông báo", $"Đã lưu cài đặt ngôn ngữ / Saved language: {lang}", "OK");
+        DisplayAlert("Thông báo", $"Đã lưu cài đặt. Language: {lang}", "OK");
     }
 }

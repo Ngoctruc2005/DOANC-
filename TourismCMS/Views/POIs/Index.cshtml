@@ -1,4 +1,4 @@
-@model IEnumerable<TourismCMS.Models.POI>
+Ôªø@model IEnumerable<TourismCMS.Models.POI>
 
 @{
     var isPendingPage = string.Equals(
@@ -14,24 +14,31 @@
     {
         if (string.IsNullOrWhiteSpace(status)) return false;
         var s = status.Trim();
-        return s.Equals("Ch? duy?t", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("Ch? duy?t", StringComparison.OrdinalIgnoreCase);
+        return s.Equals("Ch·ªù duy·ªát", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("Ch? duy?t", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("Cho duyet", StringComparison.OrdinalIgnoreCase);
     }
 
     bool IsDeletedStatus(string? status)
     {
         if (string.IsNullOrWhiteSpace(status)) return false;
         var s = status.Trim();
-        return s.Equals("?„ xÛa", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("–„ xÛa", StringComparison.OrdinalIgnoreCase);
+        return s.Equals("ƒê√£ x√≥a", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("?√£ x√≥a", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("√ê√£ x√≥a", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("ƒê√£ b·ªã admin x√≥a", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("Da b? admin x√≥a", StringComparison.OrdinalIgnoreCase);
     }
 
     bool IsCanceledStatus(string? status)
     {
         if (string.IsNullOrWhiteSpace(status)) return false;
         var s = status.Trim();
-        return s.Equals("?„ h?y", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("–„ h?y", StringComparison.OrdinalIgnoreCase);
+        return s.Equals("ƒê√£ h·ªßy", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("?√£ h?y", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("√ê√£ h?y", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("√ê√£ h·ªßy", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("Da h?y", StringComparison.OrdinalIgnoreCase);
     }
 
     bool IsApprovedStatus(string? status)
@@ -40,9 +47,9 @@
         var s = status.Trim();
         return s.Equals("Open", StringComparison.OrdinalIgnoreCase)
             || s.Equals("Approved", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("?„ duy?t", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("–„ duy?t", StringComparison.OrdinalIgnoreCase)
-            || s.Equals("–„ duy?t", StringComparison.OrdinalIgnoreCase);
+            || s.Equals("?√£ duy?t", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("√ê√£ duy?t", StringComparison.OrdinalIgnoreCase)
+            || s.Equals("√ê√£ duy?t", StringComparison.OrdinalIgnoreCase);
     }
 
     bool IsOpenStatus(string? status)
@@ -86,14 +93,14 @@
         return IsApprovedStatus(item.Status) && !IsPendingStatus(item.Status);
     }
 
-    if (ViewData["Layout"] != null)
+    if (ViewData["Layout"] is string layoutValue && !string.IsNullOrWhiteSpace(layoutValue))
     {
-        Layout = ViewData["Layout"].ToString();
+        Layout = layoutValue;
     }
 
     if (ViewData["Title"] == null)
     {
-        ViewData["Title"] = "Danh s·ch qu·n an";
+        ViewData["Title"] = "Danh s√°ch qu√°n ƒÉn";
     }
 
     var mapPois = Model
@@ -106,6 +113,12 @@
             url = Url.Action("Details", "POIs", new { id = item.Poiid }) ?? "#"
         })
         .ToList();
+
+    var visiblePois = User.IsInRole("poi_owner")
+        ? Model.ToList()
+        : Model
+            .Where(item => !IsDeletedStatus(item.Status) && !IsCanceledStatus(item.Status))
+            .ToList();
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -117,7 +130,7 @@
     </p>
 }
 
-<!-- ThÍm div d? hi?n th? b?n d? -->
+<!-- Th√™m div d? hi?n th? b?n d? -->
 <div id="map" style="height: 400px; width: 100%; margin-bottom: 20px;"></div>
 
 <table class="table">
@@ -149,7 +162,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in visiblePois) {
         var poiKey = item.Poiid;
         <tr>
             <td>
@@ -173,7 +186,7 @@
                 }
                 else if (IsPendingStatus(item.Status))
                 {
-                    <span class="badge bg-warning text-dark">@item.Status</span>
+                    <span class="badge bg-warning text-dark">Ch·ªù duy·ªát</span>
                 }
                 else if (IsDeletedStatus(item.Status))
                 {
@@ -224,25 +237,25 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Kh?i t?o b?n d?, set view m?c d?nh (cÛ th? thay d?i t?a d? trung t‚m)
-            var map = L.map('map').setView([10.762622, 106.660172], 10); // VÌ d? t?a d? TP.HCM
+            // Kh?i t?o b?n d?, set view m?c d?nh (c√≥ th? thay d?i t?a d? trung t√¢m)
+            var map = L.map('map').setView([10.762622, 106.660172], 10); // V√≠ d? t?a d? TP.HCM
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-            // M?ng ch?a c·c POI du?c truy?n t? Model
+            // M?ng ch?a c√°c POI du?c truy?n t? Model
             var pois = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mapPois));
 
-            // ThÍm marker cho t?ng POI
+            // Th√™m marker cho t?ng POI
             var bounds = [];
             pois.forEach(function (poi) {
                 var marker = L.marker([poi.lat, poi.lng]).addTo(map);
-                marker.bindPopup(`<b>${poi.name}</b><br><a href="${poi.url}">Xem chi ti?t</a>`);
+                marker.bindPopup(`<b>${poi.name}</b><br><a href="${poi.url}">Xem chi ti&#7871;t</a>`);
                 bounds.push([poi.lat, poi.lng]);
             });
 
-            // T? d?ng zoom b?n d? cho v?a v?i t?t c? c·c marker
+            // T? d?ng zoom b?n d? cho v?a v?i t?t c? c√°c marker
             if (bounds.length > 0) {
                 map.fitBounds(bounds);
             }

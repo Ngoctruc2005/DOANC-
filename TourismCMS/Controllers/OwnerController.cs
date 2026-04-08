@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using TourismCMS.Data;
 using TourismCMS.Models;
@@ -20,7 +21,7 @@ public class OwnerController : Controller
     }
 
     // 📊 quán của tôi
-    public IActionResult MyRestaurants()
+    public async Task<IActionResult> MyRestaurants()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var userId))
@@ -28,9 +29,9 @@ public class OwnerController : Controller
             return Forbid();
         }
 
-        var list = _context.POIs
+        var list = await _context.POIs
             .Where(p => p.OwnerId == userId)
-            .ToList();
+            .ToListAsync();
 
         return View(list);
     }
@@ -43,7 +44,7 @@ public class OwnerController : Controller
 
     // ➕ thêm quán
     [HttpPost]
-    public IActionResult Create(POI p)
+    public async Task<IActionResult> Create(POI p)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var userId))
@@ -53,9 +54,10 @@ public class OwnerController : Controller
 
         p.OwnerId = userId;
         p.Status = "Chờ duyệt";
+        p.CreatedAt = DateTime.Now;
 
         _context.POIs.Add(p);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
 
         return RedirectToAction("MyRestaurants");
     }

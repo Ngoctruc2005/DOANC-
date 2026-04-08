@@ -35,12 +35,12 @@ namespace TourismCMS.Controllers
             if (User.IsInRole("poi_owner"))
             {
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                query = query.Where(p => p.OwnerId == userId && p.Status != "Đã xóa" && p.Status != "Ðã xóa");
+                query = query.Where(p => p.OwnerId == userId);
             }
             else if (User.IsInRole("admin"))
             {
                 // Admin page index only shows approved by default
-                query = query.Where(p => p.Status != "Ch? duy?t" && p.Status != "Đ? xóa");
+                query = query.Where(p => p.Status != "Chờ duyệt" && p.Status != "Ch? duy?t" && p.Status != "Đã xóa" && p.Status != "Ðã xóa");
                 ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             }
 
@@ -52,8 +52,8 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Pending()
         {
-            var query = _context.POIs.Where(p => p.Status == "Ch? duy?t");
-            ViewData["Title"] = "Danh sách ch? duy?t";
+            var query = _context.POIs.Where(p => p.Status == "Chờ duyệt" || p.Status == "Ch? duy?t");
+            ViewData["Title"] = "Danh sách chờ duyệt";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -62,8 +62,8 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approved()
         {
-            var query = _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "Đ? xóa");
-            ViewData["Title"] = "Danh sách đ? duy?t";
+            var query = _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa");
+            ViewData["Title"] = "Danh sách đã duyệt";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
         }
@@ -102,7 +102,7 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Status,ImagePath,CreatedAt")] POI pOI, IFormFile? ImageFile)
+        public async Task<IActionResult> Create([Bind("Id,Poiid,Name,Latitude,Longitude,Address,Description,Status,ImagePath")] POI pOI, IFormFile? ImageFile)
         {
             // Lo?i b? ki?m tra các navigation property & collection kh?i ModelState
             ModelState.Remove("Categories");
@@ -137,7 +137,8 @@ namespace TourismCMS.Controllers
                 }
                 else if (User.IsInRole("admin"))
                 {
-                    pOI.Status = "Đ? duy?t"; // Admin đăng k? th? duy?t auto
+                    pOI.OwnerId = 0;
+                    pOI.Status = "Đã duyệt"; // Admin đăng ký thì duyệt auto
                 }
 
                 pOI.CreatedAt = DateTime.Now;
@@ -182,7 +183,7 @@ namespace TourismCMS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Poiid,Id,Name,Latitude,Longitude,Address,Description,Status,ImagePath,CreatedAt")] POI pOI, IFormFile? ImageFile)
+        public async Task<IActionResult> Edit(int id, [Bind("Poiid,Id,Name,Latitude,Longitude,Address,Description,Status,ImagePath")] POI pOI, IFormFile? ImageFile)
         {
             if (id != pOI.Poiid)
             {
@@ -209,24 +210,42 @@ namespace TourismCMS.Controllers
 
             if (ModelState.IsValid)
             {
-                if (ImageFile != null && ImageFile.Length > 0)
+                var existingPOI = await _context.POIs.FirstOrDefaultAsync(m => m.Poiid == id);
+                if (existingPOI == null)
                 {
-                    string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
+                    return NotFound();
+                }
 
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                if (User.IsInRole("admin"))
+                {
+                    existingPOI.Status = pOI.Status;
+                }
+                else
+                {
+                    existingPOI.Name = pOI.Name;
+                    existingPOI.Description = pOI.Description;
+                    existingPOI.Latitude = pOI.Latitude;
+                    existingPOI.Longitude = pOI.Longitude;
+                    existingPOI.Address = pOI.Address;
+
+                    if (ImageFile != null && ImageFile.Length > 0)
                     {
-                        await ImageFile.CopyToAsync(fileStream);
+                        string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
+                        if (!Directory.Exists(uploadsFolder))
+                            Directory.CreateDirectory(uploadsFolder);
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(fileStream);
+                        }
+                        existingPOI.ImagePath = "/images/pois/" + uniqueFileName;
                     }
-                    pOI.ImagePath = "/images/pois/" + uniqueFileName;
                 }
 
                 try
                 {
-                    _context.Update(pOI);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -283,8 +302,8 @@ namespace TourismCMS.Controllers
                     var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
                 }
 
-                // Chuy?n sang tr?ng thái "Đ? xóa" thay v? xóa c?ng kh?i CSDL
-                pOI.Status = "Đ? xóa";
+                // Chuyển sang trạng thái "Đã xóa" thay vì xóa cứng khỏi CSDL
+                pOI.Status = "Đã xóa";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
             }
@@ -348,23 +367,5 @@ namespace TourismCMS.Controllers
             return _context.POIs.Any(e => e.Poiid == id);
         }
     }
-    [ApiController]
-    [Route("api/pois")]
-    [AllowAnonymous]
-    public class PoisApiController : ControllerBase
-    {
-        private readonly ApplicationDbContext _context;
 
-        public PoisApiController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<POI>>> GetPOIs()
-        {
-            // B? qua các record đang ch? duy?t ho?c đ? b? xóa
-            return await _context.POIs.Where(p => p.Status != "Ch? duy?t" && p.Status != "Đ? xóa").ToListAsync();
-        }
-    }
 }
