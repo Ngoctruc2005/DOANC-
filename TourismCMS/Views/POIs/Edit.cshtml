@@ -1,79 +1,178 @@
 ﻿@model TourismCMS.Models.POI
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa thông tin quán";
 }
 
-<h1>Edit</h1>
+<meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<h4>POI</h4>
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+</style>
+
+<h1>Chỉnh sửa thông tin quán</h1>
+
+<h4>@Model.Name</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-8">
         <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Poiid" />
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
+
+            <div class="form-group mb-3">
                 <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" readonly="@(User.IsInRole("admin"))" />
+                <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" readonly="@(User.IsInRole("admin"))" />
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Latitude" class="control-label"></label>
-                <input asp-for="Latitude" class="form-control" readonly="@(User.IsInRole("admin"))" />
-                <span asp-validation-for="Latitude" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Longitude" class="control-label"></label>
-                <input asp-for="Longitude" class="form-control" readonly="@(User.IsInRole("admin"))" />
-                <span asp-validation-for="Longitude" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Address" class="control-label"></label>
-                <input asp-for="Address" class="form-control" readonly="@(User.IsInRole("admin"))" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Address" class="control-label">Số nhà, đường</label>
+                <input asp-for="Address" id="streetInput" class="form-control" />
                 <span asp-validation-for="Address" class="text-danger"></span>
             </div>
+
+            <!-- Ward/District/City fields removed -->
+
+            <div class="form-group mb-3">
+                <button type="button" id="searchAddress" class="btn btn-outline-secondary">Tìm trên bản đồ</button>
+            </div>
+
+            <div id="map"></div>
+
+            <input type="hidden" asp-for="Latitude" id="Latitude" />
+            <input type="hidden" asp-for="Longitude" id="Longitude" />
+
             @if (User.IsInRole("admin"))
             {
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label asp-for="Status" class="control-label"></label>
                     <select asp-for="Status" class="form-control">
                         <option value="Open">Open</option>
                         <option value="Close">Close</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Rejected">Rejected</option>
                     </select>
                     <span asp-validation-for="Status" class="text-danger"></span>
                 </div>
             }
             <div class="form-group mb-3">
-                <label class="control-label">Tải ảnh (ImagePath)</label>
-                <!-- L?u ???ng d?n c? -->
+                <label class="control-label">Hình ảnh</label>
                 <input type="hidden" asp-for="ImagePath" />
-                @if (!User.IsInRole("admin"))
-                {
-                    <input type="file" name="ImageFile" class="form-control" accept="image/*" />
-                }
+                <input type="file" name="ImageFile" class="form-control" accept="image/*" />
                 @if (!string.IsNullOrEmpty(Model.ImagePath))
                 {
-                    <img src="@Model.ImagePath" alt="Hình hiện tại" class="img-thumbnail mt-2" style="max-height: 100px;"/>
+                    <img src="@Model.ImagePath" alt="Hình hiện tại" class="img-thumbnail mt-2" style="max-height: 100px;" />
                 }
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary mt-2" />
+                <input type="submit" value="Lưu thay đổi" class="btn btn-primary mt-2" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a class="btn btn-secondary mt-3" asp-action="Index">Back to List</a>
+    <a class="btn btn-secondary mt-3" asp-action="Index">Quay lại danh sách</a>
 </div>
 
 @section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const initialLat = @(Model.Latitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null");
+            const initialLng = @(Model.Longitude?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "null");
+
+            let map = L.map('map');
+            let marker;
+
+            function updateLocation(lat, lon, displayName) {
+                document.getElementById('Latitude').value = lat;
+                document.getElementById('Longitude').value = lon;
+                if (displayName) {
+                    // For now, just update the main address line. 
+                    // A more complex implementation could parse the address components.
+                    document.getElementById('streetInput').value = displayName;
+                }
+
+                if (marker) {
+                    marker.setLatLng([lat, lon]);
+                } else {
+                    marker = L.marker([lat, lon]).addTo(map);
+                }
+                map.setView([lat, lon], 17);
+            }
+
+            if (initialLat && initialLng) {
+                map.setView([initialLat, initialLng], 15);
+                marker = L.marker([initialLat, initialLng]).addTo(map);
+            } else {
+                map.setView([10.762622, 106.660172], 13); // Default HCMC
+            }
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            map.on('click', function (e) {
+                const lat = e.latlng.lat;
+                const lon = e.latlng.lng;
+
+                fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.display_name) {
+                            updateLocation(lat, lon, data.display_name);
+                        }
+                    })
+                    .catch(error => console.error('Reverse geocoding error:', error));
+            });
+
+            document.getElementById('searchAddress').addEventListener('click', function () {
+                const street = document.getElementById('streetInput').value;
+                const fullAddress = street && street.trim();
+
+                if (!fullAddress) {
+                    alert('Vui lòng nhập địa chỉ để tìm kiếm.');
+                    return;
+                }
+
+                const searchUrl = `/POIs/SearchAddress?address=${encodeURIComponent(fullAddress)}`;
+                fetch(searchUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = data[0].lat;
+                            const lon = data[0].lon;
+                            const displayName = data[0].display_name;
+                            updateLocation(lat, lon, displayName);
+                        } else {
+                            alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi tìm địa chỉ:', error);
+                        alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
+                    });
+            });
+        });
+    </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

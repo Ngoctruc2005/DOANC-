@@ -35,10 +35,6 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<PoiOwnerRegistration> PoiOwnerRegistrations { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=FoodPOI;Trusted_Connection=True;TrustServerCertificate=True");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AdminUser>(entity =>
@@ -161,6 +157,15 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.POI).WithMany(p => p.VisitLogs)
                 .HasForeignKey(d => d.Poiid)
                 .HasConstraintName("FK__VisitLog__POIID__5BE2A6F2");
+        });
+
+        modelBuilder.Entity<PoiOwnerRegistration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50);
         });
 
         OnModelCreatingPartial(modelBuilder);

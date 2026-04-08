@@ -1,33 +1,43 @@
 @model List<POI>
 
-<h2>?? Quán c?a tôi</h2>
+<h2>Quán c?a tôi</h2>
 
 <a href="/Owner/Create" class="btn btn-success mb-3">+ Thêm quán</a>
 
 <table class="table table-bordered">
-    <tr>
-        <th>Tên</th>
-        <th>Tr?ng thái</th>
-    </tr>
-
-    @foreach (var p in Model)
-    {
+    <thead>
         <tr>
-            <td>@p.Name</td>
-            <td>
-                @if (p.Status == "pending")
-                {
-                    <span class="badge bg-warning">Ch? duy?t</span>
-                }
-                else if (p.Status == "approved")
-                {
-                    <span class="badge bg-success">Ðã duy?t</span>
-                }
-                else
-                {
-                    <span class="badge bg-danger">T? ch?i</span>
-                }
-            </td>
+            <th>Tên</th>
+            <th>Tr?ng thái</th>
+            <th>Hành ð?ng</th>
         </tr>
-    }
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            var poiKey = p.Poiid;
+            <tr>
+                <td>@p.Name</td>
+                <td>
+                    @if (p.Status == "Ch? duy?t")
+                    {
+                        <span class="badge bg-warning">Ch? duy?t</span>
+                    }
+                    else if (p.Status == "Open" || p.Status == "Ð? duy?t")
+                    {
+                        <span class="badge bg-success">Ð? duy?t</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">@p.Status</span>
+                    }
+                </td>
+                <td>
+                    <a class="btn btn-info btn-sm" asp-controller="POIs" asp-action="Details" asp-route-id="@poiKey">Chi ti?t</a>
+                    <a class="btn btn-warning btn-sm" asp-controller="POIs" asp-action="Edit" asp-route-id="@poiKey">S?a</a>
+                    <a class="btn btn-danger btn-sm" asp-controller="POIs" asp-action="Delete" asp-route-id="@poiKey">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
 </table>

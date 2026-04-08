@@ -1,43 +1,151 @@
-<h2>? Th�m qu�n (Owner)</h2>
+﻿@model TourismCMS.Models.POI
 
-<form id="createPoiForm" enctype="multipart/form-data">
+@{
+    ViewData["Title"] = "Thêm quán ăn mới";
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+}
 
-    <input name="Name" placeholder="T�n qu�n" class="form-control mb-2" required />
+<meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <textarea name="Description" placeholder="M� t?" class="form-control mb-2"></textarea>
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+    }
+</style>
 
-    <!-- Upload nhi?u ?nh -->
-    <input type="file" name="Images" class="form-control mb-2" multiple />
+<h2>Thêm quán ăn m?i</h2>
 
-    <!-- GPS -->
-    <input type="hidden" name="Latitude" id="Latitude" />
-    <input type="hidden" name="Longitude" id="Longitude" />
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <button class="btn btn-success">Luu</button>
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Tên quán</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Mô t?</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label">Số nhà, đường</label>
+        <input asp-for="Address" id="streetInput" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <!-- Ward/District/City fields removed -->
+
+    <div class="mb-3">
+        <button type="button" id="searchAddress" class="btn btn-outline-secondary">Tìm trên bản đồ</button>
+    </div>
+
+    <div id="map" class="mb-3"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Hình ảnh</label>
+        <input type="file" name="Images" class="form-control" multiple />
+    </div>
+
+    <input type="hidden" asp-for="Latitude" id="Latitude" />
+    <input type="hidden" asp-for="Longitude" id="Longitude" />
+
+    <button type="submit" class="btn btn-success">Lưu quán</button>
 </form>
 
-<script>
-    // ?? L?y v? tr� GPS
-    navigator.geolocation.getCurrentPosition(function(pos) {
-        document.getElementById("Latitude").value = pos.coords.latitude;
-        document.getElementById("Longitude").value = pos.coords.longitude;
-    });
+@section Scripts {
+    <script>
+        var map;
+        var marker;
+        var mapInitialized = false;
 
-    document.getElementById("createPoiForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
+        function updateLocation(lat, lon, displayName) {
+            document.getElementById('Latitude').value = lat;
+            document.getElementById('Longitude').value = lon;
+            if (displayName) {
+                document.getElementById('streetInput').value = displayName;
+            }
 
-        const formData = new FormData(this);
-        const token = localStorage.getItem("token");
+            if (marker) {
+                marker.setLatLng([lat, lon]);
+            } else {
+                marker = L.marker([lat, lon]).addTo(map);
+            }
+            map.setView([lat, lon], 17);
+        }
 
-        const res = await fetch("http://localhost:8000/poi", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token
-            },
-            body: formData
+        function initializeMap() {
+            if (!mapInitialized) {
+                map = L.map('map').setView([10.762622, 106.660172], 13); // Default: HCMC
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                mapInitialized = true;
+
+                map.on('click', function (e) {
+                    var lat = e.latlng.lat;
+                    var lon = e.latlng.lng;
+
+                    fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data && data.display_name) {
+                                updateLocation(lat, lon, data.display_name);
+                            }
+                        })
+                        .catch(error => console.error('Reverse geocoding error:', error));
+                });
+            }
+        }
+
+        document.getElementById('streetInput').addEventListener('focus', initializeMap);
+
+        document.getElementById('searchAddress').addEventListener('click', function () {
+            const street = document.getElementById('streetInput').value;
+            const fullAddress = street && street.trim();
+
+            if (!fullAddress) {
+                alert('Vui lòng nhập địa chỉ để tìm kiếm.');
+                return;
+            }
+
+            initializeMap();
+
+            var searchUrl = `/POIs/SearchAddress?address=${encodeURIComponent(fullAddress)}`;
+            fetch(searchUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+                        var displayName = data[0].display_name;
+                        updateLocation(lat, lon, displayName);
+                    } else {
+                        alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tìm địa chỉ:', error);
+                    alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
+                });
         });
-
-        const data = await res.json();
-        alert(data.message);
-    });
-</script>
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

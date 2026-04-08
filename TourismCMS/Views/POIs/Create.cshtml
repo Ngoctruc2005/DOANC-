@@ -4,34 +4,51 @@
     ViewData["Title"] = "Create POI";
 }
 
+<meta name="referrer" content="no-referrer-when-downgrade">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+</style>
+
 <h2>Create POI</h2>
 
 <form asp-action="Create" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
         <label asp-for="Name" class="form-label"></label>
         <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Description" class="form-label"></label>
         <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Latitude" class="form-label"></label>
-        <input asp-for="Latitude" class="form-control" />
+    <div class="form-group mb-3">
+        <label asp-for="Address" class="control-label">Số nhà, đường</label>
+        <input asp-for="Address" id="streetInput" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Longitude" class="form-label"></label>
-        <input asp-for="Longitude" class="form-control" />
+    <!-- Ward/District/City fields removed -->
+
+    <div class="form-group mb-3">
+        <button type="button" id="searchAddress" class="btn btn-outline-secondary">Tìm trên bản đồ</button>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-    </div>
+    <div id="map" class="mb-3"></div>
+
+    <input type="hidden" asp-for="Latitude" id="Latitude" />
+    <input type="hidden" asp-for="Longitude" id="Longitude" />
 
     @if (User.IsInRole("admin"))
     {
@@ -40,7 +57,9 @@
             <select asp-for="Status" class="form-control">
                 <option value="Open">Open</option>
                 <option value="Close">Close</option>
+                <option value="Chờ duyệt">Chờ duyệt</option>
             </select>
+            <span asp-validation-for="Status" class="text-danger"></span>
         </div>
     }
 
@@ -49,12 +68,96 @@
         <input type="file" name="ImageFile" class="form-control" accept="image/*" />
     </div>
 
-    <button type="submit" class="btn btn-primary mt-2">
-        Create
-    </button>
-
-    <a asp-action="Index" class="btn btn-secondary">
-        Back
-    </a>
-
+    <button type="submit" class="btn btn-primary mt-2">Create</button>
+    <a asp-action="Index" class="btn btn-secondary mt-2">Back</a>
 </form>
+
+@section Scripts {
+    <script>
+        var map;
+        var marker;
+        var mapInitialized = false;
+
+        function updateLocation(lat, lon, displayName) {
+            document.getElementById('Latitude').value = lat;
+            document.getElementById('Longitude').value = lon;
+            if (displayName) {
+                document.getElementById('streetInput').value = displayName;
+            }
+
+            if (marker) {
+                marker.setLatLng([lat, lon]);
+            } else {
+                marker = L.marker([lat, lon]).addTo(map);
+            }
+            map.setView([lat, lon], 17);
+        }
+
+        function initializeMap() {
+            if (!mapInitialized) {
+                map = L.map('map').setView([10.762622, 106.660172], 13); // Default: HCMC
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                mapInitialized = true;
+
+                map.on('click', function (e) {
+                    var lat = e.latlng.lat;
+                    var lon = e.latlng.lng;
+
+                    fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data && data.display_name) {
+                                updateLocation(lat, lon, data.display_name);
+                            }
+                        })
+                        .catch(error => console.error('Reverse geocoding error:', error));
+                });
+            }
+        }
+
+        document.getElementById('streetInput').addEventListener('focus', initializeMap);
+
+        document.getElementById('searchAddress').addEventListener('click', function () {
+            const street = document.getElementById('streetInput').value;
+            const fullAddress = street && street.trim();
+
+            if (!fullAddress) {
+                alert('Vui lòng nhập địa chỉ để tìm kiếm.');
+                return;
+            }
+
+            initializeMap();
+
+            var searchUrl = `/POIs/SearchAddress?address=${encodeURIComponent(fullAddress)}`;
+            fetch(searchUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        var lat = data[0].lat;
+                        var lon = data[0].lon;
+                        var displayName = data[0].display_name;
+                        updateLocation(lat, lon, displayName);
+                    } else {
+                        alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tìm địa chỉ:', error);
+                    alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
+                });
+        });
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

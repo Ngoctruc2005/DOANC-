@@ -57,7 +57,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "admin",
-    pattern: "admin/{controller=POIs}/{action=Index}/{id?}");
+    pattern: "admin/{controller=Admin}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

@@ -74,14 +74,14 @@ namespace TourismCMS.Controllers
         }
 
         // 📋 Danh sách owner đăng ký (pending)
-        public IActionResult Registrations()
+        public IActionResult OwnerRequests()
         {
             var list = _context.PoiOwnerRegistrations
                 .Where(r => r.Status == "pending")
                 .Join(_context.Users,
                     r => r.UserId,
                     u => u.Id,
-                    (r, u) => new OwnerRegistrationViewModel
+                    (r, u) => new TourismCMS.Models.OwnerRegistrationViewModel
                     {
                         RegistrationId = r.Id,
                         UserId = u.Id,
@@ -95,13 +95,19 @@ namespace TourismCMS.Controllers
             return View(list);
         }
 
+        public IActionResult Registrations()
+        {
+            return RedirectToAction(nameof(OwnerRequests));
+        }
+
+
         public IActionResult Owners()
         {
             var owners = _context.Users
                 .Where(u => u.Role == "poi_owner" && u.IsVerified
                     && !string.IsNullOrWhiteSpace(u.FullName)
                     && !string.IsNullOrWhiteSpace(u.PhoneNumber))
-                .Select(u => new OwnerListItemViewModel
+                .Select(u => new TourismCMS.Models.OwnerListItemViewModel
                 {
                     UserId = u.Id,
                     FullName = u.FullName,
@@ -121,7 +127,7 @@ namespace TourismCMS.Controllers
                 .Join(_context.Users,
                     r => r.UserId,
                     u => u.Id,
-                    (r, u) => new OwnerRegistrationViewModel
+                    (r, u) => new TourismCMS.Models.OwnerRegistrationViewModel
                     {
                         RegistrationId = r.Id,
                         UserId = u.Id,
@@ -145,7 +151,7 @@ namespace TourismCMS.Controllers
         {
             var deletedOwners = _context.Users
                 .Where(u => u.Role == "deleted_owner")
-                .Select(u => new OwnerListItemViewModel
+                .Select(u => new TourismCMS.Models.OwnerListItemViewModel
                 {
                     UserId = u.Id,
                     FullName = u.FullName,
@@ -249,7 +255,7 @@ namespace TourismCMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Registrations");
+            return RedirectToAction(nameof(Owners));
         }
 
         // ❌ Từ chối owner
@@ -262,7 +268,7 @@ namespace TourismCMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Registrations");
+            return RedirectToAction(nameof(Cancelled));
         }
     }
 }

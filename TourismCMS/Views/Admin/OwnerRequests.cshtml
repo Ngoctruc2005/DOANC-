@@ -1,6 +1,69 @@
-namespace TourismCMS.Views.Admin
-{
-    public class OwnerRequests
-    {
-    }
+@model IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>
+
+@{
+    ViewData["Title"] = "Yêu cầu đăng ký chủ quán";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">@ViewData["Title"]</h1>
+    <p class="mb-4">
+        Danh sách các tài khoản đăng ký làm chủ quán và đang chờ được duyệt.
+    </p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách chờ duyệt</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>
+                                Tên đầy đủ
+                            </th>
+                            <th>
+                                Số điện thoại
+                            </th>
+                            <th>
+                                Tên đăng nhập
+                            </th>
+                            <th>
+                                Trạng thái
+                            </th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.FullName)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.PhoneNumber)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Username)
+                                </td>
+                                <td>
+                                    <span class="badge badge-warning">@item.Status</span>
+                                </td>
+                                <td>
+                                    <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-success btn-sm">Duyệt</a>
+                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-danger btn-sm">Từ chối</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

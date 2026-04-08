@@ -13,6 +13,13 @@
     <!-- Map Container -->
     <div class="card shadow-sm mb-5">
         <div class="card-body p-1">
+            <div class="p-3">
+                <div class="input-group mb-2">
+                    <input id="addressInput" type="search" class="form-control" placeholder="Nhập địa chỉ: Phường, Quận, Thành phố" aria-label="Tìm địa chỉ" />
+                    <button id="searchBtn" class="btn btn-primary" type="button">Tìm</button>
+                </div>
+                <div id="map" style="height: 480px; width: 100%;"></div>
+            </div>
         </div>
     </div>
 
@@ -85,7 +92,17 @@
             }).addTo(map);
 
             var bounds = [];
-            
+            var tempSearchMarker = null;
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/\"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             // Add markers
             @foreach (var item in Model)
             {
@@ -94,11 +111,11 @@
                     <text>
                     var lat = @item.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     var lng = @item.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    var name = "@Html.Raw(item.Name?.Replace("\"", "\\\""))";
+                    var name = "@Html.Raw(item.Name?.Replace("\"", "\\\"") ?? "")";
                     var url = '@Url.Action("Details", "POIs", new { id = item.Poiid })';
-                    
+
                     var marker = L.marker([lat, lng]).addTo(map);
-                    marker.bindPopup(`<b>${name}</b><br><a href="${url}" class="btn btn-sm btn-primary mt-2">Xem chi tiết</a>`);
+                    marker.bindPopup(`<b>${escapeHtml(name)}</b><br><a href="${url}" class="btn btn-sm btn-primary mt-2">Xem chi tiết</a>`);
                     bounds.push([lat, lng]);
                     </text>
                 }
@@ -108,6 +125,55 @@
             if (bounds.length > 0) {
                 map.fitBounds(bounds);
             }
+
+            // Address search using Nominatim
+            var addressInput = document.getElementById('addressInput');
+            var searchBtn = document.getElementById('searchBtn');
+
+            function searchAddress() {
+                var q = addressInput.value && addressInput.value.trim();
+                if (!q) return;
+
+                // Use Nominatim (OpenStreetMap) for geocoding
+                var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&q=' + encodeURIComponent(q);
+
+                fetch(url, { headers: { 'Accept-Language': 'vi' } })
+                    .then(function (res) { return res.json(); })
+                    .then(function (results) {
+                        if (!results || results.length === 0) {
+                            alert('Không tìm thấy địa chỉ. Vui lòng thử lại với thông tin chi tiết hơn.');
+                            return;
+                        }
+
+                        var place = results[0];
+                        var lat = parseFloat(place.lat);
+                        var lon = parseFloat(place.lon);
+
+                        // Remove existing temporary marker
+                        if (tempSearchMarker) {
+                            map.removeLayer(tempSearchMarker);
+                            tempSearchMarker = null;
+                        }
+
+                        tempSearchMarker = L.marker([lat, lon], { opacity: 0.95 }).addTo(map);
+                        var displayName = place.display_name || addressInput.value;
+                        tempSearchMarker.bindPopup('<strong>Tìm kiếm:</strong> ' + escapeHtml(displayName)).openPopup();
+
+                        map.setView([lat, lon], 16);
+                    })
+                    .catch(function (err) {
+                        console.error(err);
+                        alert('Lỗi khi tìm địa chỉ. Vui lòng thử lại sau.');
+                    });
+            }
+
+            searchBtn.addEventListener('click', searchAddress);
+            addressInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddress();
+                }
+            });
         });
     </script>
 }

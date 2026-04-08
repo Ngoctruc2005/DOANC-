@@ -63,30 +63,56 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+    <!-- Leaflet Geocoder CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            @if(Model != null && Model.Latitude.HasValue && Model.Longitude.HasValue)
+            var lat, lng;
+            var map;
+            var initialZoom;
+
+            @if (Model != null && Model.Latitude.HasValue && Model.Longitude.HasValue)
             {
                 <text>
-                var lat = @Model.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                var lng = @Model.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                var map = L.map('map').setView([lat, lng], 13); // Zoom level 13
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-
-                var marker = L.marker([lat, lng]).addTo(map);
-                marker.bindPopup(`<b>@Html.Raw(Model.Name?.Replace("\"", "\\\""))</b>`).openPopup();
+                // Use POI's coordinates if available
+                lat = @Model.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                lng = @Model.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                initialZoom = 15; // Zoom in closer for a specific point
                 </text>
             }
             else
             {
                 <text>
-                // Thay th? b?ng t?a d? m?c d?nh n?u không có
-                document.getElementById('map').innerHTML = '<p>B?n d? chua kh? d?ng: Không có vi d?/kinh d?</p>';
+                // Default to a central location in Vietnam if no coordinates are available
+                lat = 16.047079; // Da Nang
+                lng = 108.206230;
+                initialZoom = 6; // Broader view of Vietnam
                 </text>
             }
+
+            map = L.map('map').setView([lat, lng], initialZoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add marker for the POI if coordinates are available
+            @if (Model != null && Model.Latitude.HasValue && Model.Longitude.HasValue)
+            {
+                <text>
+                var marker = L.marker([lat, lng]).addTo(map);
+                marker.bindPopup(`<b>@Html.Raw(Model.Name?.Replace("\"", "\\\""))</b>`).openPopup();
+                </text>
+            }
+
+            // Add Geocoder control for address search
+            L.Control.geocoder({
+                defaultMarkGeocode: true, // Mark the geocoded address on the map
+                placeholder: 'Nh?p ð?a ch? ð? t?m ki?m...',
+                errorMessage: 'Không t?m th?y ð?a ch?.'
+            }).addTo(map);
         });
     </script>
 }

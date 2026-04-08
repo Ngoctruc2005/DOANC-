@@ -77,7 +77,7 @@ namespace TourismCMS.Controllers
             }
 
             var pOI = await _context.POIs
-                .FirstOrDefaultAsync(m => m.Poiid == id);
+                .FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
             if (pOI == null)
             {
                 return NotFound();
@@ -121,7 +121,7 @@ namespace TourismCMS.Controllers
                     if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
@@ -164,7 +164,7 @@ namespace TourismCMS.Controllers
                 return NotFound();
             }
 
-            var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Poiid == id);
+            var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
             if (pOI == null)
             {
                 return NotFound();
@@ -190,62 +190,57 @@ namespace TourismCMS.Controllers
                 return NotFound();
             }
 
+            var existingPOI = await _context.POIs.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
+            if (existingPOI == null)
+            {
+                return NotFound();
+            }
+
+            // Security check: Ensure owner can only edit their own POIs
             if (User.IsInRole("poi_owner"))
             {
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                // Đảm bảo không cho phép sửa OwnerId
-                pOI.OwnerId = userId;
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                if (existingPOI.OwnerId != userId)
+                {
+                    return Forbid();
+                }
+            }
+
+            // Map editable fields from the submitted model (pOI) to the entity
+            existingPOI = pOI;
+
+            // Restore non-editable fields for owners
+            if (User.IsInRole("poi_owner"))
+            {
+                var originalPOI = await _context.POIs.AsNoTracking().FirstOrDefaultAsync(p => p.Poiid == id);
+                existingPOI.Status = originalPOI.Status; // Owner cannot change status
+                existingPOI.OwnerId = originalPOI.OwnerId; // Owner cannot change owner
+            }
+
+
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
+                Directory.CreateDirectory(uploadsFolder);
+                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(fileStream);
+                }
+                existingPOI.ImagePath = "/images/pois/" + uniqueFileName;
             }
 
             ModelState.Remove("Categories");
             ModelState.Remove("Menus");
             ModelState.Remove("VisitLogs");
-            ModelState.Remove("OwnerId");
             ModelState.Remove("ImageFile");
-
-            if (pOI.Id == null || pOI.Id == 0)
-            {
-                pOI.Id = pOI.Poiid;
-            }
 
             if (ModelState.IsValid)
             {
-                var existingPOI = await _context.POIs.FirstOrDefaultAsync(m => m.Poiid == id);
-                if (existingPOI == null)
-                {
-                    return NotFound();
-                }
-
-                if (User.IsInRole("admin"))
-                {
-                    existingPOI.Status = pOI.Status;
-                }
-                else
-                {
-                    existingPOI.Name = pOI.Name;
-                    existingPOI.Description = pOI.Description;
-                    existingPOI.Latitude = pOI.Latitude;
-                    existingPOI.Longitude = pOI.Longitude;
-                    existingPOI.Address = pOI.Address;
-
-                    if (ImageFile != null && ImageFile.Length > 0)
-                    {
-                        string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "pois");
-                        if (!Directory.Exists(uploadsFolder))
-                            Directory.CreateDirectory(uploadsFolder);
-
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(ImageFile.FileName);
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await ImageFile.CopyToAsync(fileStream);
-                        }
-                        existingPOI.ImagePath = "/images/pois/" + uniqueFileName;
-                    }
-                }
-
                 try
                 {
+                    _context.Update(existingPOI);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -287,6 +282,68 @@ namespace TourismCMS.Controllers
             return View(pOI);
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> SearchAddress(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return BadRequest("Address cannot be empty.");
+            }
+
+            var searchUrl = $"https://nominatim.openstreetmap.org/search?format=json&q={Uri.EscapeDataString(address)}&countrycodes=vn&accept-language=vi";
+
+            using (var httpClient = new HttpClient())
+            {
+                // Nominatim requires a valid, unique User-Agent.
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "TourismCMS/1.0 (github.com/Ngoctruc2005/DOANC-)");
+
+                try
+                {
+                    var response = await httpClient.GetAsync(searchUrl);
+                    response.EnsureSuccessStatusCode();
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    return Content(jsonString, "application/json");
+                }
+                catch (HttpRequestException e)
+                {
+                    return StatusCode(502, $"Error fetching data from Nominatim: {e.Message}");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                }
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ReverseGeocode(double lat, double lon)
+        {
+            var reverseUrl = $"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&accept-language=vi";
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "TourismCMS/1.0 (github.com/Ngoctruc2005/DOANC-)");
+
+                try
+                {
+                    var response = await httpClient.GetAsync(reverseUrl);
+                    response.EnsureSuccessStatusCode();
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    return Content(jsonString, "application/json");
+                }
+                catch (HttpRequestException e)
+                {
+                    return StatusCode(502, $"Error fetching data from Nominatim: {e.Message}");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                }
+            }
+        }
+
         // POST: POIs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -297,15 +354,25 @@ namespace TourismCMS.Controllers
 
             if (pOI != null)
             {
+                bool isOwner = false;
                 if (User.IsInRole("poi_owner"))
                 {
                     var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                    if (pOI.OwnerId == userId)
+                    {
+                        isOwner = true;
+                    }
                 }
 
                 // Chuyển sang trạng thái "Đã xóa" thay vì xóa cứng khỏi CSDL
                 pOI.Status = "Đã xóa";
                 _context.Update(pOI);
                 await _context.SaveChangesAsync();
+
+                if (isOwner)
+                {
+                    return RedirectToAction("MyRestaurants", "Owner");
+                }
             }
 
             return RedirectToAction(nameof(Index));

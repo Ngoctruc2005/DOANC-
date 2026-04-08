@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TourismCMS.Models
@@ -13,7 +13,9 @@ namespace TourismCMS.Models
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string? Address { get; set; }
-        // Ward/District/City removed as requested
+        // public string? Ward { get; set; }
+        // public string? District { get; set; }
+        // public string? City { get; set; }
         public string? Description { get; set; }
         public string? Status { get; set; }
         public string? ImagePath { get; set; }
@@ -35,9 +37,3 @@ namespace TourismCMS.Models
 
         public virtual POI? Poi { get; set; }
     }
-
-    public partial class POI
-    {
-        public double Radius { get; set; } = 50; // mét
-    }
-}
