@@ -31,11 +31,11 @@ namespace TourismApp.Services
             // Ưu tiên localhost cục bộ trước để chạy cực nhanh nếu đang chạy Backend ở cùng máy tính
             if (DeviceInfo.DeviceType == DeviceType.Physical)
             {
-                // Cập nhật lại IP hiện tại của máy tính
-                yield return "http://10.10.20.153:5219/api/";
-                yield return "https://10.10.20.153:7141/api/";
-                yield return "http://10.10.20.153:5219/";
-                yield return "https://10.10.20.153:7141/";
+                // Cập nhật lại IP hiện tại của máy tính (được lấy từ ipconfig)
+                yield return "http://192.168.31.233:5219/api/";
+                yield return "https://192.168.31.233:7141/api/";
+                yield return "http://192.168.31.233:5219/";
+                yield return "https://192.168.31.233:7141/";
             }
             else if (DeviceInfo.Platform == DevicePlatform.Android)
             {
@@ -74,9 +74,13 @@ namespace TourismApp.Services
 
             _httpClient = new HttpClient(handler)
             {
-                // 🔥 Giảm thời gian Timeout xuống 2s để API test nhanh các URL
-                Timeout = TimeSpan.FromSeconds(2) 
+                // Tăng thời gian Timeout lên 10-15s để Dev Tunnels hoặc máy ở xa có thời gian phản hồi
+                Timeout = TimeSpan.FromSeconds(15) 
             };
+
+            _httpClient.DefaultRequestHeaders.Add("X-DevTunnels-Skip-Anti-Phishing-Page", "true");
+            _httpClient.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TourismApp/1.0");
             _dbContext = dbContext;
         }
 

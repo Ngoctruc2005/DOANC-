@@ -29,27 +29,78 @@ public partial class RestaurantDetailPage : ContentPage
         if (!string.IsNullOrWhiteSpace(imageUrl))
         {
             imageUrl = imageUrl.Trim();
-            if (imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-            {
-                // Phải dùng ImageSource.FromUri để MAUI hiểu đây là link cấu hình mạng thay vì file cục bộ
-                restaurantImage.Source = ImageSource.FromUri(new Uri(imageUrl));
-            }
-            else
+            string fullImageUrl = imageUrl;
+
+            if (!imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 // Nếu backend ném về tên file (VD: "uploads/image.jpg")
                 // Ta nối với Base URL của server để lấy ảnh trực tiếp từ internet
                 string baseUrl = "https://nqrwpkxp-5219.asse.devtunnels.ms/"; 
 
-                // Chuẩn hóa chuỗi URL tránh bị lỗi dính 2 dấu gạch chéo
-                string fullImageUrl = baseUrl.TrimEnd('/') + "/" + imageUrl.TrimStart('/');
+                // Thử kết nối lấy ảnh từ URL baseUrl nếu có
+                var instance = new PoiApiService(null);
+                var urls = instance.GetType().GetMethod("GetApiBaseUrls", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(instance, null) as IEnumerable<string>;
+                if (urls != null)
+                {
+                   baseUrl = urls.FirstOrDefault(u => !string.IsNullOrEmpty(u) && !u.Contains("localhost") && !u.Contains("127.0.0.1") && u.Contains("devtunnels.ms")) ?? baseUrl;
 
-                restaurantImage.Source = ImageSource.FromUri(new Uri(fullImageUrl));
+                   baseUrl = baseUrl.Replace("api/", ""); // xoá api path ra khỏi image path
+                }
+
+                // Chuẩn hóa chuỗi URL tránh bị lỗi dính 2 dấu gạch chéo
+                fullImageUrl = baseUrl.TrimEnd('/') + "/" + imageUrl.TrimStart('/');
             }
+
+            LoadImageWithBypassAsync(fullImageUrl);
         }
         else
         {
             // Nếu API không trả về ảnh quán, sử dụng luôn ảnh mặc định từ Internet
             restaurantImage.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+        }
+    }
+
+    private async void LoadImageWithBypassAsync(string fullImageUrl)
+    {
+        try
+        {
+            // Tự động tải ảnh bằng HttpClient cho mọi URL để vượt qua SSL lỗi / Dev Tunnels
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+
+            var client = new HttpClient(handler);
+            client.Timeout = TimeSpan.FromSeconds(15);
+            // Header bypass cho Dev Tunnels, Ngrok
+            client.DefaultRequestHeaders.Add("X-DevTunnels-Skip-Anti-Phishing-Page", "true");
+            client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
+            var response = await client.GetAsync(fullImageUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    restaurantImage.Source = ImageSource.FromStream(() => new MemoryStream(bytes));
+                });
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[HTTP Lỗi tải ảnh] Mã {response.StatusCode} từ {fullImageUrl}");
+                // Fallback nếu link hỏng
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    restaurantImage.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Lỗi tải ảnh Exception] {ex.Message}");
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                restaurantImage.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+            });
         }
     }
 

@@ -14,16 +14,39 @@ public partial class QRPage : ContentPage
         InitializeComponent();
         BindingContext = TourismApp.Services.LocalizationService.Instance;
 
+        _camera.Options = new BarcodeReaderOptions
+        {
+            Formats = BarcodeFormats.All,
+            AutoRotate = true,
+            Multiple = false
+        };
+        _camera.CameraLocation = CameraLocation.Rear;
         _camera.BarcodesDetected += OnDetected;
         cameraHost.Content = _camera;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
+        await CheckCameraPermissionAsync();
+
         _isAnimating = true;
         _camera.IsDetecting = true;
         AnimateScanLine();
+    }
+
+    private async Task CheckCameraPermissionAsync()
+    {
+        var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+        if (status != PermissionStatus.Granted)
+        {
+            status = await Permissions.RequestAsync<Permissions.Camera>();
+            if (status != PermissionStatus.Granted)
+            {
+                var loc = TourismApp.Services.LocalizationService.Instance;
+                await DisplayAlert(loc["Notice"] ?? "Lỗi", "Quyền truy cập Camera bị từ chối. Không thể quét QR.", loc["OK"] ?? "OK");
+            }
+        }
     }
 
     protected override void OnDisappearing()
