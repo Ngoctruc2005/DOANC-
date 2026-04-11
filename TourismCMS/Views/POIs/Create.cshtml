@@ -47,8 +47,18 @@
 
     <div id="map" class="mb-3"></div>
 
-    <input type="hidden" asp-for="Latitude" id="Latitude" />
-    <input type="hidden" asp-for="Longitude" id="Longitude" />
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Latitude</label>
+            <input asp-for="Latitude" id="Latitude" class="form-control" readonly />
+            <span asp-validation-for="Latitude" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Longitude</label>
+            <input asp-for="Longitude" id="Longitude" class="form-control" readonly />
+            <span asp-validation-for="Longitude" class="text-danger"></span>
+        </div>
+    </div>
 
     @if (User.IsInRole("admin"))
     {
@@ -81,6 +91,8 @@
         function updateLocation(lat, lon, displayName) {
             document.getElementById('Latitude').value = lat;
             document.getElementById('Longitude').value = lon;
+            const streetInput = document.getElementById('streetInput');
+            // Always update the address input when we have a display name from geocoding
             if (displayName) {
                 document.getElementById('streetInput').value = displayName;
             }
@@ -113,7 +125,7 @@
                             return response.json();
                         })
                         .then(data => {
-                            if (data && data.display_name) {
+                            if (data) {
                                 updateLocation(lat, lon, data.display_name);
                             }
                         })
@@ -145,10 +157,12 @@
                 })
                 .then(data => {
                     if (data && data.length > 0) {
-                        var lat = data[0].lat;
-                        var lon = data[0].lon;
-                        var displayName = data[0].display_name;
-                        updateLocation(lat, lon, displayName);
+                        const query = fullAddress.toLowerCase();
+                        const best = data.find(x => (x.display_name || '').toLowerCase().includes(query)) || data[0];
+                        var lat = best.lat;
+                        var lon = best.lon;
+                        // pass the returned display_name so the full formatted address is set
+                        updateLocation(lat, lon, best.display_name);
                     } else {
                         alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
                     }
@@ -157,6 +171,16 @@
                     console.error('Lỗi khi tìm địa chỉ:', error);
                     alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
                 });
+        });
+
+        const poiCreateForm = document.querySelector('form');
+        poiCreateForm.addEventListener('submit', function (e) {
+            const lat = document.getElementById('Latitude').value;
+            const lon = document.getElementById('Longitude').value;
+            if (!lat || !lon) {
+                e.preventDefault();
+                alert('Vui lòng bấm "Tìm trên bản đồ" hoặc chọn vị trí trên bản đồ trước khi lưu.');
+            }
         });
     </script>
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

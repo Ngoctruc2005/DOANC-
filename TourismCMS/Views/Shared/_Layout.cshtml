@@ -20,33 +20,7 @@
 
     <div class="d-flex">
 
-        @if (User.Identity.IsAuthenticated)
-        {
-            <!-- Sidebar -->
-            <div class="sidebar text-white p-3" style="width:250px; min-height:100vh;">
-                <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> V&#297;nh Kh&#225;nh</h4>
-
-                @if (User.IsInRole("admin"))
-                {
-                    <a href="/Admin/Index"><i class="fa fa-chart-line"></i> B&#7843;ng &#273;i&#7873;u khi&#7875;n</a>
-                    <a href="/Admin/Registrations"><i class="fa fa-users-cog"></i> Duy&#7879;t ch&#7911; qu&#225;n</a>
-                    <a href="/Admin/Owners"><i class="fa fa-user-tie"></i> Ch&#7911; qu&#225;n</a>
-                    <a href="/POIs/Index"><i class="fa fa-store"></i> Qu&#225;n &#259;n</a>
-                    <a href="/POIs/Pending"><i class="fa fa-clock"></i> Ch&#7901; duy&#7879;t</a>
-                    <a href="/Admin/Cancelled"><i class="fa fa-ban"></i> &#272;&#227; h&#7911;y</a>
-                    <a href="/Admin/Deleted"><i class="fa fa-trash"></i> &#272;&#227; x&#243;a</a>
-                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> &#272;&#259;ng xu&#7845;t</a>
-                }
-
-                @if (User.IsInRole("poi_owner"))
-                {
-                    <a href="/Owner/Index"><i class="fa fa-chart-line"></i> B&#7843;ng &#273;i&#7873;u khi&#7875;n</a>
-                    <a href="/POIs/Index"><i class="fa fa-store"></i> Qu&#225;n c&#7911;a t&#244;i</a>
-                    <a href="/POIs/Create"><i class="fa fa-plus"></i> &#272;&#259;ng k&#253; qu&#225;n</a>
-                    <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> &#272;&#259;ng xu&#7845;t</a>
-                }
-            </div>
-        }
+        @await Html.PartialAsync("_Sidebar")
 
         <!-- Content -->
         <div class="p-4 w-100">

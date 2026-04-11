@@ -100,9 +100,8 @@
             function updateLocation(lat, lon, displayName) {
                 document.getElementById('Latitude').value = lat;
                 document.getElementById('Longitude').value = lon;
-                if (displayName) {
-                    // For now, just update the main address line. 
-                    // A more complex implementation could parse the address components.
+                const streetInput = document.getElementById('streetInput');
+                if (!streetInput.value.trim() && displayName) {
                     document.getElementById('streetInput').value = displayName;
                 }
 
@@ -135,7 +134,7 @@
                         return response.json();
                     })
                     .then(data => {
-                        if (data && data.display_name) {
+                        if (data) {
                             updateLocation(lat, lon, data.display_name);
                         }
                     })
@@ -159,10 +158,12 @@
                     })
                     .then(data => {
                         if (data && data.length > 0) {
-                            const lat = data[0].lat;
-                            const lon = data[0].lon;
-                            const displayName = data[0].display_name;
-                            updateLocation(lat, lon, displayName);
+                            const query = fullAddress.toLowerCase();
+                            const best = data.find(x => (x.display_name || '').toLowerCase().includes(query)) || data[0];
+                            const lat = best.lat;
+                            const lon = best.lon;
+                            updateLocation(lat, lon, null);
+                            document.getElementById('streetInput').value = fullAddress;
                         } else {
                             alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
                         }
@@ -171,6 +172,16 @@
                         console.error('Lỗi khi tìm địa chỉ:', error);
                         alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
                     });
+            });
+
+            const poiEditForm = document.querySelector('form');
+            poiEditForm.addEventListener('submit', function (e) {
+                const lat = document.getElementById('Latitude').value;
+                const lon = document.getElementById('Longitude').value;
+                if (!lat || !lon) {
+                    e.preventDefault();
+                    alert('Vui lòng bấm "Tìm trên bản đồ" hoặc chọn vị trí trên bản đồ trước khi lưu.');
+                }
             });
         });
     </script>

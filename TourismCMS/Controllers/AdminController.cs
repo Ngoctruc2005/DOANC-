@@ -215,6 +215,39 @@ namespace TourismCMS.Controllers
             return View(restaurants);
         }
 
+        public async Task<IActionResult> VisitHistory()
+        {
+            var history = await _context.VisitLogs
+                .AsNoTracking()
+                .Include(v => v.POI)
+                .Where(v => v.POI != null)
+                .GroupBy(v => new
+                {
+                    v.POI!.Poiid,
+                    v.POI.Name,
+                    v.POI.Address,
+                    v.POI.OwnerId
+                })
+                .Select(g => new VisitHistoryItemViewModel
+                {
+                    Poiid = g.Key.Poiid,
+                    PoiName = g.Key.Name,
+                    Address = g.Key.Address,
+                    OwnerName = _context.Users
+                        .Where(u => u.Id == g.Key.OwnerId)
+                        .Select(u => string.IsNullOrWhiteSpace(u.FullName) ? u.Username : u.FullName)
+                        .FirstOrDefault(),
+                    TotalVisits = g.Count(),
+                    UniqueDevices = g.Select(x => x.DeviceId).Where(d => !string.IsNullOrEmpty(d)).Distinct().Count(),
+                    LastVisitTime = g.Max(x => x.VisitTime)
+                })
+                .OrderByDescending(x => x.TotalVisits)
+                .ThenByDescending(x => x.LastVisitTime)
+                .ToListAsync();
+
+            return View(history);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOwner(int id)

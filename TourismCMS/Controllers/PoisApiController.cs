@@ -23,7 +23,9 @@ namespace TourismCMS.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetPois()
         {
+            // Exclude POIs that have been marked deleted on the CMS so app stays in sync when web deletes a POI
             var pois = await _db.POIs
+                .Where(p => p.Status == null || (!p.Status.Contains("xóa") && !p.Status.Contains("hủy")))
                 .Select(p => new
                 {
                     poiid = p.Poiid,

@@ -20,6 +20,40 @@ public class OwnerController : Controller
         return View();
     }
 
+    public async Task<IActionResult> VisitHistory()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var history = await _context.VisitLogs
+            .AsNoTracking()
+            .Include(v => v.POI)
+            .Where(v => v.POI != null && v.POI.OwnerId == userId)
+            .GroupBy(v => new
+            {
+                v.POI!.Poiid,
+                v.POI.Name,
+                v.POI.Address
+            })
+            .Select(g => new VisitHistoryItemViewModel
+            {
+                Poiid = g.Key.Poiid,
+                PoiName = g.Key.Name,
+                Address = g.Key.Address,
+                TotalVisits = g.Count(),
+                UniqueDevices = g.Select(x => x.DeviceId).Where(d => !string.IsNullOrEmpty(d)).Distinct().Count(),
+                LastVisitTime = g.Max(x => x.VisitTime)
+            })
+            .OrderByDescending(x => x.TotalVisits)
+            .ThenByDescending(x => x.LastVisitTime)
+            .ToListAsync();
+
+        return View(history);
+    }
+
     // 📊 quán của tôi
     public async Task<IActionResult> MyRestaurants()
     {

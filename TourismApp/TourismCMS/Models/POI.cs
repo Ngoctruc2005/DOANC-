@@ -6,16 +6,14 @@ namespace TourismCMS.Models
     public partial class POI
     {
         // Make these properties nullable by adding '?'
-        public int? Id { get; set; } 
+        public int? Id { get; set; }
         public int Poiid { get; set; }
         public int OwnerId { get; set; }
         public string? Name { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string? Address { get; set; }
-        // public string? Ward { get; set; }
-        // public string? District { get; set; }
-        // public string? City { get; set; }
+        // Ward/District/City removed as requested
         public string? Description { get; set; }
         public string? Status { get; set; }
         public string? ImagePath { get; set; }
@@ -37,3 +35,4 @@ namespace TourismCMS.Models
 
         public virtual POI? Poi { get; set; }
     }
+}

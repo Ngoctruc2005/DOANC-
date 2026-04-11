@@ -1,151 +1,220 @@
 ﻿@model TourismCMS.Models.POI
 
+@using System.Text.Json
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Thêm quán ăn mới";
     Layout = "~/Views/Shared/_OwnerLayout.cshtml";
 }
 
-<meta name="referrer" content="no-referrer-when-downgrade">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
     #map {
-        height: 400px;
-        width: 100%;
+    height: 400px;
+    width: 100%;
     }
 </style>
 
-<h2>Thêm quán ăn m?i</h2>
+<h2>Thêm quán ăn mới</h2>
 
 <form asp-action="Create" method="post" enctype="multipart/form-data">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
-        <label asp-for="Name" class="form-label">Tên quán</label>
+        <label>Tên quán</label>
         <input asp-for="Name" class="form-control" required />
-        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Description" class="form-label">Mô t?</label>
+        <label>Mô tả</label>
         <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Address" class="form-label">Số nhà, đường</label>
+        <label>Địa chỉ</label>
         <input asp-for="Address" id="streetInput" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
+        <small id="status" class="text-muted"></small>
     </div>
-
-    <!-- Ward/District/City fields removed -->
 
     <div class="mb-3">
-        <button type="button" id="searchAddress" class="btn btn-outline-secondary">Tìm trên bản đồ</button>
+        <button type="button" id="btnSearch" class="btn btn-secondary">Tìm</button>
+        <button type="button" id="btnSave" class="btn btn-primary">Lưu vị trí</button>
     </div>
 
-    <div id="map" class="mb-3"></div>
+    <div id="map"></div>
 
-    <div class="mb-3">
-        <label class="form-label">Hình ảnh</label>
-        <input type="file" name="Images" class="form-control" multiple />
+    <!-- 👉 HIỂN THỊ TỌA ĐỘ -->
+    <div class="mb-3 mt-2">
+        <label>Tọa độ (Lat, Lng)</label>
+        <input type="text" id="LatLngDisplay" class="form-control" readonly />
     </div>
 
+    <!-- hidden lưu DB -->
     <input type="hidden" asp-for="Latitude" id="Latitude" />
     <input type="hidden" asp-for="Longitude" id="Longitude" />
 
+    <br />
     <button type="submit" class="btn btn-success">Lưu quán</button>
+
 </form>
 
-@section Scripts {
-    <script>
-        var map;
-        var marker;
-        var mapInitialized = false;
-
-        function updateLocation(lat, lon, displayName) {
-            document.getElementById('Latitude').value = lat;
-            document.getElementById('Longitude').value = lon;
-            if (displayName) {
-                document.getElementById('streetInput').value = displayName;
+<script>
+    // Load Google Places autocomplete when API key is available in configuration
+    (function tryInitGooglePlaces() {
+        const googleApiKey = @JsonSerializer.Serialize(Configuration["Geocoding:GoogleApiKey"]);
+        try {
+            const key = JSON.parse(googleApiKey);
+            if (key) {
+                const s = document.createElement('script');
+                s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=vi`;
+                s.defer = true;
+                s.onload = function () {
+                    initGoogleAutocomplete();
+                };
+                document.head.appendChild(s);
             }
+        } catch { /* ignore if not set */ }
+    })();
 
-            if (marker) {
-                marker.setLatLng([lat, lon]);
-            } else {
-                marker = L.marker([lat, lon]).addTo(map);
-            }
-            map.setView([lat, lon], 17);
-        }
-
-        function initializeMap() {
-            if (!mapInitialized) {
-                map = L.map('map').setView([10.762622, 106.660172], 13); // Default: HCMC
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map);
-                mapInitialized = true;
-
-                map.on('click', function (e) {
-                    var lat = e.latlng.lat;
-                    var lon = e.latlng.lng;
-
-                    fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data && data.display_name) {
-                                updateLocation(lat, lon, data.display_name);
-                            }
-                        })
-                        .catch(error => console.error('Reverse geocoding error:', error));
-                });
-            }
-        }
-
-        document.getElementById('streetInput').addEventListener('focus', initializeMap);
-
-        document.getElementById('searchAddress').addEventListener('click', function () {
-            const street = document.getElementById('streetInput').value;
-            const fullAddress = street && street.trim();
-
-            if (!fullAddress) {
-                alert('Vui lòng nhập địa chỉ để tìm kiếm.');
-                return;
-            }
-
-            initializeMap();
-
-            var searchUrl = `/POIs/SearchAddress?address=${encodeURIComponent(fullAddress)}`;
-            fetch(searchUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.length > 0) {
-                        var lat = data[0].lat;
-                        var lon = data[0].lon;
-                        var displayName = data[0].display_name;
-                        updateLocation(lat, lon, displayName);
-                    } else {
-                        alert('Không tìm thấy địa chỉ. Vui lòng kiểm tra lại.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi tìm địa chỉ:', error);
-                    alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng xem console để biết chi tiết.');
-                });
+    function initGoogleAutocomplete() {
+        if (!window.google || !google.maps || !google.maps.places) return;
+        const input = document.getElementById('streetInput');
+        const options = { componentRestrictions: { country: 'vn' } };
+        const ac = new google.maps.places.Autocomplete(input, options);
+        ac.addListener('place_changed', function () {
+            const place = ac.getPlace();
+            if (!place || !place.geometry) return;
+            const lat = place.geometry.location.lat();
+            const lon = place.geometry.location.lng();
+            const name = place.formatted_address || input.value;
+            // preview and immediately save coordinates
+            previewLocation(lat, lon, name);
+            saveLocation();
+            setStatus('Đã tìm và ghim vị trí từ Google Places.', false);
         });
-    </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-}
+    let map, marker;
+    let pendingLocation = null;
+
+    // INIT MAP
+    map = L.map('map').setView([10.762622, 106.660172], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map);
+
+    // STATUS
+    function setStatus(msg, error = false) {
+    const el = document.getElementById("status");
+    el.innerText = msg;
+    el.className = error ? "text-danger" : "text-muted";
+    }
+
+    // PREVIEW (KHÔNG GHIM)
+    function previewLocation(lat, lon, name) {
+    pendingLocation = { lat, lon, name };
+
+    map.setView([lat, lon], 17);
+
+    // 👉 HIỂN THỊ preview tọa độ
+    document.getElementById("LatLngDisplay").value =
+    lat.toFixed(6) + ", " + lon.toFixed(6);
+
+    setStatus("Đã tìm thấy vị trí → bấm 'Lưu vị trí' để xác nhận");
+    }
+
+    // SAVE (GHIM + LƯU)
+    function saveLocation() {
+    if (!pendingLocation) {
+    alert("Chưa chọn vị trí!");
+    return;
+    }
+
+    const { lat, lon, name } = pendingLocation;
+
+    // GHIM marker
+    if (marker) {
+    marker.setLatLng([lat, lon]);
+    } else {
+    marker = L.marker([lat, lon]).addTo(map);
+    }
+
+    // LƯU hidden (DB)
+    document.getElementById("Latitude").value = lat;
+    document.getElementById("Longitude").value = lon;
+
+    // HIỂN THỊ
+    document.getElementById("LatLngDisplay").value =
+    lat.toFixed(6) + ", " + lon.toFixed(6);
+
+    // cập nhật địa chỉ
+    if (name) {
+    document.getElementById("streetInput").value = name;
+    }
+
+    setStatus(`Đã lưu tọa độ: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    }
+
+    // SEARCH
+    async function searchAddress() {
+    const input = document.getElementById("streetInput").value.trim();
+
+    if (!input) {
+    alert("Nhập địa chỉ!");
+    return;
+    }
+
+    setStatus("Đang tìm...");
+
+    try {
+    const query = input + ", Hồ Chí Minh, Việt Nam";
+
+    const res = await fetch(`/POIs/SearchAddress?address=${encodeURIComponent(query)}`);
+    const data = await res.json();
+
+    if (data.length > 0) {
+    const first = data[0];
+
+    const lat = parseFloat(first.lat);
+    const lon = parseFloat(first.lon);
+
+    previewLocation(lat, lon, first.display_name);
+
+    } else {
+    setStatus("Không tìm thấy!", true);
+    }
+
+    } catch (err) {
+    console.log(err);
+    setStatus("Lỗi tìm kiếm!", true);
+    }
+    }
+
+    // CLICK MAP
+    map.on("click", async function (e) {
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+
+    try {
+    const res = await fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`);
+    const data = await res.json();
+
+    previewLocation(lat, lon, data?.display_name);
+
+    } catch {
+    previewLocation(lat, lon, "");
+    }
+    });
+
+    // BUTTON
+    document.getElementById("btnSearch").onclick = searchAddress;
+    document.getElementById("btnSave").onclick = saveLocation;
+
+    // SUBMIT VALIDATE
+    document.querySelector("form").addEventListener("submit", function (e) {
+    if (!document.getElementById("Latitude").value) {
+    e.preventDefault();
+    alert("Bạn chưa lưu vị trí!");
+    }
+    });
+</script>

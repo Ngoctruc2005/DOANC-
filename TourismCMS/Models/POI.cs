@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TourismCMS.Models
 {
@@ -8,7 +9,8 @@ namespace TourismCMS.Models
         // Make these properties nullable by adding '?'
         public int? Id { get; set; } 
         public int Poiid { get; set; }
-        public int OwnerId { get; set; }
+        // OwnerId can be null for existing rows; make nullable to match DB mapping
+        public int? OwnerId { get; set; }
         public string? Name { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
@@ -17,6 +19,7 @@ namespace TourismCMS.Models
         public string? Description { get; set; }
         public string? Status { get; set; }
         public string? ImagePath { get; set; }
+        [NotMapped]
         public bool IsApproved { get; set; }
         public DateTime? CreatedAt { get; set; }
 
@@ -38,6 +41,7 @@ namespace TourismCMS.Models
 
     public partial class POI
     {
-        public double Radius { get; set; } = 50; // mét
+        // Radius may be NULL in the database, map as nullable here
+        public double? Radius { get; set; } = 50; // mét
     }
 }
