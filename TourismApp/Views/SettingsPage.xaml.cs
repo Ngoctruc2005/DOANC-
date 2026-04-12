@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui.Storage;
+﻿using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 using TourismApp.Services;
 
 namespace TourismApp.Views;
@@ -21,10 +22,18 @@ public partial class SettingsPage : ContentPage
             default: languagePicker.SelectedItem = "Tiếng Việt (vi)"; break;
         }
 
-        apiBaseUrlEntry.Text = Preferences.Get("api_base_url", string.Empty);
+        var apiBaseEntry = this.FindByName<Entry>("apiBaseUrlEntry");
+        if (apiBaseEntry != null)
+        {
+            var defaultApiBase = DeviceInfo.DeviceType == DeviceType.Physical
+                ? string.Empty
+                : "http://10.0.2.2:5219/api/";
+
+            apiBaseEntry.Text = Preferences.Get("api_base_url", defaultApiBase);
+        }
     }
 
-    private void OnSaveClicked(object sender, EventArgs e)
+    private async void OnSaveClicked(object sender, EventArgs e)
     {
         var selectedItem = languagePicker.SelectedItem?.ToString() ?? "Tiếng Việt (vi)";
         string lang = "vi";
@@ -33,12 +42,31 @@ public partial class SettingsPage : ContentPage
         else if (selectedItem.Contains("ja")) lang = "ja";
         else if (selectedItem.Contains("ko")) lang = "ko";
 
-        var apiBaseUrl = (apiBaseUrlEntry.Text ?? string.Empty).Trim();
-        Preferences.Set("api_base_url", apiBaseUrl);
-
-        // Vừa cập nhật Preference vừa cập nhật Global Service
         LocalizationService.Instance.CurrentLanguage = lang;
 
-        DisplayAlert("Thông báo", $"Đã lưu cài đặt. Language: {lang}", "OK");
+        var apiBaseUrl = this.FindByName<Entry>("apiBaseUrlEntry")?.Text?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            if (DeviceInfo.DeviceType == DeviceType.Physical &&
+                apiBaseUrl.Contains("10.0.2.2", StringComparison.OrdinalIgnoreCase))
+            {
+                await DisplayAlert("Thông báo", "Máy thật không dùng được 10.0.2.2. Hãy nhập IP Wi-Fi của máy tính, ví dụ: http://192.168.x.x:5219/api/", "OK");
+                return;
+            }
+
+            if (!apiBaseUrl.EndsWith("/")) apiBaseUrl += "/";
+            if (!apiBaseUrl.EndsWith("api/", StringComparison.OrdinalIgnoreCase)) apiBaseUrl += "api/";
+            Preferences.Set("api_base_url", apiBaseUrl);
+        }
+        else
+        {
+            Preferences.Remove("api_base_url");
+        }
+
+        var localization = LocalizationService.Instance;
+        await DisplayAlert(
+            localization["Notice"],
+            $"{localization["NoticeSaved"]}{lang}",
+            localization["OK"]);
     }
 }
