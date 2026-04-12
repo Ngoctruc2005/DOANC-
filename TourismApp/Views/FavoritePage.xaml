@@ -5,14 +5,6 @@
 
     <StackLayout BackgroundColor="#F5F5F5">
 
-        <!-- Tiêu đề -->
-        <Label Text="{Binding [FavoriteListTitle]}"
-               FontSize="24"
-               FontAttributes="Bold"
-               HorizontalOptions="Center"
-               TextColor="#333"
-               Margin="0,20,0,10"/>
-
         <!-- Danh sách quán -->
         <CollectionView x:Name="list" SelectionMode="None">
 
@@ -26,9 +18,9 @@
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer CommandParameter="{Binding .}" Tapped="OnRestaurantTapped" />
                         </Border.GestureRecognizers>
-                        <Grid ColumnDefinitions="*, Auto">
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12" VerticalOptions="Center">
 
-                            <!-- TÊN QUÁN -->
+                            <!-- TÊN QUÁN (chiếm toàn bộ) -->
                             <Label Grid.Column="0" 
                                    Text="{Binding Name}"
                                    FontSize="18"

@@ -67,7 +67,6 @@
             <select asp-for="Status" class="form-control">
                 <option value="Open">Open</option>
                 <option value="Close">Close</option>
-                <option value="Chờ duyệt">Chờ duyệt</option>
             </select>
             <span asp-validation-for="Status" class="text-danger"></span>
         </div>
@@ -157,10 +156,14 @@
                 })
                 .then(data => {
                     if (data && data.length > 0) {
-                        const query = fullAddress.toLowerCase();
-                        const best = data.find(x => (x.display_name || '').toLowerCase().includes(query)) || data[0];
-                        var lat = best.lat;
-                        var lon = best.lon;
+                        const best = data[0];
+                        const lat = parseFloat(best.lat);
+                        const lon = parseFloat(best.lon);
+
+                        if (Number.isNaN(lat) || Number.isNaN(lon)) {
+                            throw new Error('Invalid coordinate returned from geocoding service.');
+                        }
+
                         // pass the returned display_name so the full formatted address is set
                         updateLocation(lat, lon, best.display_name);
                     } else {

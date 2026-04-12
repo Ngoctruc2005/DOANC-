@@ -208,21 +208,24 @@
             <td>
                 @if (isPendingPage && User.IsInRole("admin"))
                 {
-                    <form asp-action="Approve" method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="@poiKey" />
-                        <button type="submit" class="btn btn-sm btn-success">Duy&#7879;t</button>
-                    </form>
-                    <span>|</span>
-                    <form asp-action="Reject" method="post" style="display:inline;" onsubmit="return confirm('B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n h&#7911;y y&#234;u c&#7847;u duy&#7879;t n&#224;y kh&#244;ng?');">
-                        <input type="hidden" name="id" value="@poiKey" />
-                        <button type="submit" class="btn btn-sm btn-danger">H&#7911;y</button>
-                    </form>
+                    <div class="d-inline-flex flex-column gap-2">
+                        <form asp-action="Approve" method="post" class="m-0">
+                            <input type="hidden" name="id" value="@poiKey" />
+                            <button type="submit" class="btn btn-sm btn-success w-100">Duy&#7879;t</button>
+                        </form>
+                        <form asp-action="Reject" method="post" class="m-0" onsubmit="return confirm('B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n h&#7911;y y&#234;u c&#7847;u duy&#7879;t n&#224;y kh&#244;ng?');">
+                            <input type="hidden" name="id" value="@poiKey" />
+                            <button type="submit" class="btn btn-sm btn-danger w-100">H&#7911;y</button>
+                        </form>
+                    </div>
                 }
                 else
                 {
-                    <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@poiKey">Edit</a>
-                    <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@poiKey">Details</a>
-                    <a class="btn btn-danger btn-sm me-1" asp-action="Delete" asp-route-id="@poiKey">Delete</a>
+                    <div class="d-inline-flex flex-nowrap gap-1">
+                        <a class="btn btn-warning btn-sm" style="min-width:72px" asp-action="Edit" asp-route-id="@poiKey">Edit</a>
+                        <a class="btn btn-info btn-sm" style="min-width:72px" asp-action="Details" asp-route-id="@poiKey">Details</a>
+                        <a class="btn btn-danger btn-sm" style="min-width:72px" asp-action="Delete" asp-route-id="@poiKey">Delete</a>
+                    </div>
                 }
             </td>
         </tr>

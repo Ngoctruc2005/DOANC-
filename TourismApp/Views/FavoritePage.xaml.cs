@@ -48,4 +48,53 @@ public partial class FavoritePage : ContentPage
             await Navigation.PushAsync(new RestaurantDetailPage(selectedRestaurant));
         }
     }
+
+    // Thumb loader for the CollectionView items: resolves ImagePath/Thumbnail, downloads bytes (bypass SSL/dev tunnels)
+    private async void OnThumbBindingContextChanged(object sender, EventArgs e)
+    {
+        if (sender is Image img && img.BindingContext is Poi poi)
+        {
+            try
+            {
+                var imageUrl = !string.IsNullOrWhiteSpace(poi.ImagePath) ? poi.ImagePath : poi.Thumbnail;
+                System.Diagnostics.Debug.WriteLine($"[FavoritePage] thumb imageUrl raw='{imageUrl}' for poi='{poi.Name}'");
+                if (string.IsNullOrWhiteSpace(imageUrl))
+                {
+                    img.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+                    return;
+                }
+
+                var resolved = RestaurantCatalogPage.ResolveImageUrl(imageUrl);
+                System.Diagnostics.Debug.WriteLine($"[FavoritePage] resolved image url='{resolved}'");
+                if (!Uri.TryCreate(resolved, UriKind.Absolute, out var uri))
+                {
+                    img.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+                    return;
+                }
+
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = (m, cert, chain, errors) => true;
+                using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+                client.DefaultRequestHeaders.Add("X-DevTunnels-Skip-Anti-Phishing-Page", "true");
+                client.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
+                var resp = await client.GetAsync(uri);
+                System.Diagnostics.Debug.WriteLine($"[FavoritePage] HTTP GET {uri} => {(int)resp.StatusCode} {resp.ReasonPhrase}");
+                if (resp.IsSuccessStatusCode)
+                {
+                    var bytes = await resp.Content.ReadAsByteArrayAsync();
+                    img.Source = ImageSource.FromStream(() => new MemoryStream(bytes));
+                }
+                else
+                {
+                    img.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+                }
+            }
+            catch
+            {
+                img.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
+            }
+        }
+    }
 }

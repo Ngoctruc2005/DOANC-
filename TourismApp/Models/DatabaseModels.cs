@@ -6,6 +6,9 @@ namespace TourismApp.Models
     // A. Content Module
     public class Poi
     {
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public int? ApiId { get; set; }
+
         // Chỉnh sửa kiểu dữ liệu để khớp với JSON từ Backend API (`Poiid` kiểu int -> chuỗi)
         [System.Text.Json.Serialization.JsonPropertyName("poiid")]
         public int Poiid { get; set; }
@@ -31,7 +34,7 @@ namespace TourismApp.Models
 
         // Dùng property Id dạng chuỗi của cũ mapping qua Poiid mới nếu cần
         [System.Text.Json.Serialization.JsonIgnore]
-        public string? Id => Poiid.ToString();
+        public string? Id => (ApiId ?? Poiid).ToString();
     }
 
     public class Menu

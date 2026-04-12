@@ -23,10 +23,11 @@
                     {
                         foreach (var poi in Model)
                         {
+                            var displayStatus = poi.Status == "Ch? duy?t" ? "Chờ duyệt" : poi.Status;
                             <tr>
                                 <td>@poi.Name</td>
                                 <td>@poi.Address</td>
-                                <td>@poi.Status</td>
+                                <td>@displayStatus</td>
                             </tr>
                         }
                     }

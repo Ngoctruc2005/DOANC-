@@ -28,6 +28,7 @@ namespace TourismCMS.Controllers
                 .Where(p => p.Status == null || (!p.Status.Contains("xóa") && !p.Status.Contains("hủy")))
                 .Select(p => new
                 {
+                    id = p.Id,
                     poiid = p.Poiid,
                     name = p.Name,
                     description = p.Description,

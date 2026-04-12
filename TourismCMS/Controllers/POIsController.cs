@@ -14,6 +14,8 @@ using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Globalization;
 using System.Text;
+using System.Net;
+using System.Collections.Concurrent;
 using TourismCMS.Data;
 using TourismCMS.Models;
 
@@ -22,6 +24,7 @@ namespace TourismCMS.Controllers
     [Authorize(Roles = "admin,poi_owner")]
     public class POIsController : Controller
     {
+        private static readonly ConcurrentDictionary<string, (DateTimeOffset ExpiresAt, string Json)> _geocodeCache = new(StringComparer.OrdinalIgnoreCase);
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _configuration;
@@ -68,7 +71,7 @@ namespace TourismCMS.Controllers
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> Approved()
         {
-            var query = _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Đã xóa");
+            var query = _context.POIs.Where(p => p.Status != "Chờ duyệt" && p.Status != "Ch? duy?t" && p.Status != "Đã xóa");
             ViewData["Title"] = "Danh sách đã duyệt";
             ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
             return View("Index", await query.ToListAsync());
@@ -139,7 +142,7 @@ namespace TourismCMS.Controllers
                 if (User.IsInRole("poi_owner"))
                 {
                     pOI.OwnerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                    pOI.Status = "Ch? duy?t"; // Ch? quán đăng k? s? ? tr?ng thái ch? duy?t
+                    pOI.Status = "Chờ duyệt"; // Chủ quán đăng ký sẽ ở trạng thái chờ duyệt
                 }
                 else if (User.IsInRole("admin"))
                 {
@@ -303,6 +306,29 @@ namespace TourismCMS.Controllers
 
             var normalizedAddress = string.Join(" ", address.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var normalizedQuery = NormalizeAddressForCompare(normalizedAddress);
+
+            if (TryGetCachedGeocode(normalizedAddress, out var cachedJson))
+            {
+                return Content(cachedJson, "application/json");
+            }
+
+            if (TryParseCoordinatesFromInput(normalizedAddress, out var parsedLat, out var parsedLon))
+            {
+                var parsedJson = JsonSerializer.Serialize(new[]
+                {
+                    new
+                    {
+                        lat = parsedLat,
+                        lon = parsedLon,
+                        display_name = normalizedAddress,
+                        source = "manual"
+                    }
+                });
+
+                SetCachedGeocode(normalizedAddress, parsedJson);
+                return Content(parsedJson, "application/json");
+            }
+
             var googleApiKey = _configuration["Geocoding:GoogleApiKey"];
 
             if (!string.IsNullOrWhiteSpace(googleApiKey))
@@ -310,8 +336,18 @@ namespace TourismCMS.Controllers
                 var googleResults = await SearchWithGoogleGeocodingAsync(normalizedAddress, googleApiKey);
                 if (googleResults.Count > 0)
                 {
-                    return Content(JsonSerializer.Serialize(googleResults), "application/json");
+                    var googleJson = JsonSerializer.Serialize(googleResults);
+                    SetCachedGeocode(normalizedAddress, googleJson);
+                    return Content(googleJson, "application/json");
                 }
+            }
+
+            var photonResults = await SearchWithPhotonGeocodingAsync(normalizedAddress);
+            if (photonResults.Count > 0)
+            {
+                var photonJson = JsonSerializer.Serialize(photonResults);
+                SetCachedGeocode(normalizedAddress, photonJson);
+                return Content(photonJson, "application/json");
             }
 
             var searchQueries = new (string Query, bool UseCountryCode)[]
@@ -332,6 +368,7 @@ namespace TourismCMS.Controllers
                 {
                     var candidates = new List<(string RawJson, double Score, long PlaceId)>();
                     var seenPlaceIds = new HashSet<long>();
+                    var nominatimRateLimited = false;
 
                     foreach (var (query, useCountryCode) in searchQueries.Distinct())
                     {
@@ -341,8 +378,26 @@ namespace TourismCMS.Controllers
                             searchUrl += "&countrycodes=vn";
                         }
 
-                        var response = await httpClient.GetAsync(searchUrl);
-                        response.EnsureSuccessStatusCode();
+                        HttpResponseMessage response;
+                        try
+                        {
+                            response = await httpClient.GetAsync(searchUrl);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+
+                        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                        {
+                            nominatimRateLimited = true;
+                            continue;
+                        }
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            continue;
+                        }
 
                         var jsonString = await response.Content.ReadAsStringAsync();
                         using var json = JsonDocument.Parse(jsonString);
@@ -371,6 +426,35 @@ namespace TourismCMS.Controllers
 
                                 double score = CalculateAddressMatchScore(normalizedQuery, displayName) + (importance * 5);
 
+                                var countryCode = string.Empty;
+                                if (item.TryGetProperty("address", out var addressElement) &&
+                                    addressElement.ValueKind == JsonValueKind.Object &&
+                                    addressElement.TryGetProperty("country_code", out var countryCodeElement))
+                                {
+                                    countryCode = countryCodeElement.GetString() ?? string.Empty;
+                                }
+
+                                if (string.Equals(countryCode, "vn", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    score += 20;
+                                }
+                                else if (!string.IsNullOrWhiteSpace(countryCode))
+                                {
+                                    score -= 50;
+                                }
+
+                                if (item.TryGetProperty("place_rank", out var placeRankElement) && placeRankElement.TryGetInt32(out var placeRank))
+                                {
+                                    if (placeRank >= 28)
+                                    {
+                                        score += 12;
+                                    }
+                                    else if (placeRank <= 20)
+                                    {
+                                        score -= 8;
+                                    }
+                                }
+
                                 if (item.TryGetProperty("type", out var typeElement))
                                 {
                                     var type = (typeElement.GetString() ?? string.Empty).ToLowerInvariant();
@@ -392,20 +476,248 @@ namespace TourismCMS.Controllers
                             .ThenByDescending(c => c.PlaceId)
                             .Select(c => c.RawJson);
 
-                        return Content($"[{string.Join(",", ordered)}]", "application/json");
+                        var orderedJson = $"[{string.Join(",", ordered)}]";
+                        SetCachedGeocode(normalizedAddress, orderedJson);
+                        return Content(orderedJson, "application/json");
+                    }
+
+                    var mapsCoResults = await SearchWithMapsCoGeocodingAsync(normalizedAddress);
+                    if (mapsCoResults.Count > 0)
+                    {
+                        var mapsCoJson = JsonSerializer.Serialize(mapsCoResults);
+                        SetCachedGeocode(normalizedAddress, mapsCoJson);
+                        return Content(mapsCoJson, "application/json");
+                    }
+
+                    if (nominatimRateLimited)
+                    {
+                        return Content("[]", "application/json");
                     }
 
                     return Content("[]", "application/json");
                 }
-                catch (HttpRequestException e)
-                {
-                    return StatusCode(502, $"Error fetching data from Nominatim: {e.Message}");
-                }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                    return Content("[]", "application/json");
                 }
             }
+        }
+
+        private static bool TryGetCachedGeocode(string address, out string json)
+        {
+            if (_geocodeCache.TryGetValue(address, out var cached) && cached.ExpiresAt > DateTimeOffset.UtcNow)
+            {
+                json = cached.Json;
+                return true;
+            }
+
+            _geocodeCache.TryRemove(address, out _);
+            json = string.Empty;
+            return false;
+        }
+
+        private static void SetCachedGeocode(string address, string json)
+        {
+            _geocodeCache[address] = (DateTimeOffset.UtcNow.AddMinutes(30), json);
+        }
+
+        private static bool TryParseCoordinatesFromInput(string input, out double lat, out double lon)
+        {
+            lat = 0;
+            lon = 0;
+
+            var cleaned = input.Replace(";", ",", StringComparison.Ordinal).Trim();
+            var parts = cleaned.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length != 2)
+            {
+                return false;
+            }
+
+            if (!double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out lat) &&
+                !double.TryParse(parts[0], NumberStyles.Float, CultureInfo.GetCultureInfo("vi-VN"), out lat))
+            {
+                return false;
+            }
+
+            if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out lon) &&
+                !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.GetCultureInfo("vi-VN"), out lon))
+            {
+                return false;
+            }
+
+            return lat is >= -90 and <= 90 && lon is >= -180 and <= 180;
+        }
+
+        private static async Task<List<object>> SearchWithPhotonGeocodingAsync(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new List<object>();
+            }
+
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "TourismCMS/1.0 (github.com/Ngoctruc2005/DOANC-)");
+            var list = new List<object>();
+            var queryCandidates = new[]
+            {
+                address,
+                NormalizeAddressForCompare(address),
+                NormalizeAddressForCompare(address).Replace(' ', '+')
+            }
+            .Where(q => !string.IsNullOrWhiteSpace(q))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+            foreach (var query in queryCandidates)
+            {
+                var endpoint = $"https://photon.komoot.io/api/?q={Uri.EscapeDataString(query)}";
+                HttpResponseMessage response;
+                try
+                {
+                    response = await httpClient.GetAsync(endpoint);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                var jsonString = await response.Content.ReadAsStringAsync();
+                using var json = JsonDocument.Parse(jsonString);
+
+                if (!json.RootElement.TryGetProperty("features", out var featuresElement) ||
+                    featuresElement.ValueKind != JsonValueKind.Array)
+                {
+                    continue;
+                }
+
+                foreach (var feature in featuresElement.EnumerateArray())
+                {
+                    if (!feature.TryGetProperty("geometry", out var geometryElement) ||
+                        !geometryElement.TryGetProperty("coordinates", out var coordinatesElement) ||
+                        coordinatesElement.ValueKind != JsonValueKind.Array ||
+                        coordinatesElement.GetArrayLength() < 2)
+                    {
+                        continue;
+                    }
+
+                    var lon = coordinatesElement[0].GetDouble();
+                    var lat = coordinatesElement[1].GetDouble();
+
+                    string displayName;
+                    string countryCode = string.Empty;
+                    if (feature.TryGetProperty("properties", out var propertiesElement))
+                    {
+                        var name = propertiesElement.TryGetProperty("name", out var nameElement)
+                            ? nameElement.GetString()
+                            : null;
+                        var street = propertiesElement.TryGetProperty("street", out var streetElement)
+                            ? streetElement.GetString()
+                            : null;
+                        var city = propertiesElement.TryGetProperty("city", out var cityElement)
+                            ? cityElement.GetString()
+                            : null;
+                        var country = propertiesElement.TryGetProperty("country", out var countryElement)
+                            ? countryElement.GetString()
+                            : null;
+
+                        countryCode = propertiesElement.TryGetProperty("countrycode", out var ccElement)
+                            ? ccElement.GetString() ?? string.Empty
+                            : string.Empty;
+
+                        displayName = string.Join(", ", new[] { name, street, city, country }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                        if (string.IsNullOrWhiteSpace(displayName))
+                        {
+                            displayName = address;
+                        }
+                    }
+                    else
+                    {
+                        displayName = address;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(countryCode) && !string.Equals(countryCode, "VN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    list.Add(new
+                    {
+                        lat,
+                        lon,
+                        display_name = displayName,
+                        source = "photon"
+                    });
+                }
+
+                if (list.Count > 0)
+                {
+                    break;
+                }
+            }
+
+            return list;
+        }
+
+        private static async Task<List<object>> SearchWithMapsCoGeocodingAsync(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return new List<object>();
+            }
+
+            var endpoint = $"https://geocode.maps.co/search?q={Uri.EscapeDataString(address)}&country=VN";
+            using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "TourismCMS/1.0 (github.com/Ngoctruc2005/DOANC-)");
+
+            var response = await httpClient.GetAsync(endpoint);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<object>();
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            using var json = JsonDocument.Parse(jsonString);
+            if (json.RootElement.ValueKind != JsonValueKind.Array)
+            {
+                return new List<object>();
+            }
+
+            var results = new List<object>();
+            foreach (var item in json.RootElement.EnumerateArray())
+            {
+                if (!item.TryGetProperty("lat", out var latElement) ||
+                    !item.TryGetProperty("lon", out var lonElement))
+                {
+                    continue;
+                }
+
+                var latString = latElement.GetString();
+                var lonString = lonElement.GetString();
+                if (!double.TryParse(latString, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat) ||
+                    !double.TryParse(lonString, NumberStyles.Float, CultureInfo.InvariantCulture, out var lon))
+                {
+                    continue;
+                }
+
+                var displayName = item.TryGetProperty("display_name", out var displayNameElement)
+                    ? displayNameElement.GetString() ?? address
+                    : address;
+
+                results.Add(new
+                {
+                    lat,
+                    lon,
+                    display_name = displayName,
+                    source = "mapsco"
+                });
+            }
+
+            return results;
         }
 
         private static string NormalizeAddressForCompare(string value)
@@ -451,20 +763,52 @@ namespace TourismCMS.Controllers
                 score += 50;
             }
 
+            if (normalizedDisplayName.StartsWith(normalizedQuery, StringComparison.Ordinal))
+            {
+                score += 30;
+            }
+
             var tokens = normalizedQuery.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Where(t => t.Length >= 2)
+                .Where(t => t.Length >= 1)
                 .Distinct(StringComparer.Ordinal)
                 .ToList();
 
+            bool allTokensMatched = true;
+
             foreach (var token in tokens)
             {
+                var isNumericToken = token.All(char.IsDigit);
                 if (normalizedDisplayName.Contains(token, StringComparison.Ordinal))
                 {
-                    score += 8;
+                    score += isNumericToken ? 25 : 8;
                 }
                 else
                 {
-                    score -= 3;
+                    allTokensMatched = false;
+                    score -= isNumericToken ? 20 : 3;
+                }
+            }
+
+            if (allTokensMatched && tokens.Count > 0)
+            {
+                score += 20;
+            }
+
+            var numericTokens = tokens.Where(static t => t.All(char.IsDigit)).ToList();
+            if (numericTokens.Count > 0)
+            {
+                var numericMatched = numericTokens.Count(t => normalizedDisplayName.Contains(t, StringComparison.Ordinal));
+                if (numericMatched == 0)
+                {
+                    score -= 40;
+                }
+                else if (numericMatched < numericTokens.Count)
+                {
+                    score -= 15;
+                }
+                else
+                {
+                    score += 10;
                 }
             }
 
@@ -511,7 +855,7 @@ namespace TourismCMS.Controllers
 
         private static async Task<List<object>> SearchWithGoogleGeocodingAsync(string address, string apiKey)
         {
-            var endpoint = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&region=vn&language=vi&key={Uri.EscapeDataString(apiKey)}";
+            var endpoint = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&region=vn&components=country:VN&language=vi&key={Uri.EscapeDataString(apiKey)}";
 
             using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             var response = await httpClient.GetAsync(endpoint);
@@ -597,25 +941,37 @@ namespace TourismCMS.Controllers
 
             if (pOI != null)
             {
-                bool isOwner = false;
                 if (User.IsInRole("poi_owner"))
                 {
                     var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-                    if (pOI.OwnerId == userId)
+                    if (pOI.OwnerId != userId)
                     {
-                        isOwner = true;
+                        return Forbid();
                     }
-                }
 
-                // Chuyển sang trạng thái "Đã xóa" thay vì xóa cứng khỏi CSDL
-                pOI.Status = "Đã xóa";
-                _context.Update(pOI);
-                await _context.SaveChangesAsync();
+                    var menus = await _context.Menus.Where(m => m.Poiid == pOI.Poiid).ToListAsync();
+                    if (menus.Any())
+                    {
+                        _context.Menus.RemoveRange(menus);
+                    }
 
-                if (isOwner)
-                {
+                    var visits = await _context.VisitLogs.Where(v => v.Poiid == pOI.Poiid).ToListAsync();
+                    if (visits.Any())
+                    {
+                        _context.VisitLogs.RemoveRange(visits);
+                    }
+
+                    await _context.Database.ExecuteSqlRawAsync("DELETE FROM POI_Categories WHERE POIID = {0}", pOI.Poiid);
+
+                    _context.POIs.Remove(pOI);
+                    await _context.SaveChangesAsync();
+
                     return RedirectToAction("MyRestaurants", "Owner");
                 }
+
+                pOI.Status = "Đã bị admin xóa";
+                _context.Update(pOI);
+                await _context.SaveChangesAsync();
             }
 
             return RedirectToAction(nameof(Index));

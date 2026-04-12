@@ -47,36 +47,13 @@
                         Clicked="OnDirectionsClicked" Padding="0"
                         BackgroundColor="#2E8B57" TextColor="White"/>
 
-                <Button Grid.Row="1" Grid.Column="Span 2" 
-                        Text="{Binding [Favorites]}" 
+                <Button Grid.Row="1" Grid.Column="Span 2"
+                        x:Name="btnFavorite"
+                        Text="{Binding [Favorites]}"
                         Clicked="OnFavoriteClicked" Padding="0" 
                         BackgroundColor="#FF69B4" TextColor="White"
                         HeightRequest="45"/>
             </Grid>
-
-            <!-- Tiêu đề Menu -->
-            <Label Text="{Binding [Menu]}"
-                   FontAttributes="Bold"
-                   FontSize="20"
-                   TextColor="#DEB887"
-                   Margin="0,10,0,0"/>
-
-            <!-- Danh sách món ăn -->
-            <CollectionView x:Name="menuList">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Stroke="#E0E0E0" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15" Margin="0,5">
-                            <Border.Shadow>
-                                <Shadow Brush="Black" Offset="0,2" Opacity="0.1" Radius="2" />
-                            </Border.Shadow>
-                            <Grid ColumnDefinitions="*,Auto">
-                                <Label Grid.Column="0" Text="{Binding ItemName}" FontAttributes="Bold" FontSize="16" TextColor="#333333" VerticalOptions="Center"/>
-                                <Label Grid.Column="1" Text="{Binding Price, StringFormat='{0:N0} đ'}" TextColor="#E53935" FontAttributes="Bold" FontSize="16" VerticalOptions="Center"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
 
         </VerticalStackLayout>
 

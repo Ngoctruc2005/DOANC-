@@ -58,6 +58,8 @@ public partial class RestaurantDetailPage : ContentPage
             // Nếu API không trả về ảnh quán, sử dụng luôn ảnh mặc định từ Internet
             restaurantImage.Source = ImageSource.FromUri(new Uri("https://th.bing.com/th/id/OIG2.cM2sC3m65gCok8JmZJq1?pid=ImgGn"));
         }
+
+        UpdateFavoriteButtonText();
     }
 
     private async void LoadImageWithBypassAsync(string fullImageUrl)
@@ -104,65 +106,57 @@ public partial class RestaurantDetailPage : ContentPage
         }
     }
 
-    private async void LoadMenu()
-    {
-        try
-        {
-            var dbContext = this.Handler?.MauiContext?.Services.GetService<TourismCMS.Data.FoodDbContext>();
-            var apiService = new PoiApiService(dbContext);
-            var menus = await apiService.GetMenusForPoiAsync(_restaurant.Id);
-
-            if (menus != null && menus.Any())
-            {
-                MainThread.BeginInvokeOnMainThread(() => 
-                {
-                    menuList.ItemsSource = menus;
-                });
-            }
-            else
-            {
-                MainThread.BeginInvokeOnMainThread(() => 
-                {
-                    menuList.ItemsSource = new List<Menu>();
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[Lỗi tải Menu] {ex.Message}");
-        }
-    }
-
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        LoadMenu(); // Tải menu khi trang hiển thị để đảm bảo Handler không null
+        UpdateFavoriteButtonText();
         var lang = Microsoft.Maui.Storage.Preferences.Get("language", "vi");
 
+        string finalName = _restaurant.Name;
         string finalDescription = _restaurant.Description;
 
         if (lang != "vi")
         {
+            nameLabel.Text = LocalizationService.Instance["Loading"];
             descriptionLabel.Text = LocalizationService.Instance["Loading"];
+
+            string translatedName = await TTSHelper.TranslateTextAsync(_restaurant.Name, lang);
             string translatedDesc = await TTSHelper.TranslateTextAsync(_restaurant.Description, lang);
+            finalName = translatedName;
             finalDescription = translatedDesc;
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                nameLabel.Text = translatedName;
                 descriptionLabel.Text = translatedDesc;
             });
         }
+        else
+        {
+            nameLabel.Text = _restaurant.Name;
+            descriptionLabel.Text = _restaurant.Description;
+        }
 
-        if (_autoPlayDescription && !string.IsNullOrWhiteSpace(finalDescription))
+        if (_autoPlayDescription)
         {
             _autoPlayDescription = false; // Chỉ phát 1 lần khi mới quét QR xong
-            _ = TTSHelper.SpeakDescriptionAsync(finalDescription);
+            var name = string.IsNullOrWhiteSpace(finalName) ? "Quán ăn" : finalName;
+            var desc = string.IsNullOrWhiteSpace(finalDescription) ? string.Empty : $". {finalDescription}";
+            var textToSpeak = $"{name}{desc}";
+
+            if (!string.IsNullOrWhiteSpace(textToSpeak))
+            {
+                _ = TTSHelper.SpeakDescriptionAsync(textToSpeak);
+            }
         }
     }
 
 
     private async void OnPlayAudioClicked(object sender, EventArgs e)
     {
-        await TTSHelper.SpeakDescriptionAsync(_restaurant.Description);
+        var name = string.IsNullOrWhiteSpace(_restaurant.Name) ? "Quán ăn" : _restaurant.Name;
+        var desc = string.IsNullOrWhiteSpace(_restaurant.Description) ? string.Empty : $". {_restaurant.Description}";
+        var textToSpeak = $"{name}{desc}";
+        await TTSHelper.SpeakDescriptionAsync(textToSpeak);
     }
 
     private async void OnDirectionsClicked(object sender, EventArgs e)
@@ -186,13 +180,35 @@ public partial class RestaurantDetailPage : ContentPage
         }
     }
 
-    private void OnFavoriteClicked(object sender, EventArgs e)
+    private bool IsFavorite()
     {
-        if (_restaurant != null)
+        return _restaurant != null && FavoriteService.Contains(_restaurant);
+    }
+
+    private void UpdateFavoriteButtonText()
+    {
+        btnFavorite.Text = IsFavorite()
+            ? LocalizationService.Instance["Unfavorite"]
+            : LocalizationService.Instance["Favorites"];
+    }
+
+    private async void OnFavoriteClicked(object sender, EventArgs e)
+    {
+        if (_restaurant == null)
+            return;
+
+        var localization = LocalizationService.Instance;
+        if (IsFavorite())
         {
-            FavoriteService.Add(_restaurant);
-            DisplayAlert("Thông báo", "Đã thêm vào yêu thích ❤️", "OK");
+            FavoriteService.Remove(_restaurant);
+            UpdateFavoriteButtonText();
+            await DisplayAlert(localization["Notice"], localization["RemovedFromFavorites"], localization["OK"]);
+            return;
         }
+
+        FavoriteService.Add(_restaurant);
+        UpdateFavoriteButtonText();
+        await DisplayAlert(localization["Notice"], localization["AddedToFavorites"], localization["OK"]);
     }
 
     // Thêm nút Back để hỗ trợ người dùng có thể quay lại tab yêu thích

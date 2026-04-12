@@ -39,7 +39,22 @@
 					</CollectionView.ItemTemplate>
 				</CollectionView>
 			</Border>
+
 		</VerticalStackLayout>
+
+		<Button Text="📡 refresh"
+				Clicked="OnRefreshGpsClicked"
+				BackgroundColor="#1E88E5"
+				TextColor="White"
+				FontAttributes="Bold"
+				FontSize="12"
+				CornerRadius="20"
+				HeightRequest="40"
+				WidthRequest="92"
+				Padding="10,0"
+				Margin="0,0,14,18"
+				HorizontalOptions="End"
+				VerticalOptions="End" />
 
 		<!-- PANEL CHI TIẾT QUÁN -->
 		<Border
@@ -58,6 +73,11 @@
 				<!-- Nội dung chính -->
 				<ScrollView>
 					<VerticalStackLayout Spacing="10">
+
+						<Image x:Name="restaurantImage"
+							   HeightRequest="160"
+							   Aspect="AspectFill"
+							   IsVisible="False" />
 
 						<!-- 🌐 Ngôn ngữ -->
 						<Picker x:Name="languagePicker"
@@ -80,20 +100,6 @@
                                FontSize="14"
                                TextColor="Gray"
                                LineBreakMode="WordWrap"/>
-
-						<!-- Món nổi bật -->
-						<Label x:Name="bestSellerLabel"
-                               FontSize="14"
-                               TextColor="DarkOrange"/>
-
-						<!-- Menu -->
-						<CollectionView x:Name="menuList" MaximumHeightRequest="120">
-							<CollectionView.ItemTemplate>
-								<DataTemplate>
-									<Label Text="{Binding .}" FontSize="14"/>
-								</DataTemplate>
-							</CollectionView.ItemTemplate>
-						</CollectionView>
 
 						<!-- NHÓM CÁC NÚT TƯƠNG TÁC CHIA THÀNH LƯỚI 2 CỘT -->
 						<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">

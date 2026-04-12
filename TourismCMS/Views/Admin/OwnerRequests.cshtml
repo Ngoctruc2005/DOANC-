@@ -32,9 +32,6 @@
                             <th>
                                 Tên đăng nhập
                             </th>
-                            <th>
-                                Trạng thái
-                            </th>
                             <th>Hành động</th>
                         </tr>
                     </thead>
@@ -50,9 +47,6 @@
                                 </td>
                                 <td>
                                     @Html.DisplayFor(modelItem => item.Username)
-                                </td>
-                                <td>
-                                    <span class="badge badge-warning">@item.Status</span>
                                 </td>
                                 <td>
                                     <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-success btn-sm">Duyệt</a>

@@ -156,6 +156,55 @@
     }
 
     // SEARCH
+    function extractHouseNumber(text) {
+    if (!text) return null;
+    const match = text.match(/\b\d+[a-zA-Z]?\b/);
+    return match ? match[0].toLowerCase() : null;
+    }
+
+    function chooseBestResult(inputAddress, results) {
+    if (!Array.isArray(results) || results.length === 0) return null;
+
+    const inputLower = (inputAddress || "").toLowerCase();
+    const inputHouseNo = extractHouseNumber(inputLower);
+
+    let best = results[0];
+    let bestScore = -999999;
+
+    for (const item of results) {
+    const display = (item.display_name || "").toLowerCase();
+    let score = 0;
+
+    if (display && inputLower && display.includes(inputLower)) {
+    score += 50;
+    }
+
+    const itemHouseNo = extractHouseNumber(display);
+    if (inputHouseNo && itemHouseNo) {
+    if (inputHouseNo === itemHouseNo) {
+    score += 120;
+    } else {
+    score -= 80;
+    }
+    }
+
+    if (display && inputHouseNo && display.includes(inputHouseNo)) {
+    score += 40;
+    }
+
+    if ((item.type || "").toLowerCase() === "house") {
+    score += 10;
+    }
+
+    if (score > bestScore) {
+    bestScore = score;
+    best = item;
+    }
+    }
+
+    return best;
+    }
+
     async function searchAddress() {
     const input = document.getElementById("streetInput").value.trim();
 
@@ -167,18 +216,18 @@
     setStatus("Đang tìm...");
 
     try {
-    const query = input + ", Hồ Chí Minh, Việt Nam";
-
-    const res = await fetch(`/POIs/SearchAddress?address=${encodeURIComponent(query)}`);
+    const res = await fetch(`/POIs/SearchAddress?address=${encodeURIComponent(input)}`);
     const data = await res.json();
 
     if (data.length > 0) {
-    const first = data[0];
+    const first = chooseBestResult(input, data);
 
     const lat = parseFloat(first.lat);
     const lon = parseFloat(first.lon);
 
     previewLocation(lat, lon, first.display_name);
+    saveLocation();
+    setStatus("Đã tìm và ghim đúng vị trí trên bản đồ.");
 
     } else {
     setStatus("Không tìm thấy!", true);

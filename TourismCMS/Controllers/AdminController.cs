@@ -172,6 +172,60 @@ namespace TourismCMS.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PurgeDeleted()
+        {
+            var deletedStatuses = new[] { "Đã xóa", "?ã xóa", "Ðã xóa", "Đã bị admin xóa", "Da b? admin xóa" };
+
+            // Remove related data for deleted POIs
+            var pois = await _context.POIs.Where(p => deletedStatuses.Contains(p.Status ?? string.Empty)).ToListAsync();
+            if (pois.Any())
+            {
+                var poiIds = pois.Select(p => p.Poiid).ToList();
+
+                // Remove menus
+                var menus = await _context.Menus.Where(m => m.Poiid != null && poiIds.Contains(m.Poiid.Value)).ToListAsync();
+                if (menus.Any()) _context.Menus.RemoveRange(menus);
+
+                // Remove visit logs
+                var visits = await _context.VisitLogs.Where(v => v.Poiid != null && poiIds.Contains(v.Poiid.Value)).ToListAsync();
+                if (visits.Any()) _context.VisitLogs.RemoveRange(visits);
+
+                // Remove many-to-many join entries from POI_Categories table (if exist)
+                if (poiIds.Any())
+                {
+                    var idsCsv = string.Join(",", poiIds);
+                    try
+                    {
+                        await _context.Database.ExecuteSqlRawAsync($"DELETE FROM POI_Categories WHERE POIID IN ({idsCsv})");
+                    }
+                    catch
+                    {
+                        // ignore failures here to avoid stopping purge; join table may be empty or named differently
+                    }
+                }
+
+                // Finally remove POIs
+                _context.POIs.RemoveRange(pois);
+            }
+
+            // Remove deleted owner accounts and their registrations
+            var deletedOwners = await _context.Users.Where(u => u.Role == "deleted_owner").ToListAsync();
+            if (deletedOwners.Any())
+            {
+                var ownerIds = deletedOwners.Select(u => u.Id).ToList();
+                var regs = await _context.PoiOwnerRegistrations.Where(r => ownerIds.Contains(r.UserId)).ToListAsync();
+                if (regs.Any()) _context.PoiOwnerRegistrations.RemoveRange(regs);
+
+                _context.Users.RemoveRange(deletedOwners);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Deleted));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOldOwners()
         {
             var oldOwnerIds = await _context.Users
