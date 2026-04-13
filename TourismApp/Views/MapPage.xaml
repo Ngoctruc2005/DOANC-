@@ -43,7 +43,7 @@
 		</VerticalStackLayout>
 
 		<Button Text="📡 refresh"
-				Clicked="OnRefreshGpsClicked"
+               Clicked="OnRefreshGpsClicked"
 				BackgroundColor="#1E88E5"
 				TextColor="White"
 				FontAttributes="Bold"
@@ -52,8 +52,8 @@
 				HeightRequest="40"
 				WidthRequest="92"
 				Padding="10,0"
-				Margin="0,0,14,18"
-				HorizontalOptions="End"
+				Margin="14,0,0,18"
+				HorizontalOptions="Start"
 				VerticalOptions="End" />
 
 		<!-- PANEL CHI TIẾT QUÁN -->
