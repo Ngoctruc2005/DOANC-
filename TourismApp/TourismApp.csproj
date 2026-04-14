@@ -24,6 +24,15 @@
 		<JavaMaximumHeapSize>2G</JavaMaximumHeapSize>
 	</PropertyGroup>
 
+	<!-- Release-specific Android packaging settings to produce per-ABI APKs -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(TargetFramework)' == 'net10.0-android'">
+		<!-- Create separate APK per ABI to reduce package size -->
+		<AndroidCreatePackagePerAbi>true</AndroidCreatePackagePerAbi>
+		<AndroidSupportedAbis>arm64-v8a;armeabi-v7a</AndroidSupportedAbis>
+		<!-- Use APK output by default for release publish if requested -->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- ICON -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

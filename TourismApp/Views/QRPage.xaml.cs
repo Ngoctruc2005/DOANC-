@@ -40,7 +40,7 @@ public partial class QRPage : ContentPage
 
         _isAnimating = true;
         _camera.IsDetecting = true;
-        AnimateScanLine();
+        AnimateScanLine();      
     }
 
     private async Task<bool> CheckCameraPermissionAsync()

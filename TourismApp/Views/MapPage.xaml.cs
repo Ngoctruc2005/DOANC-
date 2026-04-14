@@ -341,6 +341,23 @@ public partial class MapPage : ContentPage
         detailPanel.IsVisible = false;
     }
 
+    // Thay đổi ngôn ngữ từ Picker trong panel chi tiết
+    void OnLanguageChanged(object sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is Picker p && p.SelectedIndex >= 0)
+            {
+                var lang = p.Items[p.SelectedIndex];
+                if (!string.IsNullOrWhiteSpace(lang))
+                {
+                    LocalizationService.Instance.CurrentLanguage = lang;
+                }
+            }
+        }
+        catch { }
+    }
+
     // 👉 NÚT "NGHE"
     async void OnPlayAudioClicked(object sender, EventArgs e)
     {

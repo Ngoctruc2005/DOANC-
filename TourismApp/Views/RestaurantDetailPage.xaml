@@ -47,7 +47,7 @@
                         Clicked="OnDirectionsClicked" Padding="0"
                         BackgroundColor="#2E8B57" TextColor="White"/>
 
-                <Button Grid.Row="1" Grid.Column="Span 2"
+                <Button Grid.Row="1" Grid.ColumnSpan="2"
                         x:Name="btnFavorite"
                         Text="{Binding [Favorites]}"
                         Clicked="OnFavoriteClicked" Padding="0" 
