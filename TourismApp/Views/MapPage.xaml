@@ -14,7 +14,7 @@
             IsShowingUser="False" />
 
 		<!-- SEARCH CONTAINER -->
-		<VerticalStackLayout Margin="10,20,10,0" VerticalOptions="Start" Spacing="5">
+		<VerticalStackLayout Margin="10,10,50,0" VerticalOptions="Start" Spacing="5">
 			<!-- TÌM KIẾM -->
 			<Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
 				<Border.Shadow>
@@ -42,7 +42,7 @@
 
 		</VerticalStackLayout>
 
-		<Button Text="📡 refresh"
+		<Button Text="⟲ Refresh"
                Clicked="OnRefreshGpsClicked"
 				BackgroundColor="#1E88E5"
 				TextColor="White"

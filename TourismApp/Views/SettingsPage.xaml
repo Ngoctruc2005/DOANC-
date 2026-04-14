@@ -26,21 +26,7 @@
 
                 </VerticalStackLayout>
             </Border>
-            <Border Padding="20" StrokeShape="RoundRectangle 15" BackgroundColor="White" Stroke="Transparent">
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,2" Opacity="0.1" Radius="5" />
-                </Border.Shadow>
-                <VerticalStackLayout Spacing="15">
-
-                    <Label Text="API Base URL" FontAttributes="Bold" TextColor="#333" FontSize="16"/>
-
-                    <Entry x:Name="apiBaseUrlEntry"
-                           Placeholder="http://10.0.2.2:5219/api/"
-                           Keyboard="Url"
-                           TextColor="#555"/>
-
-                </VerticalStackLayout>
-            </Border>
+            <!-- API Base URL control removed from UI; preference still handled in code -->
 
             <!-- Nút lưu -->
             <Button Text="{Binding [SaveSettings]}"
