@@ -56,6 +56,9 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("FK__AdminUser__RoleI__4CA06362");
         });
 
+        // Ensure EF Core does not try to map the Radius property (column was removed from DB)
+        modelBuilder.Entity<POI>().Ignore(p => p.Radius);
+
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity.HasKey(e => e.LogId).HasName("PK__AuditLog__5E5499A81C6A02AB");
@@ -110,8 +113,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(150);
             entity.Property(e => e.Status).HasMaxLength(50);
 
-            // Radius column may contain NULL in the database; map as optional
-            entity.Property(e => e.Radius).IsRequired(false).HasColumnType("float");
+            // Radius column was removed from the database; property is ignored by EF (see above)
 
             entity.HasMany(d => d.Categories).WithMany(p => p.POIs)
                 .UsingEntity<Dictionary<string, object>>(

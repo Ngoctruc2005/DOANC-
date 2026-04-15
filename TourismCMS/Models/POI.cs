@@ -41,7 +41,9 @@ namespace TourismCMS.Models
 
     public partial class POI
     {
-        // Radius may be NULL in the database, map as nullable here
+        // Radius is removed from the database; keep property for in-memory use
+        // but do not map it to the database to avoid SQL errors.
+        [NotMapped]
         public double? Radius { get; set; } = 50; // mét
     }
 }

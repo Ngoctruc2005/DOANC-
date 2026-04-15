@@ -60,9 +60,9 @@ public partial class MapPage : ContentPage
             map.IsShowingUser = true;
         }
 
-        MainThread.BeginInvokeOnMainThread(() => 
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            try { ShowVinhKhanh(); } catch { } 
+            try { ShowVinhKhanh(); } catch { }
         });
 
         // Khởi tạo ApiService lấy dữ liệu thật
@@ -77,7 +77,7 @@ public partial class MapPage : ContentPage
             // Đợi UI map render hoàn tất trước khi thao tác ghim Pin
             await Task.Delay(1500);
 
-            MainThread.BeginInvokeOnMainThread(() => 
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 map.Pins.Clear();
                 LoadRestaurants();
@@ -540,7 +540,7 @@ public partial class MapPage : ContentPage
         if (firstMatch != null && firstMatch.Latitude != null && firstMatch.Longitude != null)
         {
             map.MoveToRegion(MapSpan.FromCenterAndRadius(
-                new Location(firstMatch.Latitude.Value, firstMatch.Longitude.Value), 
+                new Location(firstMatch.Latitude.Value, firstMatch.Longitude.Value),
                 Distance.FromMeters(500)));
             ShowDetail(firstMatch);
         }
@@ -558,7 +558,7 @@ public partial class MapPage : ContentPage
             if (selectedPoi.Latitude != null && selectedPoi.Longitude != null)
             {
                 map.MoveToRegion(MapSpan.FromCenterAndRadius(
-                    new Location(selectedPoi.Latitude.Value, selectedPoi.Longitude.Value), 
+                    new Location(selectedPoi.Latitude.Value, selectedPoi.Longitude.Value),
                     Distance.FromMeters(500)));
                 ShowDetail(selectedPoi);
             }

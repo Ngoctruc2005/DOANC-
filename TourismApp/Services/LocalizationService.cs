@@ -10,7 +10,7 @@ public class LocalizationService : INotifyPropertyChanged
     public static LocalizationService Instance => _instance;
 
     private string _currentLanguage = "vi";
-    
+
     private LocalizationService()
     {
         _currentLanguage = Preferences.Get("language", "vi");

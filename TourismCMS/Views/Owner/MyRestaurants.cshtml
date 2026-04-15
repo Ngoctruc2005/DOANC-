@@ -1,13 +1,13 @@
-@model List<POI>
+Ôªø@model List<POI>
 
-<h2>Qu·n c?a tÙi</h2>
+<h2>Qu√°n c?a t√¥i</h2>
 
-<a href="/Owner/Create" class="btn btn-success mb-3">+ ThÍm qu·n</a>
+<a href="/Owner/Create" class="btn btn-success mb-3">+ Th√™m qu√°n</a>
 
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>TÍn</th>
+            <th>T√™n</th>
             <th>Tr&#7841;ng th&#225;i</th>
             <th>H&#224;nh &#273;&#7897;ng</th>
         </tr>
@@ -27,7 +27,7 @@
                     {
                         <span class="badge bg-success">&#272;&#227; duy&#7879;t</span>
                     }
-                    else if (p.Status == "–? b? admin xÛa" || p.Status == "–? xÛa")
+                    else if (p.Status == "√ê? b? admin x√≥a" || p.Status == "√ê? x√≥a")
                     {
                         <span class="badge bg-danger">&#272;&#227; b&#7883; x&#243;a</span>
                     }
@@ -39,9 +39,10 @@
                 <td>
                     <a class="btn btn-info btn-sm" asp-controller="POIs" asp-action="Details" asp-route-id="@poiKey">Chi ti&#7871;t</a>
                     <a class="btn btn-warning btn-sm" asp-controller="POIs" asp-action="Edit" asp-route-id="@poiKey">S&#7917;a</a>
-                    <a class="btn btn-danger btn-sm" asp-controller="POIs" asp-action="Delete" asp-route-id="@poiKey">XÛa</a>
+                    <a class="btn btn-danger btn-sm" asp-controller="POIs" asp-action="Delete" asp-route-id="@poiKey">X√≥a</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+

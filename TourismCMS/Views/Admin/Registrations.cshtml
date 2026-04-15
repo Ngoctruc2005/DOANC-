@@ -1,12 +1,12 @@
-@model IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>
+﻿@model IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>
 @{
-    ViewData["Title"] = "Phê duyệt chủ quán";
+    ViewData["Title"] = "PhÃª duyá»‡t chá»§ quÃ¡n";
     Layout = "_Layout";
 }
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Danh sách đăng ký chủ quán chờ duyệt</h2>
+        <h2>Danh sÃ¡ch Ä‘Äƒng kÃ½ chá»§ quÃ¡n chá» duyá»‡t</h2>
     </div>
 
     <div class="card shadow-sm">
@@ -14,13 +14,13 @@
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-primary">
                     <tr>
-                        <th>Mã đăng ký</th>
-                        <th>Mã User</th>
-                        <th>Họ tên</th>
-                        <th>SĐT</th>
-                        <th>Tên đăng nhập</th>
-                        <th>Trạng thái</th>
-                        <th class="text-center">Thao tác</th>
+                        <th>MÃ£ Ä‘Äƒng kÃ½</th>
+                        <th>MÃ£ User</th>
+                        <th>Há» tÃªn</th>
+                        <th>SÄT</th>
+                        <th>TÃªn Ä‘Äƒng nháº­p</th>
+                        <th>Tráº¡ng thÃ¡i</th>
+                        <th class="text-center">Thao tÃ¡c</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,15 +36,15 @@
                                 <td>@item.Username</td>
                                 <td>
                                     <span class="badge bg-warning text-dark">
-                                        @(string.Equals(item.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "Chờ duyệt" : item.Status)
+                                        @(string.Equals(item.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "Chá» duyá»‡t" : item.Status)
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-sm btn-success">
-                                        <i class="fa fa-check"></i> Duyệt
+                                        <i class="fa fa-check"></i> Duyá»‡t
                                     </a>
-                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Bạn có chắc chắn muốn từ chối đăng ký này?');">
-                                        <i class="fa fa-times"></i> Từ chối
+                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-sm btn-danger ms-2" onclick="return confirm('Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n tá»« chá»‘i Ä‘Äƒng kÃ½ nÃ y?');">
+                                        <i class="fa fa-times"></i> Tá»« chá»‘i
                                     </a>
                                 </td>
                             </tr>
@@ -54,7 +54,7 @@
                     {
                         <tr>
                             <td colspan="7" class="text-center py-4 text-muted">
-                                <em>Không có đăng ký nào đang chờ duyệt.</em>
+                                <em>KhÃ´ng cÃ³ Ä‘Äƒng kÃ½ nÃ o Ä‘ang chá» duyá»‡t.</em>
                             </td>
                         </tr>
                     }
@@ -63,3 +63,4 @@
         </div>
     </div>
 </div>
+

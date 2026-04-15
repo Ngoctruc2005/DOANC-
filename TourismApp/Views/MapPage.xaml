@@ -5,44 +5,44 @@
     x:Class="TourismApp.Views.MapPage"
     BackgroundColor="White">
 
-	<Grid>
+    <Grid>
 
-		<!-- 🗺️ MAP -->
-		<maps:Map
+        <!-- 🗺️ MAP -->
+        <maps:Map
             x:Name="map"
             MapType="Street"
             IsShowingUser="False" />
 
-		<!-- SEARCH CONTAINER -->
-		<VerticalStackLayout Margin="10,10,50,0" VerticalOptions="Start" Spacing="5">
-			<!-- TÌM KIẾM -->
-			<Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
-				<Border.Shadow>
-					<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-				</Border.Shadow>
-				<!-- Sửa Placeholder thành Binding -->
-				<SearchBar x:Name="searchBar" Placeholder="{Binding [SearchPlaceholder]}" TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
-			</Border>
+        <!-- SEARCH CONTAINER -->
+        <VerticalStackLayout Margin="10,10,50,0" VerticalOptions="Start" Spacing="5">
+            <!-- TÌM KIẾM -->
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 25" Padding="5,0">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+                </Border.Shadow>
+                <!-- Sửa Placeholder thành Binding -->
+                <SearchBar x:Name="searchBar" Placeholder="{Binding [SearchPlaceholder]}" TextChanged="OnSearchTextChanged" SearchButtonPressed="OnSearchButtonPressed" />
+            </Border>
 
-			<!-- KẾT QUẢ TÌM KIẾM -->
-			<Border x:Name="searchResultsBorder" IsVisible="False" BackgroundColor="White" StrokeShape="RoundRectangle 15">
-				<Border.Shadow>
-					<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-				</Border.Shadow>
-				<CollectionView x:Name="searchResults" MaximumHeightRequest="200" SelectionMode="Single" SelectionChanged="OnSearchResultSelected">
-					<CollectionView.ItemTemplate>
-						<DataTemplate>
-							<ContentView>
-								<Label Text="{Binding Name}" Padding="15,10" FontSize="16" TextColor="Black" />
-							</ContentView>
-						</DataTemplate>
-					</CollectionView.ItemTemplate>
-				</CollectionView>
-			</Border>
+            <!-- KẾT QUẢ TÌM KIẾM -->
+            <Border x:Name="searchResultsBorder" IsVisible="False" BackgroundColor="White" StrokeShape="RoundRectangle 15">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+                </Border.Shadow>
+                <CollectionView x:Name="searchResults" MaximumHeightRequest="200" SelectionMode="Single" SelectionChanged="OnSearchResultSelected">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <ContentView>
+                                <Label Text="{Binding Name}" Padding="15,10" FontSize="16" TextColor="Black" />
+                            </ContentView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Border>
 
-		</VerticalStackLayout>
+        </VerticalStackLayout>
 
-		<Button Text="⟲ Refresh"
+        <Button Text="⟲ Refresh"
                Clicked="OnRefreshGpsClicked"
 				BackgroundColor="#1E88E5"
 				TextColor="White"
@@ -56,8 +56,8 @@
 				HorizontalOptions="Start"
 				VerticalOptions="End" />
 
-		<!-- PANEL CHI TIẾT QUÁN -->
-		<Border
+        <!-- PANEL CHI TIẾT QUÁN -->
+        <Border
             x:Name="detailPanel"
             BackgroundColor="White"
             StrokeShape="RoundRectangle 20"
@@ -65,71 +65,71 @@
             VerticalOptions="End"
             Margin="10"
             IsVisible="False">
-			<Border.Shadow>
-				<Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
-			</Border.Shadow>
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,2" Opacity="0.2" Radius="5" />
+            </Border.Shadow>
 
-			<Grid>
-				<!-- Nội dung chính -->
-				<ScrollView>
-					<VerticalStackLayout Spacing="10">
+            <Grid>
+                <!-- Nội dung chính -->
+                <ScrollView>
+                    <VerticalStackLayout Spacing="10">
 
-						<Image x:Name="restaurantImage"
+                        <Image x:Name="restaurantImage"
 							   HeightRequest="160"
 							   Aspect="AspectFill"
 							   IsVisible="False" />
 
-						<!-- 🌐 Ngôn ngữ -->
-						<Picker x:Name="languagePicker"
+                        <!-- 🌐 Ngôn ngữ -->
+                        <Picker x:Name="languagePicker"
                                 Title="Ngôn ngữ"
                                 IsVisible="False"
                                 SelectedIndexChanged="OnLanguageChanged">
-							<Picker.Items>
-								<x:String>vi</x:String>
-								<x:String>en</x:String>
-							</Picker.Items>
-						</Picker>
+                            <Picker.Items>
+                                <x:String>vi</x:String>
+                                <x:String>en</x:String>
+                            </Picker.Items>
+                        </Picker>
 
-						<!-- Tên quán -->
-						<Label x:Name="nameLabel"
+                        <!-- Tên quán -->
+                        <Label x:Name="nameLabel"
                                FontSize="22"
                                FontAttributes="Bold"/>
 
-						<!-- Mô tả -->
-						<Label x:Name="descLabel"
+                        <!-- Mô tả -->
+                        <Label x:Name="descLabel"
                                FontSize="14"
                                TextColor="Gray"
                                LineBreakMode="WordWrap"/>
 
-						<!-- NHÓM CÁC NÚT TƯƠNG TÁC CHIA THÀNH LƯỚI 2 CỘT -->
-						<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">
+                        <!-- NHÓM CÁC NÚT TƯƠNG TÁC CHIA THÀNH LƯỚI 2 CỘT -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Margin="0,10,0,0">
 
-							<!-- Sửa Text thành Binding -->
-							<Button Grid.Row="0" Grid.Column="0"
+                            <!-- Sửa Text thành Binding -->
+                            <Button Grid.Row="0" Grid.Column="0"
                                     Text="{Binding [ListenAudio]}"
                                     Clicked="OnPlayAudioClicked" Padding="0"/>
 
-							<Button Grid.Row="0" Grid.Column="1"
+                            <Button Grid.Row="0" Grid.Column="1"
                                     Text="{Binding [Directions]}"
                                     Clicked="OnDirectionsClicked" Padding="0"
                                     BackgroundColor="#2E8B57" TextColor="White"/>
 
-							<Button Grid.Row="1" Grid.Column="0"
+                            <Button Grid.Row="1" Grid.Column="0"
                                     Text="{Binding [Favorites]}"
                                     Clicked="OnFavoriteClicked" Padding="0"
                                     BackgroundColor="#FF69B4" TextColor="White"/>
 
-							<Button Grid.Row="1" Grid.Column="1"
+                            <Button Grid.Row="1" Grid.Column="1"
                                     Text="{Binding [Close]}"
                                     Clicked="OnCloseClicked" Padding="0"
                                     BackgroundColor="#696969" TextColor="White"/>
-						</Grid>
+                        </Grid>
 
-					</VerticalStackLayout>
-				</ScrollView>
-			</Grid>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
 
-		</Border>
+        </Border>
 
-	</Grid>
+    </Grid>
 </ContentPage>

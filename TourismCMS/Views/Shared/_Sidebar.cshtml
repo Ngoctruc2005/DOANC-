@@ -1,34 +1,35 @@
-@* Shared sidebar partial used by all layouts *@
+﻿@* Shared sidebar partial used by all layouts *@
 @if (User.Identity != null && User.Identity.IsAuthenticated)
 {
     <div class="sidebar text-white p-3" style="width:250px; min-height:100vh;">
-        <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> Vĩnh Khánh</h4>
+        <h4 class="text-center sidebar-logo mb-4 mt-2"><i class="fa fa-bowl-food text-danger pe-2"></i> VÄ©nh KhÃ¡nh</h4>
 
         @if (User.IsInRole("admin"))
         {
-            <a href="/Admin/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
-            <a href="/Admin/OwnerRequests"><i class="fa fa-users-cog"></i> Duyệt chủ quán</a>
-            <a href="/Admin/Owners"><i class="fa fa-user-tie"></i> Chủ quán</a>
-            <a href="/POIs/Index"><i class="fa fa-store"></i> Quán ăn</a>
-            <a href="/POIs/Pending"><i class="fa fa-clock"></i> Chờ duyệt</a>
+            <a href="/Admin/Index"><i class="fa fa-chart-line"></i> Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <a href="/Admin/OwnerRequests"><i class="fa fa-users-cog"></i> Duyá»‡t chá»§ quÃ¡n</a>
+            <a href="/Admin/Owners"><i class="fa fa-user-tie"></i> Chá»§ quÃ¡n</a>
+            <a href="/POIs/Index"><i class="fa fa-store"></i> QuÃ¡n Äƒn</a>
+            <a href="/POIs/Pending"><i class="fa fa-clock"></i> Chá» duyá»‡t</a>
             <!-- VisitHistory link removed -->
-            <a href="/Admin/Cancelled"><i class="fa fa-ban"></i> Đã hủy</a>
-            <a href="/Admin/Deleted"><i class="fa fa-trash"></i> Đã xóa</a>
+            <a href="/Admin/Cancelled"><i class="fa fa-ban"></i> ÄÃ£ há»§y</a>
+            <a href="/Admin/Deleted"><i class="fa fa-trash"></i> ÄÃ£ xÃ³a</a>
 
-            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> ÄÄƒng xuáº¥t</a>
         }
         else if (User.IsInRole("poi_owner"))
         {
-            <a href="/Owner/Index"><i class="fa fa-chart-line"></i> Bảng điều khiển</a>
-            <a href="/POIs/Index"><i class="fa fa-store"></i> Quán của tôi</a>
-            <a href="/POIs/Create"><i class="fa fa-plus"></i> Đăng ký quán</a>
+            <a href="/Owner/Index"><i class="fa fa-chart-line"></i> Báº£ng Ä‘iá»u khiá»ƒn</a>
+            <a href="/POIs/Index"><i class="fa fa-store"></i> QuÃ¡n cá»§a tÃ´i</a>
+            <a href="/POIs/Create"><i class="fa fa-plus"></i> ÄÄƒng kÃ½ quÃ¡n</a>
             <!-- VisitHistory link removed -->
-            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> ÄÄƒng xuáº¥t</a>
         }
         else
         {
-            <a href="/POIs/Index"><i class="fa fa-store"></i> Quán ăn</a>
-            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> Đăng xuất</a>
+            <a href="/POIs/Index"><i class="fa fa-store"></i> QuÃ¡n Äƒn</a>
+            <a href="/Auth/Logout"><i class="fa fa-sign-out-alt"></i> ÄÄƒng xuáº¥t</a>
         }
     </div>
 }
+

@@ -1,23 +1,23 @@
-@model IEnumerable<TourismCMS.Models.POI>
+﻿@model IEnumerable<TourismCMS.Models.POI>
 @{
-    ViewData["Title"] = "Danh sách đã hủy";
+    ViewData["Title"] = "Danh sÃ¡ch Ä‘Ã£ há»§y";
     Layout = "_Layout";
     var cancelledOwners = ViewBag.CancelledOwners as IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>;
 }
 
 <div class="container-fluid mt-4">
-    <h2 class="mb-3">Tài khoản chủ quán đã hủy</h2>
+    <h2 class="mb-3">TÃ i khoáº£n chá»§ quÃ¡n Ä‘Ã£ há»§y</h2>
     <div class="card shadow-sm mb-4">
         <div class="card-body p-0">
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-danger">
                     <tr>
-                        <th>Mã đăng ký</th>
-                        <th>Mã User</th>
-                        <th>Họ tên</th>
-                        <th>SĐT</th>
-                        <th>Tên đăng nhập</th>
-                        <th>Trạng thái</th>
+                        <th>MÃ£ Ä‘Äƒng kÃ½</th>
+                        <th>MÃ£ User</th>
+                        <th>Há» tÃªn</th>
+                        <th>SÄT</th>
+                        <th>TÃªn Ä‘Äƒng nháº­p</th>
+                        <th>Tráº¡ng thÃ¡i</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -31,14 +31,14 @@
                                 <td>@owner.FullName</td>
                                 <td>@owner.PhoneNumber</td>
                                 <td>@owner.Username</td>
-                                <td><span class="badge bg-danger">Đã hủy</span></td>
+                                <td><span class="badge bg-danger">ÄÃ£ há»§y</span></td>
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted"><em>Không có tài khoản chủ quán đã hủy.</em></td>
+                            <td colspan="6" class="text-center py-4 text-muted"><em>KhÃ´ng cÃ³ tÃ i khoáº£n chá»§ quÃ¡n Ä‘Ã£ há»§y.</em></td>
                         </tr>
                     }
                 </tbody>
@@ -46,16 +46,16 @@
         </div>
     </div>
 
-    <h2 class="mb-3">Quán ăn đã hủy</h2>
+    <h2 class="mb-3">QuÃ¡n Äƒn Ä‘Ã£ há»§y</h2>
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-danger">
                     <tr>
-                        <th>Mã quán</th>
-                        <th>Tên quán</th>
-                        <th>Địa chỉ</th>
-                        <th>Trạng thái</th>
+                        <th>MÃ£ quÃ¡n</th>
+                        <th>TÃªn quÃ¡n</th>
+                        <th>Äá»‹a chá»‰</th>
+                        <th>Tráº¡ng thÃ¡i</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -74,7 +74,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center py-4 text-muted"><em>Không có quán ăn đã hủy.</em></td>
+                            <td colspan="4" class="text-center py-4 text-muted"><em>KhÃ´ng cÃ³ quÃ¡n Äƒn Ä‘Ã£ há»§y.</em></td>
                         </tr>
                     }
                 </tbody>
@@ -82,3 +82,4 @@
         </div>
     </div>
 </div>
+

@@ -1,4 +1,4 @@
-using System.Xml;
+﻿using System.Xml;
 using TourismApp.Models;
 using TourismApp.Services;
 
@@ -35,16 +35,16 @@ public partial class RestaurantDetailPage : ContentPage
             {
                 // Nếu backend ném về tên file (VD: "uploads/image.jpg")
                 // Ta nối với Base URL của server để lấy ảnh trực tiếp từ internet
-                string baseUrl = "https://nqrwpkxp-5219.asse.devtunnels.ms/"; 
+                string baseUrl = "https://nqrwpkxp-5219.asse.devtunnels.ms/";
 
                 // Thử kết nối lấy ảnh từ URL baseUrl nếu có
                 var instance = new PoiApiService(null);
                 var urls = instance.GetType().GetMethod("GetApiBaseUrls", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(instance, null) as IEnumerable<string>;
                 if (urls != null)
                 {
-                   baseUrl = urls.FirstOrDefault(u => !string.IsNullOrEmpty(u) && !u.Contains("localhost") && !u.Contains("127.0.0.1") && u.Contains("devtunnels.ms")) ?? baseUrl;
+                    baseUrl = urls.FirstOrDefault(u => !string.IsNullOrEmpty(u) && !u.Contains("localhost") && !u.Contains("127.0.0.1") && u.Contains("devtunnels.ms")) ?? baseUrl;
 
-                   baseUrl = baseUrl.Replace("api/", ""); // xoá api path ra khỏi image path
+                    baseUrl = baseUrl.Replace("api/", ""); // xoá api path ra khỏi image path
                 }
 
                 // Chuẩn hóa chuỗi URL tránh bị lỗi dính 2 dấu gạch chéo

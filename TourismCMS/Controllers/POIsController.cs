@@ -91,6 +91,45 @@ namespace TourismCMS.Controllers
             {
                 return NotFound();
             }
+            // Pass visit count and QR URL to the view
+            try
+            {
+                var visitCount = await _context.VisitLogs.CountAsync(v => v.Poiid == pOI.Poiid);
+                ViewBag.VisitCount = visitCount;
+                var visitUrl = Url.Action("Visit", "POIs", new { id = pOI.Poiid }, Request.Scheme);
+
+                // If the app is accessed from a mobile device scanning the QR, localhost won't be reachable.
+                // If request host is loopback, replace with machine LAN IPv4 address so phone can reach it.
+                var host = Request.Host.Host ?? string.Empty;
+                var port = Request.Host.Port;
+                if (host == "localhost" || host == "127.0.0.1" || host == "::1")
+                {
+                    try
+                    {
+                        var addresses = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+                        var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.ToString();
+                        if (!string.IsNullOrWhiteSpace(ipv4))
+                        {
+                            var p = port.HasValue ? $":" + port.Value.ToString() : string.Empty;
+                            visitUrl = $"{Request.Scheme}://{ipv4}{p}/POIs/Visit/{pOI.Poiid}";
+                        }
+                    }
+                    catch
+                    {
+                        // ignore and fall back to generated URL
+                    }
+                }
+
+                ViewBag.VisitUrl = visitUrl;
+                ViewBag.QRImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + Uri.EscapeDataString(visitUrl ?? string.Empty);
+            }
+            catch
+            {
+                ViewBag.VisitCount = 0;
+                ViewBag.VisitUrl = string.Empty;
+                ViewBag.QRImageUrl = string.Empty;
+            }
+
 
             if (User.IsInRole("poi_owner"))
             {
@@ -162,7 +201,42 @@ namespace TourismCMS.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
+
             return View(pOI);
+        }
+
+        // QR scan endpoint: when a user scans the QR for a POI we log a visit and redirect to details
+        [AllowAnonymous]
+        [HttpGet("/POIs/Visit/{id}")]
+        public async Task<IActionResult> Visit(int id)
+        {
+            var pOI = await _context.POIs.FirstOrDefaultAsync(m => m.Id == id || m.Poiid == id);
+            if (pOI == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var device = Request.Headers["User-Agent"].ToString();
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                var visit = new VisitLog
+                {
+                    Poiid = pOI.Poiid,
+                    DeviceId = string.IsNullOrWhiteSpace(device) ? ip : (device + (string.IsNullOrWhiteSpace(ip) ? string.Empty : " | " + ip)),
+                    VisitTime = DateTime.Now
+                };
+
+                _context.VisitLogs.Add(visit);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                // Logging failures shouldn't block the user experience; swallow exceptions
+            }
+
+            return RedirectToAction("Details", new { id = pOI.Poiid });
         }
 
         // GET: POIs/Edit/5

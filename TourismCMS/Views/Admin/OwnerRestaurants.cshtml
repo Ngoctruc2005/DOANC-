@@ -1,21 +1,21 @@
-@model IEnumerable<TourismCMS.Models.POI>
+﻿@model IEnumerable<TourismCMS.Models.POI>
 @{
-    ViewData["Title"] = "Quán ăn của chủ quán";
+    ViewData["Title"] = "QuÃ¡n Äƒn cá»§a chá»§ quÃ¡n";
     Layout = "_Layout";
 }
 
 <div class="container-fluid mt-4">
-    <h2 class="mb-2">Quán ăn của: @ViewBag.OwnerName</h2>
-    <p class="text-muted">SĐT: @ViewBag.OwnerPhone</p>
+    <h2 class="mb-2">QuÃ¡n Äƒn cá»§a: @ViewBag.OwnerName</h2>
+    <p class="text-muted">SÄT: @ViewBag.OwnerPhone</p>
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-primary">
                     <tr>
-                        <th>Tên quán</th>
-                        <th>Địa chỉ</th>
-                        <th>Trạng thái</th>
+                        <th>TÃªn quÃ¡n</th>
+                        <th>Äá»‹a chá»‰</th>
+                        <th>Tráº¡ng thÃ¡i</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,7 +23,7 @@
                     {
                         foreach (var poi in Model)
                         {
-                            var displayStatus = poi.Status == "Ch? duy?t" ? "Chờ duyệt" : poi.Status;
+                            var displayStatus = poi.Status == "Ch? duy?t" ? "Chá» duyá»‡t" : poi.Status;
                             <tr>
                                 <td>@poi.Name</td>
                                 <td>@poi.Address</td>
@@ -35,7 +35,7 @@
                     {
                         <tr>
                             <td colspan="3" class="text-center py-4 text-muted">
-                                <em>Chủ quán này chưa có quán ăn nào.</em>
+                                <em>Chá»§ quÃ¡n nÃ y chÆ°a cÃ³ quÃ¡n Äƒn nÃ o.</em>
                             </td>
                         </tr>
                     }
@@ -45,6 +45,7 @@
     </div>
 
     <div class="mt-3">
-        <a asp-action="Owners" class="btn btn-secondary">Quay lại danh sách chủ quán</a>
+        <a asp-action="Owners" class="btn btn-secondary">Quay láº¡i danh sÃ¡ch chá»§ quÃ¡n</a>
     </div>
 </div>
+

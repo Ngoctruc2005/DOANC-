@@ -1,21 +1,21 @@
-@using System.Linq
+ï»¿@using System.Linq
 @model IEnumerable<TourismCMS.Models.POI>
 
 @{
-    ViewData["Title"] = "Qu?n lý quán an";
+    ViewData["Title"] = "Qu?n lÃ½ quÃ¡n an";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>?? Qu?n lý quán an Vinh Khánh <small class="text-muted">- Admin</small></h2>
+<h2>?? Qu?n lÃ½ quÃ¡n an Vinh KhÃ¡nh <small class="text-muted">- Admin</small></h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <a class="btn btn-success" asp-action="Create">+ Thêm quán</a>
+        <a class="btn btn-success" asp-action="Create">+ ThÃªm quÃ¡n</a>
         <span class="badge bg-secondary ms-2">@Model?.Count() ?? 0</span>
     </div>
 
     <div class="d-flex">
-        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="Tìm theo tên ho?c mô t?..." />
+        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="TÃ¬m theo tÃªn ho?c mÃ´ t?..." />
     </div>
 </div>
 
@@ -23,13 +23,13 @@
     <table id="poisTable" class="table table-bordered table-hover nowrap" style="width:100%">
         <thead class="table-dark">
             <tr>
-                <th>Tên quán</th>
-                <th>Mô t?</th>
-                <th>V? trí</th>
-                <th>Bán kính</th>
+                <th>TÃªn quÃ¡n</th>
+                <th>MÃ´ t?</th>
+                <th>V? trÃ­</th>
+                <th>BÃ¡n kÃ­nh</th>
                 <th>?nh</th>
                 <th>Audio</th>
-                <th>Hành d?ng</th>
+                <th>HÃ nh d?ng</th>
             </tr>
         </thead>
         <tbody>
@@ -57,14 +57,14 @@
                         }
                         else
                         {
-                            <span class="text-muted">Không có</span>
+                            <span class="text-muted">KhÃ´ng cÃ³</span>
                         }
                     </td>
 
                     <td>
                         <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">S?a</a>
                         <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@item.Id">Xem</a>
-                        <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">Xóa</a>
+                        <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">XÃ³a</a>
                     </td>
                 </tr>
             }
@@ -77,7 +77,7 @@
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmDeleteLabel">Xác nh?n xóa</h5>
+        <h5 class="modal-title" id="confirmDeleteLabel">XÃ¡c nh?n xÃ³a</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -85,7 +85,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">H?y</button>
-        <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">Xóa</button>
+        <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">XÃ³a</button>
       </div>
     </div>
   </div>
@@ -117,8 +117,8 @@
             $('.btn-delete').on('click', function (e) {
                 e.preventDefault();
                 deleteUrl = $(this).data('delete-url');
-                var name = $(this).data('name') || 'm?c này';
-                $('#confirmDeleteModal .modal-body').text('B?n có ch?c mu?n xóa "' + name + '"?');
+                var name = $(this).data('name') || 'm?c nÃ y';
+                $('#confirmDeleteModal .modal-body').text('B?n cÃ³ ch?c mu?n xÃ³a "' + name + '"?');
                 var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
                 modal.show();
             });
@@ -132,3 +132,4 @@
         });
     </script>
 }
+

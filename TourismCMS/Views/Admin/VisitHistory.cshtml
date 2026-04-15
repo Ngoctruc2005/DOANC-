@@ -1,11 +1,11 @@
-@model List<TourismCMS.Models.VisitHistoryItemViewModel>
+﻿@model List<TourismCMS.Models.VisitHistoryItemViewModel>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Lịch sử sử dụng";
-    ViewData["PageHeaderIcon"] = "📈";
-    ViewData["PageHeaderTitle"] = "Lịch sử sử dụng";
-    ViewData["PageHeaderSubtitle"] = "Thống kê lượt truy cập các quán ăn";
+    ViewData["Title"] = "Lá»‹ch sá»­ sá»­ dá»¥ng";
+    ViewData["PageHeaderIcon"] = "ðŸ“ˆ";
+    ViewData["PageHeaderTitle"] = "Lá»‹ch sá»­ sá»­ dá»¥ng";
+    ViewData["PageHeaderSubtitle"] = "Thá»‘ng kÃª lÆ°á»£t truy cáº­p cÃ¡c quÃ¡n Äƒn";
 
     var totalVisits = Model.Sum(x => x.TotalVisits);
     var totalRestaurants = Model.Count;
@@ -16,13 +16,13 @@
 <div class="row g-3 mb-3">
     <div class="col-md-4">
         <div class="card border-0 shadow-sm p-3 text-center">
-            <h6>Tổng lượt truy cập</h6>
+            <h6>Tá»•ng lÆ°á»£t truy cáº­p</h6>
             <h3 class="text-primary">@totalVisits</h3>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card border-0 shadow-sm p-3 text-center">
-            <h6>Số quán có truy cập</h6>
+            <h6>Sá»‘ quÃ¡n cÃ³ truy cáº­p</h6>
             <h3 class="text-success">@totalRestaurants</h3>
         </div>
     </div>
@@ -34,18 +34,18 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Quán ăn</th>
-                        <th>Chủ quán</th>
-                        <th>Địa chỉ</th>
-                        <th>Lượt truy cập</th>
-                        <th>Lần truy cập gần nhất</th>
+                        <th>QuÃ¡n Äƒn</th>
+                        <th>Chá»§ quÃ¡n</th>
+                        <th>Äá»‹a chá»‰</th>
+                        <th>LÆ°á»£t truy cáº­p</th>
+                        <th>Láº§n truy cáº­p gáº§n nháº¥t</th>
                     </tr>
                 </thead>
                 <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="5" class="text-center text-muted">Chưa có dữ liệu lịch sử sử dụng.</td>
+                        <td colspan="5" class="text-center text-muted">ChÆ°a cÃ³ dá»¯ liá»‡u lá»‹ch sá»­ sá»­ dá»¥ng.</td>
                     </tr>
                 }
                 else
@@ -68,3 +68,4 @@
         </div>
     </div>
 </div>
+

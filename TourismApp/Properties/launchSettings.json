@@ -2,10 +2,7 @@
   "profiles": {
     "Windows Machine": {
       "commandName": "Project",
-      "nativeDebugging": false,
-      "environmentVariables": {
-        "TOURISM_API_BASE_URL": "http://localhost:5219/api/"
-      }
+      "nativeDebugging": false
     }
   }
 }

@@ -8,7 +8,7 @@
 
         <VerticalStackLayout Padding="20" Spacing="20">
 
-           
+
 
             <!-- Hình ảnh quán ăn -->
             <Border x:Name="imageContainer" Stroke="Transparent" StrokeShape="RoundRectangle 15" BackgroundColor="LightGray" HeightRequest="200">

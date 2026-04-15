@@ -47,6 +47,33 @@ namespace TourismCMS.Controllers
             return Ok(pois);
         }
 
+        // GET: api/pois/{id}
+        // Returns JSON detail for single POI (for native app consumption)
+        [HttpGet("{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPoi(int id)
+        {
+            var p = await _db.POIs.FirstOrDefaultAsync(x => x.Poiid == id || x.Id == id);
+            if (p == null) return NotFound();
+
+            var dto = new
+            {
+                id = p.Id,
+                poiid = p.Poiid,
+                name = p.Name,
+                description = p.Description,
+                latitude = p.Latitude,
+                longitude = p.Longitude,
+                address = p.Address,
+                status = p.Status,
+                imagePath = p.ImagePath,
+                createdAt = p.CreatedAt,
+                visitCount = await _db.VisitLogs.CountAsync(v => v.Poiid == p.Poiid)
+            };
+
+            return Ok(dto);
+        }
+
         [HttpGet("menus")]
         [AllowAnonymous]
         public async Task<IActionResult> GetMenus()
@@ -63,6 +90,42 @@ namespace TourismCMS.Controllers
                 .ToListAsync();
 
             return Ok(menus);
+        }
+
+        // POST: api/pois/{id}/visit
+        // App should call this endpoint after scanning QR to register a visit (returns JSON).
+        [HttpPost("{id}/visit")]
+        [AllowAnonymous]
+        public async Task<IActionResult> PostVisit(int id)
+        {
+            var poi = await _db.POIs.FirstOrDefaultAsync(p => p.Poiid == id || p.Id == id);
+            if (poi == null)
+            {
+                return NotFound(new { success = false, message = "POI not found" });
+            }
+
+            try
+            {
+                var device = Request.Headers["User-Agent"].ToString();
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                var visit = new VisitLog
+                {
+                    Poiid = poi.Poiid,
+                    DeviceId = string.IsNullOrWhiteSpace(device) ? ip : (device + (string.IsNullOrWhiteSpace(ip) ? string.Empty : " | " + ip)),
+                    VisitTime = DateTime.Now
+                };
+
+                _db.VisitLogs.Add(visit);
+                await _db.SaveChangesAsync();
+
+                var count = await _db.VisitLogs.CountAsync(v => v.Poiid == poi.Poiid);
+                return Ok(new { success = true, visitId = visit.VisitId, visits = count });
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false, message = "Error saving visit" });
+            }
         }
     }
 }
