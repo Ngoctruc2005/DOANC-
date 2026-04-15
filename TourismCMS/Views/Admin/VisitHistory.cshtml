@@ -1,0 +1,70 @@
+@model List<TourismCMS.Models.VisitHistoryItemViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Lịch sử sử dụng";
+    ViewData["PageHeaderIcon"] = "📈";
+    ViewData["PageHeaderTitle"] = "Lịch sử sử dụng";
+    ViewData["PageHeaderSubtitle"] = "Thống kê lượt truy cập các quán ăn";
+
+    var totalVisits = Model.Sum(x => x.TotalVisits);
+    var totalRestaurants = Model.Count;
+}
+
+@await Html.PartialAsync("_AdminPageHeader")
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 text-center">
+            <h6>Tổng lượt truy cập</h6>
+            <h3 class="text-primary">@totalVisits</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-3 text-center">
+            <h6>Số quán có truy cập</h6>
+            <h3 class="text-success">@totalRestaurants</h3>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Quán ăn</th>
+                        <th>Chủ quán</th>
+                        <th>Địa chỉ</th>
+                        <th>Lượt truy cập</th>
+                        <th>Lần truy cập gần nhất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Chưa có dữ liệu lịch sử sử dụng.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid">@item.PoiName</a>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(item.OwnerName) ? "-" : item.OwnerName)</td>
+                            <td>@item.Address</td>
+                            <td><span class="badge bg-primary">@item.TotalVisits</span></td>
+                            <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

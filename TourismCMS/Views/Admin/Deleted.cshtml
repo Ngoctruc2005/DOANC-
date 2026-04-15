@@ -6,6 +6,10 @@
 }
 
 <div class="container-fluid mt-4">
+    <form method="post" asp-action="PurgeDeleted" onsubmit="return confirm('Bạn có chắc muốn xóa vĩnh viễn tất cả dữ liệu đã xóa? Hành động này không thể hoàn tác.');">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger mb-3">Xóa vĩnh viễn tất cả dữ liệu đã xóa</button>
+    </form>
     <h2 class="mb-3">Tài khoản chủ quán đã xóa</h2>
     <div class="card shadow-sm mb-4">
         <div class="card-body p-0">

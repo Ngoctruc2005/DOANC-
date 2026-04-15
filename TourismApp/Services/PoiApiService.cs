@@ -1,8 +1,9 @@
 ﻿using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Maui.Devices;
+using Microsoft.Maui.Storage;
 using TourismApp.Models;
 using TourismCMS.Data;
-using Microsoft.Maui.Storage;
 
 namespace TourismApp.Services
 {
@@ -42,7 +43,6 @@ namespace TourismApp.Services
             return "Không thể tải dữ liệu từ API.";
         }
 
-        // Can override from Settings/Preferences: Preferences.Set("api_base_url", "http://10.0.2.2:5219/api/")
         private string? CustomBaseUrl => Preferences.Get("api_base_url", string.Empty);
         private string? DebugBaseUrl => Environment.GetEnvironmentVariable("TOURISM_API_BASE_URL");
 
@@ -55,23 +55,21 @@ namespace TourismApp.Services
                 yield return EnsureApiSuffix(CustomBaseUrl!);
             }
 
-            // DÙNG URL CỦA DEV TUNNELS BẠN ĐANG MỞ
-            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/"; 
-
-            // IP Wi-Fi của máy tính bạn hiện tại để điện thoại thật kết nối được!
-            if (DeviceInfo.DeviceType == DeviceType.Physical)
+            if (!string.IsNullOrWhiteSpace(_successfulBaseUrl))
             {
-                // Cập nhật lại IP hiện tại của máy tính
-                yield return "http://10.10.20.153:5219/api/";
-                yield return "https://10.10.20.153:7141/api/";
-                yield return "http://10.10.20.153:5219/";
-                yield return "https://10.10.20.153:7141/";
+                yield return EnsureApiSuffix(_successfulBaseUrl!);
             }
-            else if (DeviceInfo.Platform == DevicePlatform.Android)
+
+            if (!string.IsNullOrWhiteSpace(DebugBaseUrl))
             {
-                // Android emulator -> host localhost via 10.0.2.2
+                yield return EnsureApiSuffix(DebugBaseUrl!);
+            }
+
+            yield return "https://nqrwpkxp-5219.asse.devtunnels.ms/api/";
+
+            if (DeviceInfo.Platform == DevicePlatform.Android && DeviceInfo.DeviceType != DeviceType.Physical)
+            {
                 yield return "http://10.0.2.2:5219/api/";
-                yield return "http://10.0.2.2:5219/"; // Thêm d? ph?ng
                 yield return "http://10.0.2.2:5000/api/";
                 yield return "https://10.0.2.2:7141/api/";
                 yield return "https://10.0.2.2:5001/api/";
@@ -100,8 +98,12 @@ namespace TourismApp.Services
 
             _httpClient = new HttpClient(handler)
             {
-                Timeout = TimeSpan.FromSeconds(15) // Tăng lên 15s để tránh Timeout trên máy ảo hoặc mạng chậm
+                Timeout = TimeSpan.FromSeconds(15)
             };
+
+            _httpClient.DefaultRequestHeaders.Add("X-DevTunnels-Skip-Anti-Phishing-Page", "true");
+            _httpClient.DefaultRequestHeaders.Add("ngrok-skip-browser-warning", "true");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TourismApp/1.0");
             _dbContext = dbContext;
         }
 
@@ -124,7 +126,24 @@ namespace TourismApp.Services
             }
             catch (Exception dbEx)
             {
-                System.Diagnostics.Debug.WriteLine($"[L?I DB L?Y QUÁN ĂN] {dbEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"[LỖI DB LẤY QUÁN ĂN] {dbEx.Message}");
+            }
+
+            if (DeviceInfo.DeviceType == DeviceType.Physical &&
+                string.IsNullOrWhiteSpace(CustomBaseUrl) &&
+                string.IsNullOrWhiteSpace(DebugBaseUrl))
+            {
+                return new List<Poi>
+                {
+                    new Poi
+                    {
+                        Poiid = -1,
+                        Name = "Lỗi API",
+                        Description = "Máy thật cần cấu hình API Base URL (IP Wi-Fi máy tính), ví dụ: http://192.168.x.x:5219/api/",
+                        Latitude = 10.7607,
+                        Longitude = 106.7029
+                    }
+                };
             }
 
             var options = new System.Text.Json.JsonSerializerOptions
@@ -187,7 +206,7 @@ namespace TourismApp.Services
             }
             catch (Exception dbEx)
             {
-                System.Diagnostics.Debug.WriteLine($"[L?I DB L?Y MENU] {dbEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"[LỖI DB LẤY MENU] {dbEx.Message}");
             }
 
             var options = new System.Text.Json.JsonSerializerOptions
@@ -218,42 +237,38 @@ namespace TourismApp.Services
             return new List<Menu>();
         }
 
-        // Tích hợp AI
         public async Task<string> ChatWithAI(string prompt)
         {
             try
             {
                 var requestBody = new { prompt = prompt };
 
-                // Lấy danh sách URL base, tìm đến route AI
-                foreach(var baseUrl in GetApiBaseUrls().Distinct())
+                foreach (var baseUrl in GetApiBaseUrls().Distinct())
                 {
                     try
                     {
-                        var endpoint = $"{baseUrl}ai/chat"; 
+                        var endpoint = $"{baseUrl}ai/chat";
                         var response = await _httpClient.PostAsJsonAsync(endpoint, requestBody);
 
                         if (response.IsSuccessStatusCode)
                         {
                             _successfulBaseUrl = baseUrl;
                             var result = await response.Content.ReadAsStringAsync();
-                            // Loại bỏ dấu ngoặc kép thừa ở kết quả trả về từ API/JSON
                             return result?.Trim('"', ' ');
                         }
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"[API AI FAIL] {baseUrl}ai/chat -> {ex.Message}");
-                        // Thử endpoint khác
                     }
                 }
             }
             catch (Exception ex)
             {
-                 System.Diagnostics.Debug.WriteLine($"[AI Tổng Lỗi] -> {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[AI TỔNG LỖI] -> {ex.Message}");
             }
 
-            return string.Empty; // Trả về lỗi rỗng nếu gọi API thất bại toàn bộ
+            return string.Empty;
         }
     }
 }

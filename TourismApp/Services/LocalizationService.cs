@@ -50,7 +50,9 @@ public class LocalizationService : INotifyPropertyChanged
     private string GetVietnameseText(string key) => key switch
     {
         "Explore" => "Khám phá",
+        "RestaurantCatalog" => "Danh mục",
         "Favorites" => "❤Yêu thích",
+        "Unfavorite" => "💔 Bỏ thích",
         "TabFavorites" => "Yêu thích",
         "ScanQR" => "Quét QR",
         "Settings" => "Cài đặt",
@@ -67,6 +69,8 @@ public class LocalizationService : INotifyPropertyChanged
         "Menu" => "🍜 Menu",
         "ViewMap" => "🗺️ Xem bản đồ",
         "SearchPlaceholder" => "Tìm kiếm quán ăn...",
+        "DistancePrefix" => "📍 Cách",
+        "DistanceUnknown" => "📍 Không xác định",
         "RestaurantDetailTitle" => "Chi tiết quán",
         "ScanQRInstruction" => "Đưa camera vào mã QR để quét",
         "Delete" => "🗑️ Xóa",
@@ -81,6 +85,12 @@ public class LocalizationService : INotifyPropertyChanged
         "InvalidQRCode" => "Mã QR không hợp lệ",
         "InvalidQRFormat" => "Định dạng QR không hợp lệ: ",
         "RequireScanRestaurant" => "Yêu cầu quét mã số quán ăn.",
+        "AddedToFavorites" => "Đã thêm vào yêu thích ❤️",
+        "RemovedFromFavorites" => "Đã bỏ khỏi yêu thích",
+        "NoticeSaved" => "Đã lưu cài đặt. Ngôn ngữ: ",
+        "ConfirmDelete" => "Xác nhận xóa",
+        "Yes" => "Có",
+        "No" => "Không",
         "OK" => "OK",
         _ => key
     };
@@ -88,7 +98,9 @@ public class LocalizationService : INotifyPropertyChanged
     private string GetEnglishText(string key) => key switch
     {
         "Explore" => "Explore",
+        "RestaurantCatalog" => "Catalog",
         "Favorites" => "❤ Favorites",
+        "Unfavorite" => "💔 Unfavorite",
         "TabFavorites" => "Favorites",
         "ScanQR" => "Scan QR",
         "Settings" => "Settings",
@@ -105,6 +117,8 @@ public class LocalizationService : INotifyPropertyChanged
         "Menu" => "🍜 Menu",
         "ViewMap" => "🗺️ View Map",
         "SearchPlaceholder" => "Search restaurants...",
+        "DistancePrefix" => "📍",
+        "DistanceUnknown" => "📍 Unknown",
         "RestaurantDetailTitle" => "Restaurant Details",
         "ScanQRInstruction" => "Point camera at QR code to scan",
         "Delete" => "🗑️ Delete",
@@ -119,6 +133,12 @@ public class LocalizationService : INotifyPropertyChanged
         "InvalidQRCode" => "Invalid QR Code",
         "InvalidQRFormat" => "Invalid QR format: ",
         "RequireScanRestaurant" => "Please scan a valid restaurant QR.",
+        "AddedToFavorites" => "Added to favorites ❤️",
+        "RemovedFromFavorites" => "Removed from favorites",
+        "NoticeSaved" => "Settings saved. Language: ",
+        "ConfirmDelete" => "Confirm delete",
+        "Yes" => "Yes",
+        "No" => "No",
         "OK" => "OK",
         _ => key
     };
@@ -126,7 +146,9 @@ public class LocalizationService : INotifyPropertyChanged
     private string GetChineseText(string key) => key switch
     {
         "Explore" => "探索",
+        "RestaurantCatalog" => "目录",
         "Favorites" => "❤ 最爱",
+        "Unfavorite" => "💔 取消收藏",
         "TabFavorites" => "最爱",
         "ScanQR" => "扫描二维码",
         "Settings" => "设置",
@@ -143,6 +165,8 @@ public class LocalizationService : INotifyPropertyChanged
         "Menu" => "🍜 菜单",
         "ViewMap" => "🗺️ 查看地图",
         "SearchPlaceholder" => "搜索餐厅...",
+        "DistancePrefix" => "📍 距离",
+        "DistanceUnknown" => "📍 未知",
         "RestaurantDetailTitle" => "餐厅详情",
         "ScanQRInstruction" => "将相机对准二维码进行扫描",
         "Delete" => "🗑️ 删除",
@@ -157,6 +181,12 @@ public class LocalizationService : INotifyPropertyChanged
         "InvalidQRCode" => "二维码无效",
         "InvalidQRFormat" => "二维码格式无效: ",
         "RequireScanRestaurant" => "请扫描餐厅二维码。",
+        "AddedToFavorites" => "已添加到收藏 ❤️",
+        "RemovedFromFavorites" => "已从收藏移除",
+        "NoticeSaved" => "设置已保存。语言: ",
+        "ConfirmDelete" => "确认删除",
+        "Yes" => "确定",
+        "No" => "取消",
         "OK" => "确定",
         _ => key
     };
@@ -164,7 +194,9 @@ public class LocalizationService : INotifyPropertyChanged
     private string GetJapaneseText(string key) => key switch
     {
         "Explore" => "探検する",
+        "RestaurantCatalog" => "カタログ",
         "Favorites" => "❤お気に入り",
+        "Unfavorite" => "💔 お気に入り解除",
         "TabFavorites" => "お気に入り",
         "ScanQR" => "QRをスキャン",
         "Settings" => "設定",
@@ -181,6 +213,8 @@ public class LocalizationService : INotifyPropertyChanged
         "Menu" => "🍜 メニュー",
         "ViewMap" => "🗺️ 地図を見る",
         "SearchPlaceholder" => "レストランを検索...",
+        "DistancePrefix" => "📍 距離",
+        "DistanceUnknown" => "📍 不明",
         "RestaurantDetailTitle" => "レストランの詳細",
         "ScanQRInstruction" => "カメラをQRコードに向けてスキャン",
         "Delete" => "🗑️ 削除",
@@ -195,6 +229,12 @@ public class LocalizationService : INotifyPropertyChanged
         "InvalidQRCode" => "無効なQRコード",
         "InvalidQRFormat" => "無効なQRフォーマット: ",
         "RequireScanRestaurant" => "レストランのQRをスキャンしてください。",
+        "AddedToFavorites" => "お気に入りに追加しました ❤️",
+        "RemovedFromFavorites" => "お気に入りから外しました",
+        "NoticeSaved" => "設定を保存しました。言語: ",
+        "ConfirmDelete" => "削除を確認",
+        "Yes" => "はい",
+        "No" => "いいえ",
         "OK" => "OK",
         _ => key
     };
@@ -202,7 +242,9 @@ public class LocalizationService : INotifyPropertyChanged
     private string GetKoreanText(string key) => key switch
     {
         "Explore" => "탐험하다",
+        "RestaurantCatalog" => "카탈로그",
         "Favorites" => "❤즐겨찾기",
+        "Unfavorite" => "💔 즐겨찾기 해제",
         "TabFavorites" => "즐겨찾기",
         "ScanQR" => "QR 스캔",
         "Settings" => "설정",
@@ -219,6 +261,8 @@ public class LocalizationService : INotifyPropertyChanged
         "Menu" => "🍜 메뉴",
         "ViewMap" => "🗺️ 지도 보기",
         "SearchPlaceholder" => "레스토랑 검색...",
+        "DistancePrefix" => "📍 거리",
+        "DistanceUnknown" => "📍 알 수 없음",
         "RestaurantDetailTitle" => "레스토랑 세부 정보",
         "ScanQRInstruction" => "카메라를 QR 코드에 맞춰 스캔하세요",
         "Delete" => "🗑️ 삭제",
@@ -233,6 +277,12 @@ public class LocalizationService : INotifyPropertyChanged
         "InvalidQRCode" => "잘못된 QR 코드",
         "InvalidQRFormat" => "잘못된 QR 형식: ",
         "RequireScanRestaurant" => "레스토랑 코드를 스캔하세요.",
+        "AddedToFavorites" => "즐겨찾기에 추가되었습니다 ❤️",
+        "RemovedFromFavorites" => "즐겨찾기에서 제거되었습니다",
+        "NoticeSaved" => "설정이 저장되었습니다. 언어: ",
+        "ConfirmDelete" => "삭제 확인",
+        "Yes" => "예",
+        "No" => "아니요",
         "OK" => "확인",
         _ => key
     };

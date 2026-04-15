@@ -1,0 +1,13 @@
+@{
+    var icon = ViewData["PageHeaderIcon"]?.ToString() ?? "📄";
+    var title = ViewData["PageHeaderTitle"]?.ToString() ?? (ViewData["Title"]?.ToString() ?? "Trang quản trị");
+    var subtitle = ViewData["PageHeaderSubtitle"]?.ToString() ?? string.Empty;
+}
+
+<div class="mb-4 p-4 text-white rounded shadow" style="background: linear-gradient(135deg, #4e73df, #224abe);">
+    <h3>@icon @title</h3>
+    @if (!string.IsNullOrWhiteSpace(subtitle))
+    {
+        <p class="mb-0">@subtitle</p>
+    }
+</div>

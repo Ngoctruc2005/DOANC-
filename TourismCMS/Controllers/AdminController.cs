@@ -74,14 +74,14 @@ namespace TourismCMS.Controllers
         }
 
         // 📋 Danh sách owner đăng ký (pending)
-        public IActionResult Registrations()
+        public IActionResult OwnerRequests()
         {
             var list = _context.PoiOwnerRegistrations
                 .Where(r => r.Status == "pending")
                 .Join(_context.Users,
                     r => r.UserId,
                     u => u.Id,
-                    (r, u) => new OwnerRegistrationViewModel
+                    (r, u) => new TourismCMS.Models.OwnerRegistrationViewModel
                     {
                         RegistrationId = r.Id,
                         UserId = u.Id,
@@ -95,13 +95,19 @@ namespace TourismCMS.Controllers
             return View(list);
         }
 
+        public IActionResult Registrations()
+        {
+            return RedirectToAction(nameof(OwnerRequests));
+        }
+
+
         public IActionResult Owners()
         {
             var owners = _context.Users
                 .Where(u => u.Role == "poi_owner" && u.IsVerified
                     && !string.IsNullOrWhiteSpace(u.FullName)
                     && !string.IsNullOrWhiteSpace(u.PhoneNumber))
-                .Select(u => new OwnerListItemViewModel
+                .Select(u => new TourismCMS.Models.OwnerListItemViewModel
                 {
                     UserId = u.Id,
                     FullName = u.FullName,
@@ -121,7 +127,7 @@ namespace TourismCMS.Controllers
                 .Join(_context.Users,
                     r => r.UserId,
                     u => u.Id,
-                    (r, u) => new OwnerRegistrationViewModel
+                    (r, u) => new TourismCMS.Models.OwnerRegistrationViewModel
                     {
                         RegistrationId = r.Id,
                         UserId = u.Id,
@@ -145,7 +151,7 @@ namespace TourismCMS.Controllers
         {
             var deletedOwners = _context.Users
                 .Where(u => u.Role == "deleted_owner")
-                .Select(u => new OwnerListItemViewModel
+                .Select(u => new TourismCMS.Models.OwnerListItemViewModel
                 {
                     UserId = u.Id,
                     FullName = u.FullName,
@@ -162,6 +168,60 @@ namespace TourismCMS.Controllers
 
             ViewBag.DeletedOwners = deletedOwners;
             return View(deletedRestaurants);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PurgeDeleted()
+        {
+            var deletedStatuses = new[] { "Đã xóa", "?ã xóa", "Ðã xóa", "Đã bị admin xóa", "Da b? admin xóa" };
+
+            // Remove related data for deleted POIs
+            var pois = await _context.POIs.Where(p => deletedStatuses.Contains(p.Status ?? string.Empty)).ToListAsync();
+            if (pois.Any())
+            {
+                var poiIds = pois.Select(p => p.Poiid).ToList();
+
+                // Remove menus
+                var menus = await _context.Menus.Where(m => m.Poiid != null && poiIds.Contains(m.Poiid.Value)).ToListAsync();
+                if (menus.Any()) _context.Menus.RemoveRange(menus);
+
+                // Remove visit logs
+                var visits = await _context.VisitLogs.Where(v => v.Poiid != null && poiIds.Contains(v.Poiid.Value)).ToListAsync();
+                if (visits.Any()) _context.VisitLogs.RemoveRange(visits);
+
+                // Remove many-to-many join entries from POI_Categories table (if exist)
+                if (poiIds.Any())
+                {
+                    var idsCsv = string.Join(",", poiIds);
+                    try
+                    {
+                        await _context.Database.ExecuteSqlRawAsync($"DELETE FROM POI_Categories WHERE POIID IN ({idsCsv})");
+                    }
+                    catch
+                    {
+                        // ignore failures here to avoid stopping purge; join table may be empty or named differently
+                    }
+                }
+
+                // Finally remove POIs
+                _context.POIs.RemoveRange(pois);
+            }
+
+            // Remove deleted owner accounts and their registrations
+            var deletedOwners = await _context.Users.Where(u => u.Role == "deleted_owner").ToListAsync();
+            if (deletedOwners.Any())
+            {
+                var ownerIds = deletedOwners.Select(u => u.Id).ToList();
+                var regs = await _context.PoiOwnerRegistrations.Where(r => ownerIds.Contains(r.UserId)).ToListAsync();
+                if (regs.Any()) _context.PoiOwnerRegistrations.RemoveRange(regs);
+
+                _context.Users.RemoveRange(deletedOwners);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Deleted));
         }
 
         [HttpPost]
@@ -209,6 +269,39 @@ namespace TourismCMS.Controllers
             return View(restaurants);
         }
 
+        public async Task<IActionResult> VisitHistory()
+        {
+            var history = await _context.VisitLogs
+                .AsNoTracking()
+                .Include(v => v.POI)
+                .Where(v => v.POI != null)
+                .GroupBy(v => new
+                {
+                    v.POI!.Poiid,
+                    v.POI.Name,
+                    v.POI.Address,
+                    v.POI.OwnerId
+                })
+                .Select(g => new VisitHistoryItemViewModel
+                {
+                    Poiid = g.Key.Poiid,
+                    PoiName = g.Key.Name,
+                    Address = g.Key.Address,
+                    OwnerName = _context.Users
+                        .Where(u => u.Id == g.Key.OwnerId)
+                        .Select(u => string.IsNullOrWhiteSpace(u.FullName) ? u.Username : u.FullName)
+                        .FirstOrDefault(),
+                    TotalVisits = g.Count(),
+                    UniqueDevices = g.Select(x => x.DeviceId).Where(d => !string.IsNullOrEmpty(d)).Distinct().Count(),
+                    LastVisitTime = g.Max(x => x.VisitTime)
+                })
+                .OrderByDescending(x => x.TotalVisits)
+                .ThenByDescending(x => x.LastVisitTime)
+                .ToListAsync();
+
+            return View(history);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOwner(int id)
@@ -249,7 +342,7 @@ namespace TourismCMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Registrations");
+            return RedirectToAction(nameof(Owners));
         }
 
         // ❌ Từ chối owner
@@ -262,7 +355,7 @@ namespace TourismCMS.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Registrations");
+            return RedirectToAction(nameof(Cancelled));
         }
     }
 }

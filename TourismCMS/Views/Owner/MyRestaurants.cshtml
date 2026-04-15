@@ -1,33 +1,47 @@
 @model List<POI>
 
-<h2>?? Quán c?a tôi</h2>
+<h2>Quán c?a tôi</h2>
 
 <a href="/Owner/Create" class="btn btn-success mb-3">+ Thêm quán</a>
 
 <table class="table table-bordered">
-    <tr>
-        <th>Tên</th>
-        <th>Tr?ng thái</th>
-    </tr>
-
-    @foreach (var p in Model)
-    {
+    <thead>
         <tr>
-            <td>@p.Name</td>
-            <td>
-                @if (p.Status == "pending")
-                {
-                    <span class="badge bg-warning">Ch? duy?t</span>
-                }
-                else if (p.Status == "approved")
-                {
-                    <span class="badge bg-success">Ðã duy?t</span>
-                }
-                else
-                {
-                    <span class="badge bg-danger">T? ch?i</span>
-                }
-            </td>
+            <th>Tên</th>
+            <th>Tr&#7841;ng th&#225;i</th>
+            <th>H&#224;nh &#273;&#7897;ng</th>
         </tr>
-    }
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            var poiKey = p.Poiid;
+            <tr>
+                <td>@p.Name</td>
+                <td>
+                    @if (p.Status == "Ch\u1EDD duy\u1EC7t")
+                    {
+                        <span class="badge bg-warning">Ch&#7901; duy&#7879;t</span>
+                    }
+                    else if (p.Status == "Open" || p.Status == "\u0110\u00E3 duy\u1EC7t")
+                    {
+                        <span class="badge bg-success">&#272;&#227; duy&#7879;t</span>
+                    }
+                    else if (p.Status == "Ð? b? admin xóa" || p.Status == "Ð? xóa")
+                    {
+                        <span class="badge bg-danger">&#272;&#227; b&#7883; x&#243;a</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">@p.Status</span>
+                    }
+                </td>
+                <td>
+                    <a class="btn btn-info btn-sm" asp-controller="POIs" asp-action="Details" asp-route-id="@poiKey">Chi ti&#7871;t</a>
+                    <a class="btn btn-warning btn-sm" asp-controller="POIs" asp-action="Edit" asp-route-id="@poiKey">S&#7917;a</a>
+                    <a class="btn btn-danger btn-sm" asp-controller="POIs" asp-action="Delete" asp-route-id="@poiKey">Xóa</a>
+                </td>
+            </tr>
+        }
+    </tbody>
 </table>

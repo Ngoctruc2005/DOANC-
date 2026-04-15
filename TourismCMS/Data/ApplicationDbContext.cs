@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -34,10 +33,6 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<PoiOwnerRegistration> PoiOwnerRegistrations { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=FoodPOI;Trusted_Connection=True;TrustServerCertificate=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -106,7 +101,8 @@ public partial class ApplicationDbContext : DbContext
             entity.ToTable("POIs");
 
             entity.Property(e => e.Poiid).HasColumnName("POIID");
-            entity.Property(e => e.OwnerId).HasDefaultValue(0);
+             // OwnerId may be NULL in existing DB rows; map as optional
+                entity.Property(e => e.OwnerId).IsRequired(false);
             entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -114,12 +110,15 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(150);
             entity.Property(e => e.Status).HasMaxLength(50);
 
+            // Radius column may contain NULL in the database; map as optional
+            entity.Property(e => e.Radius).IsRequired(false).HasColumnType("float");
+
             entity.HasMany(d => d.Categories).WithMany(p => p.POIs)
                 .UsingEntity<Dictionary<string, object>>(
                     "PoiCategory",
                     r => r.HasOne<Category>().WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
+                         .OnDelete(DeleteBehavior.ClientSetNull)
                         .HasConstraintName("FK__POI_Categ__Categ__5535A963"),
                     l => l.HasOne<POI>().WithMany()
                         .HasForeignKey("Poiid")
@@ -161,6 +160,15 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.POI).WithMany(p => p.VisitLogs)
                 .HasForeignKey(d => d.Poiid)
                 .HasConstraintName("FK__VisitLog__POIID__5BE2A6F2");
+        });
+
+        modelBuilder.Entity<PoiOwnerRegistration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50);
         });
 
         OnModelCreatingPartial(modelBuilder);

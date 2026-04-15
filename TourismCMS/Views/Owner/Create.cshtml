@@ -1,43 +1,269 @@
-<h2>? Th�m qu�n (Owner)</h2>
+﻿@model TourismCMS.Models.POI
 
-<form id="createPoiForm" enctype="multipart/form-data">
+@using System.Text.Json
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Thêm quán ăn mới";
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+}
 
-    <input name="Name" placeholder="T�n qu�n" class="form-control mb-2" required />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <textarea name="Description" placeholder="M� t?" class="form-control mb-2"></textarea>
+<style>
+    #map {
+    height: 400px;
+    width: 100%;
+    }
+</style>
 
-    <!-- Upload nhi?u ?nh -->
-    <input type="file" name="Images" class="form-control mb-2" multiple />
+<h2>Thêm quán ăn mới</h2>
 
-    <!-- GPS -->
-    <input type="hidden" name="Latitude" id="Latitude" />
-    <input type="hidden" name="Longitude" id="Longitude" />
+<form asp-action="Create" method="post" enctype="multipart/form-data">
 
-    <button class="btn btn-success">Luu</button>
+    <div class="mb-3">
+        <label>Tên quán</label>
+        <input asp-for="Name" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Mô tả</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Địa chỉ</label>
+        <input asp-for="Address" id="streetInput" class="form-control" />
+        <small id="status" class="text-muted"></small>
+    </div>
+
+    <div class="mb-3">
+        <button type="button" id="btnSearch" class="btn btn-secondary">Tìm</button>
+        <button type="button" id="btnSave" class="btn btn-primary">Lưu vị trí</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- 👉 HIỂN THỊ TỌA ĐỘ -->
+    <div class="mb-3 mt-2">
+        <label>Tọa độ (Lat, Lng)</label>
+        <input type="text" id="LatLngDisplay" class="form-control" readonly />
+    </div>
+
+    <!-- hidden lưu DB -->
+    <input type="hidden" asp-for="Latitude" id="Latitude" />
+    <input type="hidden" asp-for="Longitude" id="Longitude" />
+
+    <br />
+    <button type="submit" class="btn btn-success">Lưu quán</button>
+
 </form>
 
 <script>
-    // ?? L?y v? tr� GPS
-    navigator.geolocation.getCurrentPosition(function(pos) {
-        document.getElementById("Latitude").value = pos.coords.latitude;
-        document.getElementById("Longitude").value = pos.coords.longitude;
+    // Load Google Places autocomplete when API key is available in configuration
+    (function tryInitGooglePlaces() {
+        const googleApiKey = @JsonSerializer.Serialize(Configuration["Geocoding:GoogleApiKey"]);
+        try {
+            const key = JSON.parse(googleApiKey);
+            if (key) {
+                const s = document.createElement('script');
+                s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=places&language=vi`;
+                s.defer = true;
+                s.onload = function () {
+                    initGoogleAutocomplete();
+                };
+                document.head.appendChild(s);
+            }
+        } catch { /* ignore if not set */ }
+    })();
+
+    function initGoogleAutocomplete() {
+        if (!window.google || !google.maps || !google.maps.places) return;
+        const input = document.getElementById('streetInput');
+        const options = { componentRestrictions: { country: 'vn' } };
+        const ac = new google.maps.places.Autocomplete(input, options);
+        ac.addListener('place_changed', function () {
+            const place = ac.getPlace();
+            if (!place || !place.geometry) return;
+            const lat = place.geometry.location.lat();
+            const lon = place.geometry.location.lng();
+            const name = place.formatted_address || input.value;
+            // preview and immediately save coordinates
+            previewLocation(lat, lon, name);
+            saveLocation();
+            setStatus('Đã tìm và ghim vị trí từ Google Places.', false);
+        });
+    }
+    let map, marker;
+    let pendingLocation = null;
+
+    // INIT MAP
+    map = L.map('map').setView([10.762622, 106.660172], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map);
+
+    // STATUS
+    function setStatus(msg, error = false) {
+    const el = document.getElementById("status");
+    el.innerText = msg;
+    el.className = error ? "text-danger" : "text-muted";
+    }
+
+    // PREVIEW (KHÔNG GHIM)
+    function previewLocation(lat, lon, name) {
+    pendingLocation = { lat, lon, name };
+
+    map.setView([lat, lon], 17);
+
+    // 👉 HIỂN THỊ preview tọa độ
+    document.getElementById("LatLngDisplay").value =
+    lat.toFixed(6) + ", " + lon.toFixed(6);
+
+    setStatus("Đã tìm thấy vị trí → bấm 'Lưu vị trí' để xác nhận");
+    }
+
+    // SAVE (GHIM + LƯU)
+    function saveLocation() {
+    if (!pendingLocation) {
+    alert("Chưa chọn vị trí!");
+    return;
+    }
+
+    const { lat, lon, name } = pendingLocation;
+
+    // GHIM marker
+    if (marker) {
+    marker.setLatLng([lat, lon]);
+    } else {
+    marker = L.marker([lat, lon]).addTo(map);
+    }
+
+    // LƯU hidden (DB)
+    document.getElementById("Latitude").value = lat;
+    document.getElementById("Longitude").value = lon;
+
+    // HIỂN THỊ
+    document.getElementById("LatLngDisplay").value =
+    lat.toFixed(6) + ", " + lon.toFixed(6);
+
+    // cập nhật địa chỉ
+    if (name) {
+    document.getElementById("streetInput").value = name;
+    }
+
+    setStatus(`Đã lưu tọa độ: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    }
+
+    // SEARCH
+    function extractHouseNumber(text) {
+    if (!text) return null;
+    const match = text.match(/\b\d+[a-zA-Z]?\b/);
+    return match ? match[0].toLowerCase() : null;
+    }
+
+    function chooseBestResult(inputAddress, results) {
+    if (!Array.isArray(results) || results.length === 0) return null;
+
+    const inputLower = (inputAddress || "").toLowerCase();
+    const inputHouseNo = extractHouseNumber(inputLower);
+
+    let best = results[0];
+    let bestScore = -999999;
+
+    for (const item of results) {
+    const display = (item.display_name || "").toLowerCase();
+    let score = 0;
+
+    if (display && inputLower && display.includes(inputLower)) {
+    score += 50;
+    }
+
+    const itemHouseNo = extractHouseNumber(display);
+    if (inputHouseNo && itemHouseNo) {
+    if (inputHouseNo === itemHouseNo) {
+    score += 120;
+    } else {
+    score -= 80;
+    }
+    }
+
+    if (display && inputHouseNo && display.includes(inputHouseNo)) {
+    score += 40;
+    }
+
+    if ((item.type || "").toLowerCase() === "house") {
+    score += 10;
+    }
+
+    if (score > bestScore) {
+    bestScore = score;
+    best = item;
+    }
+    }
+
+    return best;
+    }
+
+    async function searchAddress() {
+    const input = document.getElementById("streetInput").value.trim();
+
+    if (!input) {
+    alert("Nhập địa chỉ!");
+    return;
+    }
+
+    setStatus("Đang tìm...");
+
+    try {
+    const res = await fetch(`/POIs/SearchAddress?address=${encodeURIComponent(input)}`);
+    const data = await res.json();
+
+    if (data.length > 0) {
+    const first = chooseBestResult(input, data);
+
+    const lat = parseFloat(first.lat);
+    const lon = parseFloat(first.lon);
+
+    previewLocation(lat, lon, first.display_name);
+    saveLocation();
+    setStatus("Đã tìm và ghim đúng vị trí trên bản đồ.");
+
+    } else {
+    setStatus("Không tìm thấy!", true);
+    }
+
+    } catch (err) {
+    console.log(err);
+    setStatus("Lỗi tìm kiếm!", true);
+    }
+    }
+
+    // CLICK MAP
+    map.on("click", async function (e) {
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+
+    try {
+    const res = await fetch(`/POIs/ReverseGeocode?lat=${lat}&lon=${lon}`);
+    const data = await res.json();
+
+    previewLocation(lat, lon, data?.display_name);
+
+    } catch {
+    previewLocation(lat, lon, "");
+    }
     });
 
-    document.getElementById("createPoiForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
+    // BUTTON
+    document.getElementById("btnSearch").onclick = searchAddress;
+    document.getElementById("btnSave").onclick = saveLocation;
 
-        const formData = new FormData(this);
-        const token = localStorage.getItem("token");
-
-        const res = await fetch("http://localhost:8000/poi", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token
-            },
-            body: formData
-        });
-
-        const data = await res.json();
-        alert(data.message);
+    // SUBMIT VALIDATE
+    document.querySelector("form").addEventListener("submit", function (e) {
+    if (!document.getElementById("Latitude").value) {
+    e.preventDefault();
+    alert("Bạn chưa lưu vị trí!");
+    }
     });
 </script>

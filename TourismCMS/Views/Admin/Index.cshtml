@@ -1,13 +1,12 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Bảng điều khiển";
+    ViewData["PageHeaderIcon"] = "📊";
+    ViewData["PageHeaderTitle"] = "Bảng điều khiển quản trị";
+    ViewData["PageHeaderSubtitle"] = "Chào mừng bạn quay lại hệ thống 👋";
 }
 
-<!-- Header -->
-<div class="mb-4 p-4 text-white rounded shadow" style="background: linear-gradient(135deg, #4e73df, #224abe);">
-    <h3>📊 Bảng điều khiển quản trị</h3>
-    <p class="mb-0">Chào mừng bạn quay lại hệ thống 👋</p>
-</div>
+@await Html.PartialAsync("_AdminPageHeader")
 
 <!-- Cards thống kê -->
 <div class="row g-3">

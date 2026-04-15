@@ -11,42 +11,42 @@ namespace TourismCMS.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "Id",
-                table: "POIs",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            // migrationBuilder.AddColumn<int>(
+            //     name: "Id",
+            //     table: "POIs",
+            //     type: "int",
+            //     nullable: false,
+            //     defaultValue: 0);
 
-            migrationBuilder.AddColumn<double>(
-                name: "Radius",
-                table: "POIs",
-                type: "float",
-                nullable: true);
+            // migrationBuilder.AddColumn<double>(
+            //     name: "Radius",
+            //     table: "POIs",
+            //     type: "float",
+            //     nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "ImagePath",
-                table: "POIs",
-                type: "nvarchar(max)",
-                nullable: true);
+            // migrationBuilder.AddColumn<string>(
+            //     name: "ImagePath",
+            //     table: "POIs",
+            //     type: "nvarchar(max)",
+            //     nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "AudioPath",
-                table: "POIs",
-                type: "nvarchar(max)",
-                nullable: true);
+            // migrationBuilder.AddColumn<string>(
+            //     name: "AudioPath",
+            //     table: "POIs",
+            //     type: "nvarchar(max)",
+            //     nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Id",
-                table: "POIs");
+            // migrationBuilder.DropColumn(
+            //     name: "Id",
+            //     table: "POIs");
 
-            migrationBuilder.DropColumn(
-                name: "Radius",
-                table: "POIs");
+            // migrationBuilder.DropColumn(
+            //     name: "Radius",
+            //     table: "POIs");
 
             migrationBuilder.DropColumn(
                 name: "ImagePath",

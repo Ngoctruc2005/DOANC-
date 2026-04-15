@@ -11,7 +11,7 @@
     Shell.TabBarForegroundColor="CornflowerBlue">
 
     <!-- TAB BAR DƯỚI -->
-    <TabBar>
+    <TabBar x:Name="mainTabBar">
 
         <ShellContent
             Title="{Binding [Explore]}"
@@ -19,7 +19,7 @@
             ContentTemplate="{DataTemplate views:MapPage}" />
 
         <ShellContent
-            Title="{Binding [Favorites]}"
+            Title="{Binding [TabFavorites]}"
             Icon="heart.png"
             ContentTemplate="{DataTemplate views:FavoritePage}" />
 

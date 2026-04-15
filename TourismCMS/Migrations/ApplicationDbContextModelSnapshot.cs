@@ -186,6 +186,9 @@ namespace TourismCMS.Migrations
                     b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<double?>("Latitude")
                         .HasColumnType("float");
 
@@ -200,6 +203,9 @@ namespace TourismCMS.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(0);
+
+                    b.Property<double>("Radius")
+                        .HasColumnType("float");
 
                     b.Property<string>("Status")
                         .HasMaxLength(50)
@@ -221,7 +227,8 @@ namespace TourismCMS.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
