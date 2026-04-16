@@ -126,7 +126,7 @@
 @if (!User.IsInRole("admin"))
 {
     <p>
-        <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus"></i> &#272;&#259;ng k&#253; qu&#225;n m&#7899;i</a>
+        <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus"></i> Đăng ký quán mới</a>
     </p>
 }
 
@@ -136,29 +136,15 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Latitude)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Longitude)
-            </th>
-            <th>
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImagePath)
-            </th>
-            <th>
-            </th>
-            <th></th>
+            <th>Tên quán</th>
+            <th>Mô tả</th>
+            <th>Vĩ độ</th>
+            <th>Kinh độ</th>
+            <th>Địa chỉ</th>
+            <th>Trạng thái</th>
+            <th>Ảnh</th>
+            <th>Khác</th>
+            <th>Hành động</th>
         </tr>
     </thead>
     <tbody>
@@ -178,24 +164,41 @@
                 @Html.DisplayFor(modelItem => item.Longitude)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.Address)
             </td>
             <td>
-                @if (IsApprovedStatus(item.Status))
-                {
-                    <span class="badge bg-success">Open</span>
+                @{ 
+                    var raw = item.Status?.Trim() ?? string.Empty;
+                    var statusText = raw;
+                    var statusClass = "bg-secondary";
+
+                    if (IsApprovedStatus(item.Status) || raw.Equals("Open", StringComparison.OrdinalIgnoreCase))
+                    {
+                        statusText = "Đã duyệt";
+                        statusClass = "bg-success";
+                    }
+                    else if (IsPendingStatus(item.Status))
+                    {
+                        statusText = "Chờ duyệt";
+                        statusClass = "bg-warning text-dark";
+                    }
+                    else if (IsDeletedStatus(item.Status))
+                    {
+                        statusText = "Đã xóa";
+                        statusClass = "bg-danger";
+                    }
+                    else if (IsCanceledStatus(item.Status))
+                    {
+                        statusText = "Đã hủy";
+                        statusClass = "bg-danger";
+                    }
+                    else if (raw.Equals("Close", StringComparison.OrdinalIgnoreCase) || raw.Equals("Closed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        statusText = "Đóng";
+                        statusClass = "bg-secondary";
+                    }
                 }
-                else if (IsPendingStatus(item.Status))
-                {
-                    <span class="badge bg-warning text-dark">Chờ duyệt</span>
-                }
-                else if (IsDeletedStatus(item.Status))
-                {
-                    <span class="badge bg-danger">@item.Status</span>
-                }
-                else
-                {
-                    <span class="badge bg-secondary">@item.Status</span>
-                }
+                <span class="badge @statusClass">@statusText</span>
             </td>
             <td>
                 @if (!string.IsNullOrEmpty(item.ImagePath))
@@ -213,9 +216,9 @@
                             <input type="hidden" name="id" value="@poiKey" />
                             <button type="submit" class="btn btn-sm btn-success w-100">Duy&#7879;t</button>
                         </form>
-                        <form asp-action="Reject" method="post" class="m-0" onsubmit="return confirm('B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n h&#7911;y y&#234;u c&#7847;u duy&#7879;t n&#224;y kh&#244;ng?');">
+                        <form asp-action="Reject" method="post" class="m-0" onsubmit="return confirm('Bạn có chắc chắn muốn từ chối yêu cầu duyệt này không?');">
                             <input type="hidden" name="id" value="@poiKey" />
-                            <button type="submit" class="btn btn-sm btn-danger w-100">H&#7911;y</button>
+                            <button type="submit" class="btn btn-sm btn-danger w-100">Từ chối</button>
                         </form>
                     </div>
                 }
@@ -254,7 +257,7 @@
             var bounds = [];
             pois.forEach(function (poi) {
                 var marker = L.marker([poi.lat, poi.lng]).addTo(map);
-                marker.bindPopup(`<b>${poi.name}</b><br><a href="${poi.url}">Xem chi ti&#7871;t</a>`);
+                marker.bindPopup(`<b>${poi.name}</b><br><a href="${poi.url}">Xem chi tiết</a>`);
                 bounds.push([poi.lat, poi.lng]);
             });
 

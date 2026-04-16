@@ -142,6 +142,8 @@ public partial class QRPage : ContentPage
                 var restaurant = pois.FirstOrDefault(p => p.Poiid == poiId || p.ApiId == poiId || p.Id == poiId.ToString());
                 if (restaurant != null)
                 {
+                    // Register visit on backend (silent) then open restaurant page
+                    _ = apiService.PostVisitAsync(restaurant.Poiid);
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
                         resultLabel.Text = $"{loc["OpeningRestaurant"]}{restaurant.Name}...";

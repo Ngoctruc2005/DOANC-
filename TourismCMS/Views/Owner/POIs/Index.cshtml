@@ -77,14 +77,14 @@
   <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmDeleteLabel">Xác nh?n xóa</h5>
+        <h5 class="modal-title" id="confirmDeleteLabel">Xác nhận xóa</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- dynamically filled -->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">H?y</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
         <button type="button" id="confirmDeleteConfirm" class="btn btn-danger btn-sm">Xóa</button>
       </div>
     </div>
@@ -117,8 +117,8 @@
             $('.btn-delete').on('click', function (e) {
                 e.preventDefault();
                 deleteUrl = $(this).data('delete-url');
-                var name = $(this).data('name') || 'm?c này';
-                $('#confirmDeleteModal .modal-body').text('B?n có ch?c mu?n xóa "' + name + '"?');
+                var name = $(this).data('name') || 'mục này';
+                $('#confirmDeleteModal .modal-body').text('Bạn có chắc muốn xóa "' + name + '"?');
                 var modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
                 modal.show();
             });

@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Maui.Devices;
 using Microsoft.Maui.Storage;
@@ -269,6 +270,54 @@ namespace TourismApp.Services
             }
 
             return string.Empty;
+        }
+
+        // POST to api/pois/{id}/visit to register a QR visit. Returns (success, visits) where visits may be null if backend didn't return a count.
+        public async Task<(bool success, int? visits)> PostVisitAsync(int poiId)
+        {
+            Exception? lastException = null;
+
+            foreach (var baseUrl in GetApiBaseUrls().Distinct())
+            {
+                try
+                {
+                    var endpoint = $"{baseUrl}pois/{poiId}/visit";
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                    var response = await _httpClient.PostAsync(endpoint, null, cts.Token);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _successfulBaseUrl = baseUrl;
+                        try
+                        {
+                            var content = await response.Content.ReadAsStringAsync(cts.Token);
+                            if (!string.IsNullOrWhiteSpace(content))
+                            {
+                                using var doc = JsonDocument.Parse(content);
+                                if (doc.RootElement.TryGetProperty("visits", out var visitsEl) && visitsEl.ValueKind == JsonValueKind.Number && visitsEl.TryGetInt32(out var visits))
+                                {
+                                    return (true, visits);
+                                }
+                            }
+
+                            return (true, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[POST VISIT PARSE ERROR] {ex.Message}");
+                            return (true, null);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    System.Diagnostics.Debug.WriteLine($"[API POST VISIT FAIL] {baseUrl}pois/{poiId}/visit -> {ex.Message}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[POST VISIT] all endpoints failed: {BuildFriendlyApiError(lastException)}");
+            return (false, null);
         }
     }
 }
