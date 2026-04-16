@@ -12,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 // NOTE: adjust the port (7141) if your dev server uses a different port.
 builder.WebHost.UseUrls("http://0.0.0.0:5219");
 // Add services to the container.
+    // device tracker singleton
+    builder.Services.AddSingleton<TourismCMS.Services.DeviceTracker>();
 builder.Services.AddControllersWithViews(options =>
     {
         options.Filters.Add(new AuthorizeFilter());

@@ -13,10 +13,12 @@ namespace TourismCMS.Controllers
     public class PoisApiController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly TourismCMS.Services.DeviceTracker _tracker;
 
-        public PoisApiController(ApplicationDbContext db)
+        public PoisApiController(ApplicationDbContext db, TourismCMS.Services.DeviceTracker tracker)
         {
             _db = db;
+            _tracker = tracker;
         }
 
         [HttpGet]
@@ -119,6 +121,9 @@ namespace TourismCMS.Controllers
                 _db.VisitLogs.Add(visit);
                 await _db.SaveChangesAsync();
 
+                // mark device active in tracker
+                _tracker.MarkActive(visit.DeviceId);
+
                 var count = await _db.VisitLogs.CountAsync(v => v.Poiid == poi.Poiid);
                 return Ok(new { success = true, visitId = visit.VisitId, visits = count });
             }
@@ -126,6 +131,18 @@ namespace TourismCMS.Controllers
             {
                 return StatusCode(500, new { success = false, message = "Error saving visit" });
             }
+        }
+
+        // POST: api/pois/device/leave
+        // App can call this on app exit to mark device as inactive
+        [HttpPost("device/leave")]
+        [AllowAnonymous]
+        public IActionResult PostDeviceLeave([FromBody] string? deviceId)
+        {
+            if (string.IsNullOrEmpty(deviceId)) return BadRequest();
+
+            _tracker.Remove(deviceId);
+            return Ok(new { success = true });
         }
     }
 }

@@ -7,19 +7,33 @@
 
 @await Html.PartialAsync("_AdminPageHeader")
 
+<style>
+    /* Truncate long addresses nicely */
+    .poi-address { max-width: 520px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .table .col-small { width: 1%; white-space: nowrap; }
+</style>
+
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">Báo cáo thiết bị theo quán</h5>
-        <p>Tổng thiết bị duy nhất truy cập ứng dụng: <strong>@(ViewBag.TotalUniqueDevices ?? 0)</strong></p>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="card-title mb-0">Báo cáo thiết bị theo quán</h5>
+                <small class="text-muted">Tổng thiết bị truy cập ứng dụng: <strong>@(ViewBag.TotalUniqueDevices ?? 0)</strong></small>
+            </div>
+            <div>
+                <a class="btn btn-sm btn-outline-secondary" href="/Admin/VisitCounts">Xem lượt truy cập</a>
+            </div>
+        </div>
+
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
                     <tr>
                         <th>Quán</th>
-                        <th>Chủ quán</th>
+                        <th class="col-small">Chủ quán</th>
                         <th>Địa chỉ</th>
-                        <th>Thiết bị duy nhất</th>
-                        <th>Lần truy cập gần nhất</th>
+                        <th class="text-center">Thiết bị duy nhất</th>
+                        <th class="text-end">Lần truy cập gần nhất</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,11 +46,16 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td><a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid">@item.PoiName</a></td>
-                            <td>@(string.IsNullOrWhiteSpace(item.OwnerName) ? "-" : item.OwnerName)</td>
-                            <td>@item.Address</td>
-                            <td><span class="badge bg-success">@item.UniqueDevices</span></td>
-                            <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td style="min-width:220px;">
+                                <div><a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid" class="fw-semibold">@item.PoiName</a></div>
+                                <div class="text-muted small">ID: @item.Poiid</div>
+                            </td>
+                            <td class="text-truncate" style="max-width:160px;">@(string.IsNullOrWhiteSpace(item.OwnerName) ? "-" : item.OwnerName)</td>
+                            <td class="poi-address">@item.Address</td>
+                            <td class="text-center">
+                                <span class="badge bg-success px-2 py-1" style="font-size:0.95rem;">@item.UniqueDevices</span>
+                            </td>
+                            <td class="text-end text-muted">@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                         </tr>
                     }
                 }

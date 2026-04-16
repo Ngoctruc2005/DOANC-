@@ -55,4 +55,12 @@ namespace TourismCMS.Models
         public string? DeviceAgent { get; set; }
         public string? Ip { get; set; }
     }
+
+    public class DevicesPageViewModel
+    {
+        public List<DeviceItemViewModel> ActiveDevices { get; set; } = new List<DeviceItemViewModel>();
+        public List<DeviceItemViewModel> AllDevices { get; set; } = new List<DeviceItemViewModel>();
+        public int TotalUniqueDevices { get; set; }
+        public int ActiveDeviceCount => ActiveDevices?.Count ?? 0;
+    }
 }

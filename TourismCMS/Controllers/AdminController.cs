@@ -312,44 +312,78 @@ namespace TourismCMS.Controllers
         // Report: unique devices per POI
         public async Task<IActionResult> DeviceCounts()
         {
-            var history = await _context.VisitLogs
+            // Build device list (each distinct DeviceId is treated as one device)
+            var devices = await _context.VisitLogs
                 .AsNoTracking()
-                .Include(v => v.POI)
-                .Where(v => v.POI != null)
-                .GroupBy(v => new
+                .Where(v => !string.IsNullOrEmpty(v.DeviceId))
+                .GroupBy(v => v.DeviceId)
+                .Select(g => new TourismCMS.Models.DeviceItemViewModel
                 {
-                    v.POI!.Poiid,
-                    v.POI.Name,
-                    v.POI.Address,
-                    v.POI.OwnerId
-                })
-                .Select(g => new VisitHistoryItemViewModel
-                {
-                    Poiid = g.Key.Poiid,
-                    PoiName = g.Key.Name,
-                    Address = g.Key.Address,
-                    OwnerName = _context.Users
-                        .Where(u => u.Id == g.Key.OwnerId)
-                        .Select(u => string.IsNullOrWhiteSpace(u.FullName) ? u.Username : u.FullName)
-                        .FirstOrDefault(),
+                    DeviceId = g.Key!,
                     TotalVisits = g.Count(),
-                    UniqueDevices = g.Select(x => x.DeviceId).Where(d => !string.IsNullOrEmpty(d)).Distinct().Count(),
-                    LastVisitTime = g.Max(x => x.VisitTime)
+                    FirstSeen = g.Min(x => x.VisitTime),
+                    LastSeen = g.Max(x => x.VisitTime),
+                    DistinctPoiCount = g.Select(x => x.Poiid).Where(id => id != null).Distinct().Count()
                 })
-                .OrderByDescending(x => x.UniqueDevices)
-                .ThenByDescending(x => x.LastVisitTime)
+                .OrderByDescending(d => d.LastSeen)
                 .ToListAsync();
 
-            // Total unique devices across the whole application
-            var totalUniqueDevices = await _context.VisitLogs
-                .AsNoTracking()
-                .Select(v => v.DeviceId)
-                .Where(d => !string.IsNullOrEmpty(d))
-                .Distinct()
-                .CountAsync();
+            var now = DateTime.Now;
+            foreach (var d in devices)
+            {
+                var parts = (d.DeviceId ?? string.Empty).Split(" | ");
+                if (parts.Length >= 2)
+                {
+                    d.AgentSample = parts[0];
+                    d.IpSample = parts[1];
+                }
+                else
+                {
+                    d.AgentSample = d.DeviceId;
+                    d.IpSample = null;
+                }
 
-            ViewBag.TotalUniqueDevices = totalUniqueDevices;
-            return View(history);
+                if (d.LastSeen.HasValue && (now - d.LastSeen.Value).TotalMinutes <= 30)
+                {
+                    d.IsActive = true;
+                    d.StatusLabel = "Đang hoạt động";
+                }
+                else
+                {
+                    d.IsActive = false;
+                    d.StatusLabel = d.LastSeen.HasValue ? $"Hoạt động lần cuối: {d.LastSeen.Value:dd/MM/yyyy HH:mm}" : "Không rõ";
+                }
+            }
+
+            // total unique devices
+            var totalUniqueDevices = devices.Select(d => d.DeviceId).Distinct().Count();
+
+            // active devices (last seen within 30 minutes)
+            // Use DeviceTracker to get currently active device ids if available
+            var activeIds = new List<string>();
+            try
+            {
+                var tracker = HttpContext.RequestServices.GetService(typeof(TourismCMS.Services.DeviceTracker)) as TourismCMS.Services.DeviceTracker;
+                if (tracker != null)
+                {
+                    activeIds = tracker.GetActiveDeviceIds();
+                }
+            }
+            catch
+            {
+                activeIds = new List<string>();
+            }
+
+            var activeDevices = devices.Where(d => activeIds.Contains(d.DeviceId)).ToList();
+
+            var vm = new TourismCMS.Models.DevicesPageViewModel
+            {
+                ActiveDevices = activeDevices,
+                AllDevices = devices,
+                TotalUniqueDevices = totalUniqueDevices
+            };
+
+            return View("Devices", vm);
         }
 
         // List all devices that have visited the app
