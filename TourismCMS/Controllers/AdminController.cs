@@ -269,7 +269,14 @@ namespace TourismCMS.Controllers
             return View(restaurants);
         }
 
-        public async Task<IActionResult> VisitHistory()
+        // VisitHistory page now shows a selection UI linking to specific reports
+        public IActionResult VisitHistory()
+        {
+            return View();
+        }
+
+        // Report: QR visit counts per POI
+        public async Task<IActionResult> VisitCounts()
         {
             var history = await _context.VisitLogs
                 .AsNoTracking()
@@ -300,6 +307,148 @@ namespace TourismCMS.Controllers
                 .ToListAsync();
 
             return View(history);
+        }
+
+        // Report: unique devices per POI
+        public async Task<IActionResult> DeviceCounts()
+        {
+            var history = await _context.VisitLogs
+                .AsNoTracking()
+                .Include(v => v.POI)
+                .Where(v => v.POI != null)
+                .GroupBy(v => new
+                {
+                    v.POI!.Poiid,
+                    v.POI.Name,
+                    v.POI.Address,
+                    v.POI.OwnerId
+                })
+                .Select(g => new VisitHistoryItemViewModel
+                {
+                    Poiid = g.Key.Poiid,
+                    PoiName = g.Key.Name,
+                    Address = g.Key.Address,
+                    OwnerName = _context.Users
+                        .Where(u => u.Id == g.Key.OwnerId)
+                        .Select(u => string.IsNullOrWhiteSpace(u.FullName) ? u.Username : u.FullName)
+                        .FirstOrDefault(),
+                    TotalVisits = g.Count(),
+                    UniqueDevices = g.Select(x => x.DeviceId).Where(d => !string.IsNullOrEmpty(d)).Distinct().Count(),
+                    LastVisitTime = g.Max(x => x.VisitTime)
+                })
+                .OrderByDescending(x => x.UniqueDevices)
+                .ThenByDescending(x => x.LastVisitTime)
+                .ToListAsync();
+
+            // Total unique devices across the whole application
+            var totalUniqueDevices = await _context.VisitLogs
+                .AsNoTracking()
+                .Select(v => v.DeviceId)
+                .Where(d => !string.IsNullOrEmpty(d))
+                .Distinct()
+                .CountAsync();
+
+            ViewBag.TotalUniqueDevices = totalUniqueDevices;
+            return View(history);
+        }
+
+        // List all devices that have visited the app
+        public async Task<IActionResult> Devices()
+        {
+            var devices = await _context.VisitLogs
+                .AsNoTracking()
+                .Where(v => !string.IsNullOrEmpty(v.DeviceId))
+                .GroupBy(v => v.DeviceId)
+                .Select(g => new TourismCMS.Models.DeviceItemViewModel
+                {
+                    DeviceId = g.Key!,
+                    TotalVisits = g.Count(),
+                    FirstSeen = g.Min(x => x.VisitTime),
+                    LastSeen = g.Max(x => x.VisitTime),
+                    DistinctPoiCount = g.Select(x => x.Poiid).Where(id => id != null).Distinct().Count()
+                })
+                .OrderByDescending(d => d.LastSeen)
+                .ToListAsync();
+
+            // Try to parse DeviceId into agent and ip sample for display
+            var now = DateTime.Now;
+            foreach (var d in devices)
+            {
+                var parts = (d.DeviceId ?? string.Empty).Split(" | ");
+                if (parts.Length >= 2)
+                {
+                    d.AgentSample = parts[0];
+                    d.IpSample = parts[1];
+                }
+                else
+                {
+                    d.AgentSample = d.DeviceId;
+                    d.IpSample = null;
+                }
+
+                // Consider device active if last seen within past 30 minutes
+                if (d.LastSeen.HasValue && (now - d.LastSeen.Value).TotalMinutes <= 30)
+                {
+                    d.IsActive = true;
+                    d.StatusLabel = "Đang hoạt động";
+                }
+                else
+                {
+                    d.IsActive = false;
+                    d.StatusLabel = d.LastSeen.HasValue ? $"Hoạt động lần cuối: {d.LastSeen.Value:dd/MM/yyyy HH:mm}" : "Không rõ";
+                }
+            }
+
+            return View(devices);
+        }
+
+        // Device details by encoded device id (url encoded)
+        public async Task<IActionResult> DeviceDetails(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return BadRequest();
+
+            var decoded = System.Net.WebUtility.UrlDecode(id);
+
+            var visits = await _context.VisitLogs
+                .AsNoTracking()
+                .Where(v => v.DeviceId == decoded)
+                .Include(v => v.POI)
+                .OrderByDescending(v => v.VisitTime)
+                .ToListAsync();
+
+            if (!visits.Any()) return NotFound();
+
+            var model = visits.Select(v => {
+                var dv = new TourismCMS.Models.DeviceVisitViewModel
+                {
+                    VisitId = v.VisitId,
+                    Poiid = v.Poiid,
+                    PoiName = v.POI?.Name,
+                    VisitTime = v.VisitTime,
+                    RawDeviceId = v.DeviceId,
+                    DeviceAgent = null,
+                    Ip = null
+                };
+
+                if (!string.IsNullOrEmpty(v.DeviceId))
+                {
+                    var parts = v.DeviceId.Split(" | ");
+                    if (parts.Length >= 2)
+                    {
+                        dv.DeviceAgent = parts[0];
+                        dv.Ip = parts[1];
+                    }
+                    else
+                    {
+                        dv.DeviceAgent = v.DeviceId;
+                    }
+                }
+
+                return dv;
+            }).ToList();
+
+            ViewBag.DeviceId = decoded;
+            return View(model);
         }
 
         [HttpPost]

@@ -1,0 +1,43 @@
+@model List<TourismCMS.Models.VisitHistoryItemViewModel>
+
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Báo cáo lượt truy cập";
+}
+
+<h2 class="mb-3">Báo cáo lượt truy cập của bạn</h2>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Quán</th>
+                        <th>Địa chỉ</th>
+                        <th>Lượt truy cập</th>
+                        <th>Lần truy cập gần nhất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" class="text-center text-muted">Không có dữ liệu</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid">@item.PoiName</a></td>
+                            <td>@item.Address</td>
+                            <td><span class="badge bg-primary">@item.TotalVisits</span></td>
+                            <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

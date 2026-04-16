@@ -29,4 +29,30 @@ namespace TourismCMS.Models
         public int UniqueDevices { get; set; }
         public DateTime? LastVisitTime { get; set; }
     }
+
+    public class DeviceItemViewModel
+    {
+        public string DeviceId { get; set; }
+        public int TotalVisits { get; set; }
+        public DateTime? FirstSeen { get; set; }
+        public DateTime? LastSeen { get; set; }
+        public int DistinctPoiCount { get; set; }
+        // Parsed sample fields for display
+        public string? AgentSample { get; set; }
+        public string? IpSample { get; set; }
+        // Current activity status
+        public bool IsActive { get; set; }
+        public string? StatusLabel { get; set; }
+    }
+
+    public class DeviceVisitViewModel
+    {
+        public int VisitId { get; set; }
+        public int? Poiid { get; set; }
+        public string? PoiName { get; set; }
+        public DateTime? VisitTime { get; set; }
+        public string? RawDeviceId { get; set; }
+        public string? DeviceAgent { get; set; }
+        public string? Ip { get; set; }
+    }
 }

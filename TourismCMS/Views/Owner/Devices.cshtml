@@ -1,0 +1,46 @@
+@model List<TourismCMS.Models.DeviceItemViewModel>
+
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Danh sách thiết bị";
+}
+
+<h5>Tổng thiết bị duy nhất (ứng dụng): <strong>@(ViewBag.TotalUniqueDevices ?? 0)</strong></h5>
+
+<div class="card mt-2">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Thiết bị</th>
+                        <th>User-Agent</th>
+                        <th>IP</th>
+                        <th>Lượt truy cập</th>
+                        <th>Quán khác nhau</th>
+                        <th>Đã thấy lần đầu</th>
+                        <th>Lần thấy cuối</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var d in Model)
+                {
+                    <tr>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.DeviceId))</td>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? "-"))</td>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.IpSample ?? "-"))</td>
+                        <td>@d.TotalVisits</td>
+                        <td>@d.DistinctPoiCount</td>
+                        <td>@(d.FirstSeen?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>@(d.LastSeen?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.StatusLabel ?? "-"))</td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="/Owner/DeviceDetails?id=@System.Net.WebUtility.UrlEncode(d.DeviceId)">Xem</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

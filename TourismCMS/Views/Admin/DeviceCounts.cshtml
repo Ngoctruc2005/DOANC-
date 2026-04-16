@@ -1,0 +1,47 @@
+@model List<TourismCMS.Models.VisitHistoryItemViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Báo cáo thiết bị";
+}
+
+@await Html.PartialAsync("_AdminPageHeader")
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Báo cáo thiết bị theo quán</h5>
+        <p>Tổng thiết bị duy nhất truy cập ứng dụng: <strong>@(ViewBag.TotalUniqueDevices ?? 0)</strong></p>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Quán</th>
+                        <th>Chủ quán</th>
+                        <th>Địa chỉ</th>
+                        <th>Thiết bị duy nhất</th>
+                        <th>Lần truy cập gần nhất</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5" class="text-center text-muted">Không có dữ liệu</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid">@item.PoiName</a></td>
+                            <td>@(string.IsNullOrWhiteSpace(item.OwnerName) ? "-" : item.OwnerName)</td>
+                            <td>@item.Address</td>
+                            <td><span class="badge bg-success">@item.UniqueDevices</span></td>
+                            <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

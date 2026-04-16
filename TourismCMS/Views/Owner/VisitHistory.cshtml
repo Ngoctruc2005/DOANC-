@@ -1,0 +1,28 @@
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Lựa chọn thống kê";
+}
+
+<h2 class="mb-3">Lựa chọn thống kê</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Thống kê lượt truy cập (QR)</h5>
+                <p class="card-text">Xem số lượt truy cập theo từng quán của bạn (gọi từ QR).</p>
+                <a class="btn btn-primary" href="/Owner/VisitCounts">Xem báo cáo lượt truy cập</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Thống kê thiết bị</h5>
+                <p class="card-text">Xem số thiết bị duy nhất đã truy cập ứng dụng theo từng quán của bạn.</p>
+                <a class="btn btn-primary" href="/Owner/DeviceCounts">Xem báo cáo thiết bị</a>
+            </div>
+        </div>
+    </div>
+</div>

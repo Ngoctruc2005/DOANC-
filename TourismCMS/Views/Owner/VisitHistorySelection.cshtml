@@ -1,0 +1,12 @@
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Lựa chọn thống kê";
+}
+
+<h2 class="mb-3">Lịch sử truy cập</h2>
+
+<div class="alert alert-info">Chủ quán chỉ xem được báo cáo lượt truy cập từ QR. Bạn sẽ được chuyển tới trang báo cáo lượt truy cập.</div>
+
+<script>
+    setTimeout(function() { window.location = '/Owner/VisitCounts'; }, 800);
+</script>

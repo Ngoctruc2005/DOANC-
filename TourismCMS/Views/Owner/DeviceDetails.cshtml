@@ -1,0 +1,36 @@
+@model List<TourismCMS.Models.DeviceVisitViewModel>
+
+@{
+    Layout = "~/Views/Shared/_OwnerLayout.cshtml";
+    ViewData["Title"] = "Chi tiết thiết bị";
+}
+
+<h5>Thiết bị: <code>@ViewBag.DeviceId</code></h5>
+
+<div class="card mt-2">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Quán</th>
+                        <th>User-Agent / Raw</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td>@(v.VisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>@(v.PoiName ?? "-")</td>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? v.RawDeviceId ?? "-"))</td>
+                        <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.Ip ?? "-"))</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
