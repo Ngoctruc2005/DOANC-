@@ -1,7 +1,7 @@
 ﻿@model TourismCMS.Models.POI
 
 @{
-    ViewData["Title"] = "Create POI";
+    ViewData["Title"] = "Thêm quán ăn";
 }
 
 <meta name="referrer" content="no-referrer-when-downgrade">
@@ -16,7 +16,7 @@
     }
 </style>
 
-<h2>Create POI</h2>
+<h2>Thêm quán ăn</h2>
 
 <form asp-action="Create" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -65,8 +65,8 @@
         <div class="mb-3">
             <label asp-for="Status" class="form-label"></label>
             <select asp-for="Status" class="form-control">
-                <option value="Open">Open</option>
-                <option value="Close">Close</option>
+                <option value="Open">Đã duyệt</option>
+                <option value="Close">Đóng</option>
             </select>
             <span asp-validation-for="Status" class="text-danger"></span>
         </div>
@@ -77,8 +77,8 @@
         <input type="file" name="ImageFile" class="form-control" accept="image/*" />
     </div>
 
-    <button type="submit" class="btn btn-primary mt-2">Create</button>
-    <a asp-action="Index" class="btn btn-secondary mt-2">Back</a>
+    <button type="submit" class="btn btn-primary mt-2">Tạo quán</button>
+    <a asp-action="Index" class="btn btn-secondary mt-2">Quay lại</a>
 </form>
 
 @section Scripts {

@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<TourismCMS.Models.OwnerRegistrationViewModel>
 
 @{
-    ViewData["Title"] = "YÃªu cáº§u Ä‘Äƒng kÃ½ chá»§ quÃ¡n";
+    ViewData["Title"] = "Yêu cầu đăng ký chủ quán";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -10,13 +10,13 @@
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800">@ViewData["Title"]</h1>
     <p class="mb-4">
-        Danh sÃ¡ch cÃ¡c tÃ i khoáº£n Ä‘Äƒng kÃ½ lÃ m chá»§ quÃ¡n vÃ  Ä‘ang chá» Ä‘Æ°á»£c duyá»‡t.
+        Danh sách các tài khoản đăng ký làm chủ quán và đang chờ được duyệt.
     </p>
 
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Danh sÃ¡ch chá» duyá»‡t</h6>
+            <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách chờ duyệt</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -24,15 +24,15 @@
                     <thead>
                         <tr>
                             <th>
-                                TÃªn Ä‘áº§y Ä‘á»§
+                                Tên đầy đủ
                             </th>
                             <th>
-                                Sá»‘ Ä‘iá»‡n thoáº¡i
+                                Số điện thoại
                             </th>
                             <th>
-                                TÃªn Ä‘Äƒng nháº­p
+                                Tên đăng nhập
                             </th>
-                            <th>HÃ nh Ä‘á»™ng</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,8 +49,8 @@
                                     @Html.DisplayFor(modelItem => item.Username)
                                 </td>
                                 <td>
-                                    <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-success btn-sm">Duyá»‡t</a>
-                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-danger btn-sm">Tá»« chá»‘i</a>
+                                    <a asp-action="Approve" asp-route-id="@item.RegistrationId" class="btn btn-success btn-sm">Duyệt</a>
+                                    <a asp-action="Reject" asp-route-id="@item.RegistrationId" class="btn btn-danger btn-sm">Từ chối</a>
                                 </td>
                             </tr>
                         }

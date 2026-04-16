@@ -1,44 +1,44 @@
 ﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Báº£ng Ä‘iá»u khiá»ƒn";
-    ViewData["PageHeaderIcon"] = "ðŸ“Š";
-    ViewData["PageHeaderTitle"] = "Báº£ng Ä‘iá»u khiá»ƒn quáº£n trá»‹";
-    ViewData["PageHeaderSubtitle"] = "ChÃ o má»«ng báº¡n quay láº¡i há»‡ thá»‘ng ðŸ‘‹";
+    ViewData["Title"] = "Bảng điều khiển";
+    ViewData["PageHeaderIcon"] = "📊";
+    ViewData["PageHeaderTitle"] = "Bảng điều khiển quản trị";
+    ViewData["PageHeaderSubtitle"] = "Chào mừng bạn quay lại hệ thống 👋";
 }
 
 @await Html.PartialAsync("_AdminPageHeader")
 
-<!-- Cards thá»‘ng kÃª -->
+<!-- Cards thống kê -->
 <div class="row g-3">
 
     <div class="col-md-3">
         <div class="card shadow-sm text-center p-3 border-0">
-            <div class="fs-1">ðŸ½ï¸</div>
-            <h6>Tá»•ng quÃ¡n Äƒn</h6>
+            <div class="fs-1">🍽️</div>
+            <h6>Tổng quán ăn</h6>
             <h3 class="text-primary">@(ViewBag.TotalRestaurants ?? 0)</h3>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm text-center p-3 border-0">
-            <div class="fs-1">â³</div>
-            <h6>Chá» duyá»‡t</h6>
+            <div class="fs-1">⏳</div>
+            <h6>Chờ duyệt</h6>
             <h3 class="text-warning">@(ViewBag.PendingRestaurants ?? 0)</h3>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm text-center p-3 border-0">
-            <div class="fs-1">âœ…</div>
-            <h6>ÄÃ£ duyá»‡t</h6>
+            <div class="fs-1">✅</div>
+            <h6>Đã duyệt</h6>
             <h3 class="text-success">@(ViewBag.ApprovedRestaurants ?? 0)</h3>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm text-center p-3 border-0">
-            <div class="fs-1">ðŸ‘¨â€ðŸ³</div>
-            <h6>Chá»§ quÃ¡n</h6>
+            <div class="fs-1">👨‍🍳</div>
+            <h6>Chủ quán</h6>
             <h3 class="text-danger">@(ViewBag.TotalOwners ?? 0)</h3>
         </div>
     </div>

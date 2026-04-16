@@ -1,12 +1,12 @@
 ﻿@model IEnumerable<TourismCMS.Models.OwnerListItemViewModel>
 @{
-    ViewData["Title"] = "Danh sÃ¡ch chá»§ quÃ¡n";
+    ViewData["Title"] = "Danh sách chủ quán";
     Layout = "_Layout";
 }
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Danh sÃ¡ch chá»§ quÃ¡n Ä‘Ã£ duyá»‡t</h2>
+        <h2 class="mb-0">Danh sách chủ quán đã duyệt</h2>
     </div>
 
     <div class="card shadow-sm">
@@ -14,11 +14,11 @@
             <table class="table table-hover table-striped mb-0">
                 <thead class="table-primary">
                     <tr>
-                        <th>Há» tÃªn</th>
-                        <th>SÄT</th>
-                        <th>TÃªn Ä‘Äƒng nháº­p</th>
-                        <th>Sá»‘ quÃ¡n</th>
-                        <th>Chá»©c nÄƒng</th>
+                        <th>Họ tên</th>
+                        <th>SĐT</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Số quán</th>
+                        <th>Chức năng</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,11 +34,11 @@
                                 <td>@owner.Username</td>
                                 <td>@owner.RestaurantCount</td>
                                 <td>
-                                    <a asp-action="OwnerRestaurants" asp-route-id="@owner.UserId" class="btn btn-info btn-sm me-1">Xem quÃ¡n Äƒn</a>
+            <a asp-action="OwnerRestaurants" asp-route-id="@owner.UserId" class="btn btn-info btn-sm me-1">Xem quán ăn</a>
                                     <form asp-action="DeleteOwner" method="post" style="display:inline;" onsubmit="return confirm('Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a chá»§ quÃ¡n nÃ y?');">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@owner.UserId" />
-                                        <button type="submit" class="btn btn-danger btn-sm">XÃ³a</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
                                     </form>
                                 </td>
                             </tr>
@@ -47,8 +47,8 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <em>ChÆ°a cÃ³ chá»§ quÃ¡n nÃ o Ä‘Æ°á»£c duyá»‡t.</em>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                <em>Chưa có chủ quán nào được duyệt.</em>
                             </td>
                         </tr>
                     }

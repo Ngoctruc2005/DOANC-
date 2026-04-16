@@ -2,11 +2,11 @@
 @model IEnumerable<TourismCMS.Models.POI>
 
 @{
-    ViewData["Title"] = "Qu?n lý quán an";
+    ViewData["Title"] = "Quản lý quán ăn";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>?? Qu?n lý quán an Vinh Khánh <small class="text-muted">- Admin</small></h2>
+<h2>Quản lý quán ăn Vĩnh Khánh <small class="text-muted">- Chủ quán</small></h2>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -15,7 +15,7 @@
     </div>
 
     <div class="d-flex">
-        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="Tìm theo tên ho?c mô t?..." />
+        <input id="globalSearch" class="form-control form-control-sm" style="width:280px;" placeholder="Tìm theo tên hoặc mô tả..." />
     </div>
 </div>
 
@@ -24,12 +24,12 @@
         <thead class="table-dark">
             <tr>
                 <th>Tên quán</th>
-                <th>Mô t?</th>
-                <th>V? trí</th>
+                <th>Mô tả</th>
+                <th>Vị trí</th>
                 <th>Bán kính</th>
-                <th>?nh</th>
+                <th>Ảnh</th>
                 <th>Audio</th>
-                <th>Hành d?ng</th>
+                <th>Hành động</th>
             </tr>
         </thead>
         <tbody>
@@ -43,7 +43,7 @@
                     </td>
 
                     <td>
-                        ?? @item.Latitude , @item.Longitude
+                        @item.Latitude, @item.Longitude
                     </td>
 
 
@@ -51,9 +51,9 @@
                     </td>
 
                     <td>
+                        @if (!string.IsNullOrEmpty(item.ImagePath))
                         {
-                            <audio controls style="width:160px;">
-                            </audio>
+                            <img src="@item.ImagePath" alt="@item.Name" style="max-width:160px; max-height:80px; object-fit:cover;" />
                         }
                         else
                         {
@@ -62,7 +62,7 @@
                     </td>
 
                     <td>
-                        <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">S?a</a>
+                        <a class="btn btn-warning btn-sm me-1" asp-action="Edit" asp-route-id="@item.Id">Sửa</a>
                         <a class="btn btn-info btn-sm me-1" asp-action="Details" asp-route-id="@item.Id">Xem</a>
                         <a href="#" class="btn btn-danger btn-sm btn-delete" data-delete-url="@Url.Action("Delete", new { id = item.Id })" data-name="@item.Name">Xóa</a>
                     </td>

@@ -1,6 +1,6 @@
 ﻿@model List<POI>
 
-<h2>Quán c?a tôi</h2>
+<h2>Quán của tôi</h2>
 
 <a href="/Owner/Create" class="btn btn-success mb-3">+ Thêm quán</a>
 
@@ -8,8 +8,8 @@
     <thead>
         <tr>
             <th>Tên</th>
-            <th>Tr&#7841;ng th&#225;i</th>
-            <th>H&#224;nh &#273;&#7897;ng</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
         </tr>
     </thead>
     <tbody>
@@ -19,17 +19,17 @@
             <tr>
                 <td>@p.Name</td>
                 <td>
-                    @if (p.Status == "Ch\u1EDD duy\u1EC7t")
+                    @if (p.Status == "Chờ duyệt")
                     {
-                        <span class="badge bg-warning">Ch&#7901; duy&#7879;t</span>
+                        <span class="badge bg-warning">Chờ duyệt</span>
                     }
-                    else if (p.Status == "Open" || p.Status == "\u0110\u00E3 duy\u1EC7t")
+                    else if (p.Status == "Open" || p.Status == "Đã duyệt")
                     {
-                        <span class="badge bg-success">&#272;&#227; duy&#7879;t</span>
+                        <span class="badge bg-success">Đã duyệt</span>
                     }
-                    else if (p.Status == "Ð? b? admin xóa" || p.Status == "Ð? xóa")
+                    else if (p.Status == "Đã bị admin xóa" || p.Status == "Đã xóa")
                     {
-                        <span class="badge bg-danger">&#272;&#227; b&#7883; x&#243;a</span>
+                        <span class="badge bg-danger">Đã bị xóa</span>
                     }
                     else
                     {

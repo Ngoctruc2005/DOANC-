@@ -10,8 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Ensure the app listens on HTTP on all interfaces for development so mobile devices
 // on the same LAN can reach the dev server when scanning QR codes.
 // NOTE: adjust the port (7141) if your dev server uses a different port.
-builder.WebHost.UseUrls("http://0.0.0.0:7141");
-
+builder.WebHost.UseUrls("http://0.0.0.0:5219");
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
     {

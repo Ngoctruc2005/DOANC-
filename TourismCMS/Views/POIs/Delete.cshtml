@@ -1,7 +1,7 @@
 ﻿@model TourismCMS.Models.POI
 
 @{
-    ViewData["Title"] = "X&#243;a qu&#225;n &#259;n";
+    ViewData["Title"] = "Xóa quán ăn";
     if (User.IsInRole("admin"))
     {
         ViewData["Layout"] = "~/Views/Shared/_AdminLayout.cshtml";
@@ -10,12 +10,12 @@
 
 <div class="container mt-4">
     <div class="card shadow-sm border-danger">
-        <div class="card-header bg-danger text-white">
-            <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> X&#225;c nh&#7853;n x&#243;a qu&#225;n &#259;n</h4>
+            <div class="card-header bg-danger text-white">
+    <h4 class="mb-0"><i class="fa fa-exclamation-triangle"></i> Confirm deletion of the restaurant</h4>
         </div>
         <div class="card-body">
-            <h5 class="card-title text-danger">B&#7841;n c&#243; ch&#7855;c ch&#7855;n mu&#7889;n x&#243;a qu&#225;n &#259;n n&#224;y?</h5>
-            <p class="text-muted">H&#224;nh &#273;&#7897;ng n&#224;y s&#7869; x&#243;a d&#7919; li&#7879;u v&#297;nh vi&#7877;n kh&#7887;i h&#7879; th&#7889;ng.</p>
+            <h5 class="card-title text-danger">Are you sure you want to delete this restaurant?</h5>
+            <p class="text-muted">This action will permanently delete the data from the system.</p>
             <hr />
 
             <dl class="row">
@@ -34,7 +34,7 @@
                 </dd>
 
                 <dt class="col-sm-3 text-end">
-                    T&#7885;a &#273;&#7897;
+                    Tọa độ
                 </dt>
                 <dd class="col-sm-9">
                     @Html.DisplayFor(model => model.Latitude), @Html.DisplayFor(model => model.Longitude)
@@ -47,7 +47,7 @@
 
                 @if(!string.IsNullOrEmpty(Model.ImagePath))
                 {
-                    <dt class="col-sm-3 text-end">H&#236;nh &#7843;nh</dt>
+                <dt class="col-sm-3 text-end">Image</dt>
                     <dd class="col-sm-9">
                     </dd>
                 }
@@ -55,11 +55,11 @@
             </dl>
         </div>
         <div class="card-footer text-end bg-light">
-            <form asp-action="Delete" onsubmit="return confirm('X&#225;c nh&#7853;n: B&#7841;n s&#7869; x&#243;a v&#297;nh vi&#7877;n d&#7919; li&#7879;u n&#224;y ra kh&#7887;i h&#7879; th&#7889;ng. Ti&#7871;p t&#7909;c?');">
+            <form asp-action="Delete" onsubmit="return confirm('Xác nhận: Bạn sẽ xóa vĩnh viễn dữ liệu này ra khỏi hệ thống. Tiếp tục?');">
                 <input type="hidden" asp-for="Id" />
                 <!-- Try binding with Poiid as well if the backend requires it inside the entity, but Id is likely what the delete method expects if it's the route value -->
-                <a class="btn btn-secondary me-2" asp-action="Index"><i class="fa fa-arrow-left"></i> Quay l&#7841;i</a>
-                <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> X&#243;a v&#297;nh vi&#7877;n</button>
+                <a class="btn btn-secondary me-2" asp-action="Index"><i class="fa fa-arrow-left"></i> Go back</a>
+                <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Permanently delete</button>
             </form>
         </div>
     </div>

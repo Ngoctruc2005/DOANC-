@@ -6,8 +6,8 @@
 
 <div class="container mt-4">
     <div class="text-center mb-4">
-        <h1 class="display-4 fw-bold text-primary">KhÃ¡m PhÃ¡ áº¨m Thá»±c VÄ©nh KhÃ¡nh</h1>
-        <p class="lead text-muted">KhÃ¡m phÃ¡ cÃ¡c Ä‘á»‹a Ä‘iá»ƒm Äƒn uá»‘ng háº¥p dáº«n quanh báº¡n.</p>
+        <h1 class="display-4 fw-bold text-primary">Khám Phá Ẩm Thực Vĩnh Khánh</h1>
+        <p class="lead text-muted">Khám phá các địa điểm ăn uống hấp dẫn quanh bạn.</p>
     </div>
 
     <!-- Map Container -->
@@ -15,8 +15,8 @@
         <div class="card-body p-1">
             <div class="p-3">
                 <div class="input-group mb-2">
-                    <input id="addressInput" type="search" class="form-control" placeholder="Nháº­p Ä‘á»‹a chá»‰: PhÆ°á»ng, Quáº­n, ThÃ nh phá»‘" aria-label="TÃ¬m Ä‘á»‹a chá»‰" />
-                    <button id="searchBtn" class="btn btn-primary" type="button">TÃ¬m</button>
+                    <input id="addressInput" type="search" class="form-control" placeholder="Nhập địa chỉ: Phường, Quận, Thành phố" aria-label="Tìm địa chỉ" />
+                    <button id="searchBtn" class="btn btn-primary" type="button">Tìm</button>
                 </div>
                 <div id="map" style="height: 480px; width: 100%;"></div>
             </div>
@@ -24,7 +24,7 @@
     </div>
 
     <!-- POI List -->
-    <h3 class="mb-4">Danh sÃ¡ch quÃ¡n Äƒn</h3>
+    <h3 class="mb-4">Danh sách quán ăn</h3>
     <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (var item in Model)
         {
@@ -37,14 +37,14 @@
                     else
                     {
                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                            <span class="text-secondary"><i class="bi bi-image" style="font-size: 3rem;"></i><br>KhÃ´ng cÃ³ áº£nh</span>
+                        <span class="text-secondary"><i class="bi bi-image" style="font-size: 3rem;"></i><br>Không có ảnh</span>
                         </div>
                     }
                     
                     <div class="card-body">
                         <h5 class="card-title">@item.Name</h5>
                         <p class="card-text text-truncate-2" title="@item.Description">
-                            @(string.IsNullOrEmpty(item.Description) ? "ChÆ°a cÃ³ mÃ´ táº£" : item.Description)
+                            @(string.IsNullOrEmpty(item.Description) ? "Chưa có mô tả" : item.Description)
                         </p>
                         <p class="card-text mb-1">
                             <small class="text-muted">
@@ -53,7 +53,7 @@
                         </p>
                     </div>
                     <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
-                        <a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid" class="btn btn-outline-primary btn-sm">Xem chi tiáº¿t</a>
+                        <a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
                     </div>
                 </div>
             </div>

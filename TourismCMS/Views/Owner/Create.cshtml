@@ -17,7 +17,7 @@
     }
 </style>
 
-<h2>Thêm quán ăn mới</h2>
+<h2>Đăng ký quán</h2>
 
 <form asp-action="Create" method="post" enctype="multipart/form-data">
 
@@ -38,8 +38,8 @@
     </div>
 
     <div class="mb-3">
-        <button type="button" id="btnSearch" class="btn btn-secondary">Tìm</button>
-        <button type="button" id="btnSave" class="btn btn-primary">Lưu vị trí</button>
+        <button type="button" id="btnSearch" class="btn btn-secondary">Tìm kiếm</button>
+        <button type="button" id="btnSave" class="btn btn-primary">Lưu tọa độ</button>
     </div>
 
     <div id="map"></div>
@@ -55,7 +55,7 @@
     <input type="hidden" asp-for="Longitude" id="Longitude" />
 
     <br />
-    <button type="submit" class="btn btn-success">Lưu quán</button>
+<button type="submit" class="btn btn-success">Lưu quán ăn</button>
 
 </form>
 

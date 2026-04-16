@@ -1,11 +1,11 @@
 ﻿@model List<POI>
 
-<h2>? Duy?t quán</h2>
+<h2>Chờ duyệt quán</h2>
 
 <table class="table">
     <tr>
         <th>Tên</th>
-        <th>Hành d?ng</th>
+        <th>Hành động</th>
     </tr>
 
     @foreach (var p in Model)
@@ -13,8 +13,8 @@
         <tr>
             <td>@p.Name</td>
             <td>
-                <a href="/Admin/Approve/@p.Id" class="btn btn-success btn-sm">? Duy?t</a>
-                <a href="/Admin/Reject/@p.Id" class="btn btn-danger btn-sm">? T? ch?i</a>
+                <a href="/Admin/Approve/@p.Id" class="btn btn-success btn-sm">Duyệt</a>
+                <a href="/Admin/Reject/@p.Id" class="btn btn-danger btn-sm">Từ chối</a>
             </td>
         </tr>
     }
