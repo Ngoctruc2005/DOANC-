@@ -18,6 +18,7 @@
                         <th>Chủ quán</th>
                         <th>Địa chỉ</th>
                         <th>Lượt truy cập</th>
+                        <th>Chi tiết</th>
                         <th>Lần truy cập gần nhất</th>
                     </tr>
                 </thead>
@@ -35,6 +36,9 @@
                             <td>@(string.IsNullOrWhiteSpace(item.OwnerName) ? "-" : item.OwnerName)</td>
                             <td>@item.Address</td>
                             <td><span class="badge bg-primary">@item.TotalVisits</span></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="/Admin/VisitDetails/@item.Poiid">Chi tiết</a>
+                            </td>
                             <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                         </tr>
                     }

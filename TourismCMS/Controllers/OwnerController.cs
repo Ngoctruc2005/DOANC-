@@ -214,6 +214,59 @@ public class OwnerController : Controller
         return View(model);
     }
 
+    // Visit details for a specific POI (owner can view only their POIs)
+    public async Task<IActionResult> VisitDetails(int id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Forbid();
+        }
+
+        var visits = await _context.VisitLogs
+            .AsNoTracking()
+            .Include(v => v.POI)
+            .Where(v => v.Poiid == id && v.POI != null && v.POI.OwnerId == userId)
+            .OrderByDescending(v => v.VisitTime)
+            .ToListAsync();
+
+        if (!visits.Any()) return View(new List<TourismCMS.Models.DeviceVisitViewModel>());
+
+        var model = visits.Select(v => {
+            var dv = new TourismCMS.Models.DeviceVisitViewModel
+            {
+                VisitId = v.VisitId,
+                Poiid = v.Poiid,
+                PoiName = v.POI?.Name,
+                VisitTime = v.VisitTime,
+                RawDeviceId = v.DeviceId,
+                DeviceAgent = null,
+                Ip = null
+            };
+
+            if (!string.IsNullOrEmpty(v.DeviceId))
+            {
+                var parts = v.DeviceId.Split(" | ");
+                if (parts.Length >= 2)
+                {
+                    dv.DeviceAgent = parts[0];
+                    dv.Ip = parts[1];
+                }
+                else
+                {
+                    dv.DeviceAgent = v.DeviceId;
+                }
+            }
+
+            return dv;
+        }).ToList();
+
+        ViewBag.PoiId = id;
+        ViewBag.PoiName = visits.FirstOrDefault()?.POI?.Name ?? "-";
+
+        return View(model);
+    }
+
 
     // 📊 quán của tôi
     public async Task<IActionResult> MyRestaurants()

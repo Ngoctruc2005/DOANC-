@@ -1,0 +1,45 @@
+@model List<TourismCMS.Models.DeviceVisitViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết lượt truy cập";
+}
+
+@await Html.PartialAsync("_AdminPageHeader")
+
+<h5>Quán: <a asp-controller="POIs" asp-action="Details" asp-route-id="@ViewBag.PoiId">@ViewBag.PoiName</a></h5>
+
+<div class="card mt-2">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Thiết bị (DeviceId)</th>
+                        <th>User-Agent / Parsed</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" class="text-center text-muted">Không có dữ liệu</td></tr>
+                }
+                else
+                {
+                    @foreach (var v in Model)
+                    {
+                        <tr>
+                            <td>@(v.VisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.RawDeviceId ?? "-"))</td>
+                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? "-"))</td>
+                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.Ip ?? "-"))</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

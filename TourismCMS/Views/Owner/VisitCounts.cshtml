@@ -2,7 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_OwnerLayout.cshtml";
-    ViewData["Title"] = "Báo cáo lượt truy cập";
+    ViewData["Title"] = "Thống kê lượt truy cập mã QR của các quán ăn";
 }
 
 <h2 class="mb-3">Báo cáo lượt truy cập của bạn</h2>
@@ -16,6 +16,7 @@
                         <th>Quán</th>
                         <th>Địa chỉ</th>
                         <th>Lượt truy cập</th>
+                        <th>Chi tiết</th>
                         <th>Lần truy cập gần nhất</th>
                     </tr>
                 </thead>
@@ -32,6 +33,9 @@
                             <td><a asp-controller="POIs" asp-action="Details" asp-route-id="@item.Poiid">@item.PoiName</a></td>
                             <td>@item.Address</td>
                             <td><span class="badge bg-primary">@item.TotalVisits</span></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="/Owner/VisitDetails/@item.Poiid">Chi tiết</a>
+                            </td>
                             <td>@(item.LastVisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                         </tr>
                     }

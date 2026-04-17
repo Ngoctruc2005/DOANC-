@@ -485,6 +485,53 @@ namespace TourismCMS.Controllers
             return View(model);
         }
 
+        // Visit details for a specific POI (list individual visits with device and time)
+        public async Task<IActionResult> VisitDetails(int id)
+        {
+            var visits = await _context.VisitLogs
+                .AsNoTracking()
+                .Where(v => v.Poiid == id)
+                .Include(v => v.POI)
+                .OrderByDescending(v => v.VisitTime)
+                .ToListAsync();
+
+            if (!visits.Any()) return View(new List<TourismCMS.Models.DeviceVisitViewModel>());
+
+            var model = visits.Select(v => {
+                var dv = new TourismCMS.Models.DeviceVisitViewModel
+                {
+                    VisitId = v.VisitId,
+                    Poiid = v.Poiid,
+                    PoiName = v.POI?.Name,
+                    VisitTime = v.VisitTime,
+                    RawDeviceId = v.DeviceId,
+                    DeviceAgent = null,
+                    Ip = null
+                };
+
+                if (!string.IsNullOrEmpty(v.DeviceId))
+                {
+                    var parts = v.DeviceId.Split(" | ");
+                    if (parts.Length >= 2)
+                    {
+                        dv.DeviceAgent = parts[0];
+                        dv.Ip = parts[1];
+                    }
+                    else
+                    {
+                        dv.DeviceAgent = v.DeviceId;
+                    }
+                }
+
+                return dv;
+            }).ToList();
+
+            ViewBag.PoiId = id;
+            ViewBag.PoiName = visits.FirstOrDefault()?.POI?.Name ?? "-";
+
+            return View(model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOwner(int id)

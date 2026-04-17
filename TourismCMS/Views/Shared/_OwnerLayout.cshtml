@@ -45,15 +45,12 @@
     </style>
 </head>
 <body>
+    @{ var hideSidebar = (ViewData["HideSidebar"] as bool?) == true; }
 
-    <div class="sidebar">
-        <h4 class="text-center py-3"><i class="fa fa-store text-warning me-2"></i>Vĩnh Khánh</h4>
-        <a href="/Owner"><i class="fa fa-gauge-high"></i> Bảng điều khiển</a>
-        <a href="/Owner/MyRestaurants"><i class="fa fa-store"></i> Quán của tôi</a>
-        <a href="/Owner/Create"><i class="fa fa-plus-circle"></i> Thêm quán</a>
-        <a href="/Admin/VisitHistory"><i class="fa fa-history"></i> Lịch sử truy cập</a>
-        <a href="/Auth/Logout"><i class="fa fa-sign-out"></i> Đăng xuất</a>
-    </div>
+    @if (!hideSidebar)
+    {
+        @await Html.PartialAsync("_Sidebar")
+    }
 
     <div class="content">
         <div class="topbar d-flex justify-content-between">
