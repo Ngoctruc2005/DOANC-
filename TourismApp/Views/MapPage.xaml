@@ -42,15 +42,15 @@
 
         </VerticalStackLayout>
 
-        <Button Text="⟲ Refresh"
+        <Button Text="⟲"
                Clicked="OnRefreshGpsClicked"
 				BackgroundColor="#1E88E5"
 				TextColor="White"
 				FontAttributes="Bold"
-				FontSize="12"
+				FontSize="25"
 				CornerRadius="20"
 				HeightRequest="40"
-				WidthRequest="92"
+				WidthRequest="50"
 				Padding="10,0"
 				Margin="14,0,0,18"
 				HorizontalOptions="Start"
