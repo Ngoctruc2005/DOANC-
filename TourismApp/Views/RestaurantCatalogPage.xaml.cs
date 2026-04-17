@@ -263,9 +263,9 @@ namespace TourismApp.Views
 
             var baseUrl = apiBaseUrl.Trim();
             if (baseUrl.EndsWith("/api/", StringComparison.OrdinalIgnoreCase))
-                baseUrl = baseUrl[..^4];
+                baseUrl = baseUrl[..^5];
             else if (baseUrl.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
-                baseUrl = baseUrl[..^3];
+                baseUrl = baseUrl[..^4];
 
             var resolvedUrl = $"{baseUrl.TrimEnd('/')}/{imageUrl.TrimStart('/')}";
             System.Diagnostics.Debug.WriteLine($"[ResolveImageUrl] resolvedUrl={resolvedUrl}");
