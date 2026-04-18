@@ -171,7 +171,15 @@ namespace TourismCMS.Controllers
                     var doc = JsonSerializer.Deserialize<TourismCMS.Models.DeviceRegisterRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (doc != null)
                     {
-                        normalized = ((doc.Manufacturer ?? string.Empty) + " " + (doc.Model ?? string.Empty)).Trim();
+                        // prefer uuid if provided
+                        if (!string.IsNullOrWhiteSpace(doc.Uuid))
+                        {
+                            normalized = doc.Uuid.Trim();
+                        }
+                        else
+                        {
+                            normalized = ((doc.Manufacturer ?? string.Empty) + " " + (doc.Model ?? string.Empty)).Trim();
+                        }
                     }
                 }
                 else
@@ -212,10 +220,14 @@ namespace TourismCMS.Controllers
 
             try
             {
-                var matches = await _db.VisitLogs
-                    .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase))
-                    .ToListAsync();
+                // If normalized is a uuid (short GUID-like) we match by exact uuid prefix; otherwise match by agent prefix
+                var matchesQuery = _db.VisitLogs.AsQueryable();
+                if (!string.IsNullOrEmpty(normalized))
+                {
+                    matchesQuery = matchesQuery.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase));
+                }
 
+                var matches = await matchesQuery.ToListAsync();
                 if (matches.Any())
                 {
                     _db.VisitLogs.RemoveRange(matches);
@@ -242,28 +254,77 @@ namespace TourismCMS.Controllers
         // App can call this on app start to register a device (no POI) and mark it active
         [HttpPost("device/enter")]
         [AllowAnonymous]
-        public async Task<IActionResult> PostDeviceEnter([FromBody] string? deviceId)
+        public async Task<IActionResult> PostDeviceEnter()
         {
+            // Read raw body so we accept either a JSON object { Uuid, Manufacturer, Model, AppVersion } or a string
+            string body;
+            using (var reader = new StreamReader(Request.Body))
+            {
+                body = await reader.ReadToEndAsync();
+            }
+
+            string uuid = null;
+            string manufacturer = null;
+            string model = null;
+            string appv = null;
+
             try
             {
-                var device = !string.IsNullOrWhiteSpace(deviceId) ? deviceId : Request.Headers["User-Agent"].ToString();
-                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                if (!string.IsNullOrWhiteSpace(body) && body.TrimStart().StartsWith("{"))
+                {
+                    var doc = JsonSerializer.Deserialize<TourismCMS.Models.DeviceRegisterRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (doc != null)
+                    {
+                        uuid = doc.Uuid;
+                        manufacturer = doc.Manufacturer;
+                        model = doc.Model;
+                        appv = doc.AppVersion;
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(body))
+                {
+                    // fallback: treat as raw string
+                    var s = JsonSerializer.Deserialize<string>(body);
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        // attempt to split if it's the old pipe format
+                        var parts = s.Split(new[] { " | " }, System.StringSplitOptions.None);
+                        if (parts.Length > 0) uuid = parts[0];
+                        if (parts.Length > 1) manufacturer = parts[1];
+                        if (parts.Length > 2) model = parts[2];
+                    }
+                }
+            }
+            catch
+            {
+                // ignore parse errors and fallback to headers
+            }
 
-                var fullDeviceId = string.IsNullOrWhiteSpace(device)
-                    ? ip
-                    : (device + (string.IsNullOrWhiteSpace(ip) ? string.Empty : " | " + ip));
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
+            // Build device id including uuid as prefix if available
+            string agentPart = string.Join(" ", new[] { manufacturer, model }.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
+            var segments = new List<string>();
+            if (!string.IsNullOrWhiteSpace(uuid)) segments.Add(uuid);
+            if (!string.IsNullOrWhiteSpace(agentPart)) segments.Add(agentPart);
+            if (!string.IsNullOrWhiteSpace(appv)) segments.Add(appv);
+            if (!string.IsNullOrWhiteSpace(ip)) segments.Add(ip);
+
+            var fullDeviceId = segments.Count > 0 ? string.Join(" | ", segments) : (Request.Headers["User-Agent"].ToString() ?? ip ?? string.Empty);
+
+            try
+            {
                 var visit = new VisitLog
                 {
                     Poiid = null,
                     DeviceId = fullDeviceId,
-                    VisitTime = DateTime.Now
+                    VisitTime = DateTime.UtcNow
                 };
 
                 _db.VisitLogs.Add(visit);
                 await _db.SaveChangesAsync();
 
-                // mark device active in tracker
+                // mark device active in tracker (use fullDeviceId stored)
                 _tracker.MarkActive(visit.DeviceId);
 
                 // notify SignalR clients that device list changed

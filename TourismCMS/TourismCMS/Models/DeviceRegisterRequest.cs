@@ -5,5 +5,6 @@ namespace TourismCMS.Models
         public string? Manufacturer { get; set; }
         public string? Model { get; set; }
         public string? AppVersion { get; set; }
+        public string? Uuid { get; set; }
     }
 }

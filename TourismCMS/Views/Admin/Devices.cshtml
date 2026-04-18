@@ -7,13 +7,9 @@
 
 @await Html.PartialAsync("_AdminPageHeader")
 
-<div class="d-flex justify-content-between align-items-center mb-2">
+<div class="d-flex align-items-center mb-2">
     <div>
         <h5 class="mb-0">Báo cáo thiết bị</h5>
-        <small class="text-muted">Tổng thiết bị duy nhất: <strong>@Model.TotalUniqueDevices</strong></small>
-    </div>
-    <div>
-        <a class="btn btn-sm btn-outline-secondary" href="/Admin/VisitCounts">Xem lượt truy cập</a>
     </div>
 </div>
 
@@ -38,7 +34,10 @@
                     @foreach (var d in Model.ActiveDevices)
                     {
                         <tr>
-                            <td class="text-break">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? d.DeviceId ?? "-"))</td>
+                            <td class="text-break">
+                                <div class="fw-semibold">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? "-"))</div>
+                                <div class="text-muted small mt-1"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.DeviceId ?? "-"))</code></div>
+                            </td>
                         </tr>
                     }
                 }

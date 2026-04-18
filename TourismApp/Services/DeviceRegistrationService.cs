@@ -16,7 +16,15 @@ public static class DeviceRegistrationService
             var apiBase = Preferences.Get("api_base_url", string.Empty);
             if (string.IsNullOrWhiteSpace(apiBase))
             {
-                apiBase = "http://192.168.1.176:5219/api/";
+                // If running on Android emulator, use 10.0.2.2 to reach host machine's localhost
+                if (DeviceInfo.Platform == DevicePlatform.Android && DeviceInfo.DeviceType != DeviceType.Physical)
+                {
+                    apiBase = "http://10.0.2.2:5219/api/";
+                }
+                else
+                {
+                    apiBase = "http://192.168.1.176:5219/api/";
+                }
             }
 
             if (!apiBase.EndsWith("/")) apiBase += "/";
@@ -24,15 +32,22 @@ public static class DeviceRegistrationService
 
             var url = apiBase + "pois/device/enter";
 
-            var idParts = new[] { DeviceInfo.Platform.ToString(), DeviceInfo.Manufacturer, DeviceInfo.Model, DeviceInfo.VersionString };
-            var deviceId = string.Join(" | ", idParts);
+            // ensure persistent uuid per app install
+            var uuid = Preferences.Get("device_uuid", string.Empty);
+            if (string.IsNullOrWhiteSpace(uuid))
+            {
+                uuid = Guid.NewGuid().ToString();
+                Preferences.Set("device_uuid", uuid);
+            }
+
+            var payload = new { Uuid = uuid, Manufacturer = DeviceInfo.Manufacturer ?? string.Empty, Model = DeviceInfo.Model ?? string.Empty, AppVersion = DeviceInfo.VersionString ?? "" };
 
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(6) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("TourismApp/1.0");
 
-            await client.PostAsJsonAsync(url, deviceId);
+            await client.PostAsJsonAsync(url, payload);
         }
         catch (Exception ex)
         {
@@ -47,7 +62,14 @@ public static class DeviceRegistrationService
             var apiBase = Preferences.Get("api_base_url", string.Empty);
             if (string.IsNullOrWhiteSpace(apiBase))
             {
-                apiBase = "http://192.168.1.176:5219/api/";
+                if (DeviceInfo.Platform == DevicePlatform.Android && DeviceInfo.DeviceType != DeviceType.Physical)
+                {
+                    apiBase = "http://10.0.2.2:5219/api/";
+                }
+                else
+                {
+                    apiBase = "http://192.168.1.176:5219/api/";
+                }
             }
 
             if (!apiBase.EndsWith("/")) apiBase += "/";
@@ -55,15 +77,21 @@ public static class DeviceRegistrationService
 
             var url = apiBase + "pois/device/leave";
 
-            var idParts = new[] { DeviceInfo.Platform.ToString(), DeviceInfo.Manufacturer, DeviceInfo.Model, DeviceInfo.VersionString };
-            var deviceId = string.Join(" | ", idParts);
+            var uuid = Preferences.Get("device_uuid", string.Empty);
+            if (string.IsNullOrWhiteSpace(uuid))
+            {
+                uuid = Guid.NewGuid().ToString();
+                Preferences.Set("device_uuid", uuid);
+            }
+
+            var payload = new { Uuid = uuid, Manufacturer = DeviceInfo.Manufacturer ?? string.Empty, Model = DeviceInfo.Model ?? string.Empty, AppVersion = DeviceInfo.VersionString ?? "" };
 
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(6) };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("TourismApp/1.0");
 
-            await client.PostAsJsonAsync(url, deviceId);
+            await client.PostAsJsonAsync(url, payload);
         }
         catch (Exception ex)
         {
