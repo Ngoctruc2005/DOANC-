@@ -76,6 +76,13 @@ public partial class QRPage : ContentPage
         _isPageActive = false;
         _isAnimating = false;
         _camera.IsDetecting = false;
+        // Notify server that device left (best-effort)
+        try
+        {
+            var apiService = new TourismApp.Services.PoiApiService(null);
+            _ = apiService.PostDeviceLeaveAsync();
+        }
+        catch { }
     }
 
     private async void AnimateScanLine()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using TourismApp.Services;
 
 namespace TourismApp
 {
@@ -7,6 +8,8 @@ namespace TourismApp
         public App()
         {
             InitializeComponent();
+        // Register device on app start so installs / cold-starts (APK launches) are counted
+        _ = DeviceRegistrationService.RegisterDeviceAsync();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

@@ -18,39 +18,27 @@
 </div>
 
 <!-- Active devices -->
-<div class="card mb-3">
+<div class="card mb-3" id="activeDevicesContainerCard">
     <div class="card-body">
         <h6>Thiết bị đang hoạt động (@Model.ActiveDeviceCount)</h6>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Thiết bị</th>
-                        <th>User-Agent</th>
-                        <th>IP</th>
-                        <th class="text-center">Tổng lượt</th>
-                        <th class="text-center">Quán khác nhau</th>
-                        <th class="text-nowrap">Lần thấy cuối</th>
-                        <th class="text-end">Hành động</th>
+                        <th>Tên thiết bị</th>
                     </tr>
                 </thead>
                 <tbody>
                 @if (Model.ActiveDevices == null || Model.ActiveDevices.Count == 0)
                 {
-                    <tr><td colspan="7" class="text-center text-muted">Không có thiết bị đang hoạt động</td></tr>
+                    <tr><td class="text-center text-muted">Không có thiết bị đang hoạt động</td></tr>
                 }
                 else
                 {
                     @foreach (var d in Model.ActiveDevices)
                     {
                         <tr>
-                            <td class="text-break"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.DeviceId))</code></td>
-                            <td class="text-truncate" style="max-width:320px;">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? "-"))</td>
-                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.IpSample ?? "-"))</td>
-                            <td class="text-center"><span class="badge bg-primary">@d.TotalVisits</span></td>
-                            <td class="text-center">@d.DistinctPoiCount</td>
-                            <td class="text-nowrap">@(d.LastSeen?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Admin/DeviceDetails?id=@System.Net.WebUtility.UrlEncode(d.DeviceId)">Xem</a></td>
+                            <td class="text-break">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? d.DeviceId ?? "-"))</td>
                         </tr>
                     }
                 }
@@ -59,61 +47,29 @@
         </div>
     </div>
 </div>
+@* Partial removed — keep only the first (central) table. The card above has id 'activeDevicesContainerCard' so SignalR can replace it. *@
 
-<!-- All devices -->
-<div class="card mt-2">
-    <div class="card-body">
-        <h6>Tất cả thiết bị (@Model.AllDevices.Count)</h6>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th style="min-width:260px;">Thiết bị (DeviceId)</th>
-                        <th style="min-width:220px;">User-Agent (mẫu)</th>
-                        <th style="min-width:120px;">IP</th>
-                        <th class="text-center">Tổng lượt truy cập</th>
-                        <th class="text-center">Quán khác nhau</th>
-                        <th class="text-nowrap">lần truy cập đầu tiên</th>
-                        <th class="text-nowrap">Lần truy cập cuối</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th class="text-end">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @if (Model.AllDevices == null || Model.AllDevices.Count == 0)
-                {
-                    <tr><td colspan="9" class="text-center text-muted">Không có dữ liệu</td></tr>
-                }
-                else
-                {
-                    @foreach (var d in Model.AllDevices)
-                    {
-                        <tr>
-                            <td class="text-break"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.DeviceId))</code></td>
-                            <td class="text-truncate" style="max-width:320px;">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? "-"))</td>
-                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.IpSample ?? "-"))</td>
-                            <td class="text-center"><span class="badge bg-primary">@d.TotalVisits</span></td>
-                            <td class="text-center">@d.DistinctPoiCount</td>
-                            <td class="text-nowrap">@(d.FirstSeen?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                            <td class="text-nowrap">@(d.LastSeen?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                            <td class="text-center">
-                                @if (d.IsActive)
-                                {
-                                    <span class="badge bg-success">Đang hoạt động</span>
-                                }
-                                else
-                                {
-                                    @Html.Raw(System.Net.WebUtility.HtmlEncode(d.StatusLabel ?? "-"))
-                                }
-                            </td>
-                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Admin/DeviceDetails?id=@System.Net.WebUtility.UrlEncode(d.DeviceId)">Xem</a></td>
-                        </tr>
-                    }
-                }
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js" integrity="" crossorigin="anonymous"></script>
+    <script>
+        (function(){
+            const conn = new signalR.HubConnectionBuilder().withUrl('/devicehub').build();
+            conn.on('DeviceListChanged', function(){
+                // refresh only the active devices partial
+                fetch('/Admin/DevicesActivePartial')
+                    .then(r => r.text())
+                    .then(html => {
+                        const container = document.getElementById('activeDevicesContainerCard');
+                        if (container) {
+                            container.outerHTML = html;
+                        } else {
+                            location.reload();
+                        }
+                    }).catch(()=>{ location.reload(); });
+            });
+            conn.start().catch(()=>{});
+        })();
+    </script>
+}
 
 <!-- End of view -->

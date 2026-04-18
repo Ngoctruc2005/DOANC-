@@ -5,6 +5,8 @@ using TourismCMS.Data;
 using TourismCMS.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.IO;
 
 namespace TourismCMS.Controllers
 {
@@ -124,6 +126,17 @@ namespace TourismCMS.Controllers
                 // mark device active in tracker
                 _tracker.MarkActive(visit.DeviceId);
 
+                // notify connected admin clients via SignalR that active devices changed
+                try
+                {
+                    var hub = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>)) as Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>;
+                    if (hub != null)
+                    {
+                        await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { });
+                    }
+                }
+                catch { }
+
                 var count = await _db.VisitLogs.CountAsync(v => v.Poiid == poi.Poiid);
                 return Ok(new { success = true, visitId = visit.VisitId, visits = count });
             }
@@ -137,12 +150,139 @@ namespace TourismCMS.Controllers
         // App can call this on app exit to mark device as inactive
         [HttpPost("device/leave")]
         [AllowAnonymous]
-        public IActionResult PostDeviceLeave([FromBody] string? deviceId)
+        public async Task<IActionResult> PostDeviceLeave()
         {
-            if (string.IsNullOrEmpty(deviceId)) return BadRequest();
+            // Read raw body so we accept either a JSON string (old clients) or an object { Manufacturer, Model, AppVersion }
+            string body;
+            using (var reader = new StreamReader(Request.Body))
+            {
+                body = await reader.ReadToEndAsync();
+            }
 
-            _tracker.Remove(deviceId);
+            if (string.IsNullOrWhiteSpace(body)) return BadRequest();
+
+            string normalized = null;
+
+            try
+            {
+                // If body starts with '{' parse as object
+                if (body.TrimStart().StartsWith("{"))
+                {
+                    var doc = JsonSerializer.Deserialize<TourismCMS.Models.DeviceRegisterRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (doc != null)
+                    {
+                        normalized = ((doc.Manufacturer ?? string.Empty) + " " + (doc.Model ?? string.Empty)).Trim();
+                    }
+                }
+                else
+                {
+                    // body may be a JSON string literal like "Manufacturer Model | App/1.0"
+                    try
+                    {
+                        var s = JsonSerializer.Deserialize<string>(body);
+                        if (!string.IsNullOrEmpty(s)) normalized = s.Split(new[] { " | " }, StringSplitOptions.None).FirstOrDefault()?.Trim();
+                    }
+                    catch
+                    {
+                        // fallback: use raw body
+                        normalized = body.Trim('"', '\r', '\n', ' ');
+                    }
+                }
+            }
+            catch
+            {
+                normalized = body.Trim('"', '\r', '\n', ' ');
+            }
+
+            if (string.IsNullOrEmpty(normalized)) return BadRequest();
+
+            // Remove tracker entries and VisitLogs that match the normalized agent prefix
+            try
+            {
+                var activeKeys = _tracker.GetActiveDeviceIds();
+                foreach (var k in activeKeys)
+                {
+                    if (!string.IsNullOrEmpty(k) && k.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        _tracker.Remove(k);
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                var matches = await _db.VisitLogs
+                    .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase))
+                    .ToListAsync();
+
+                if (matches.Any())
+                {
+                    _db.VisitLogs.RemoveRange(matches);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch { }
+
+            // notify SignalR clients
+            try
+            {
+                var hub = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>)) as Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>;
+                if (hub != null)
+                {
+                    await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { });
+                }
+            }
+            catch { }
+
             return Ok(new { success = true });
+        }
+
+        // POST: api/pois/device/enter
+        // App can call this on app start to register a device (no POI) and mark it active
+        [HttpPost("device/enter")]
+        [AllowAnonymous]
+        public async Task<IActionResult> PostDeviceEnter([FromBody] string? deviceId)
+        {
+            try
+            {
+                var device = !string.IsNullOrWhiteSpace(deviceId) ? deviceId : Request.Headers["User-Agent"].ToString();
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+                var fullDeviceId = string.IsNullOrWhiteSpace(device)
+                    ? ip
+                    : (device + (string.IsNullOrWhiteSpace(ip) ? string.Empty : " | " + ip));
+
+                var visit = new VisitLog
+                {
+                    Poiid = null,
+                    DeviceId = fullDeviceId,
+                    VisitTime = DateTime.Now
+                };
+
+                _db.VisitLogs.Add(visit);
+                await _db.SaveChangesAsync();
+
+                // mark device active in tracker
+                _tracker.MarkActive(visit.DeviceId);
+
+                // notify SignalR clients that device list changed
+                try
+                {
+                    var hub = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>)) as Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>;
+                    if (hub != null)
+                    {
+                        await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { });
+                    }
+                }
+                catch { }
+
+                return Ok(new { success = true, visitId = visit.VisitId });
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false, message = "Error saving device visit" });
+            }
         }
     }
 }

@@ -30,6 +30,41 @@ namespace TourismApp.Services
             return false;
         }
 
+        // Notify server that this device is leaving (app paused/exited)
+        public async Task<bool> PostDeviceLeaveAsync()
+        {
+            Exception? lastException = null;
+
+            var manufacturer = DeviceInfo.Manufacturer ?? string.Empty;
+            var model = DeviceInfo.Model ?? string.Empty;
+            var appVer = AppInfo.VersionString ?? "TourismApp/1.0";
+
+            var payload = new { Manufacturer = manufacturer, Model = model, AppVersion = appVer };
+
+            foreach (var baseUrl in GetApiBaseUrls().Distinct())
+            {
+                try
+                {
+                    var endpoint = $"{baseUrl}pois/device/leave";
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                    var response = await _httpClient.PostAsJsonAsync(endpoint, payload, cts.Token);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _successfulBaseUrl = baseUrl;
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    System.Diagnostics.Debug.WriteLine($"[API DEVICE LEAVE FAIL] {baseUrl}pois/device/leave -> {ex.Message}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[DEVICE LEAVE] all endpoints failed: {BuildFriendlyApiError(lastException)}");
+            return false;
+        }
+
         static string BuildFriendlyApiError(Exception? ex)
         {
             if (ex == null)

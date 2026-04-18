@@ -21,7 +21,10 @@ namespace TourismCMS.Services
 
         public List<string> GetActiveDeviceIds()
         {
-            return _active.Keys.ToList();
+            var now = DateTime.UtcNow;
+            var threshold = TimeSpan.FromMinutes(30);
+            // Return only keys with recent activity
+            return _active.Where(kvp => (now - kvp.Value) <= threshold).Select(kvp => kvp.Key).ToList();
         }
 
         public bool IsActive(string deviceId)

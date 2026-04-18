@@ -404,36 +404,159 @@ namespace TourismCMS.Controllers
                 .OrderByDescending(d => d.LastSeen)
                 .ToListAsync();
 
-            // Try to parse DeviceId into agent and ip sample for display
-            var now = DateTime.Now;
-            foreach (var d in devices)
+            // Build active devices list from in-memory tracker only (avoid showing stale DB entries)
+            var activeIds = new List<string>();
+            try
             {
-                var parts = (d.DeviceId ?? string.Empty).Split(" | ");
-                if (parts.Length >= 2)
+                var tracker = HttpContext.RequestServices.GetService(typeof(TourismCMS.Services.DeviceTracker)) as TourismCMS.Services.DeviceTracker;
+                if (tracker != null)
                 {
-                    d.AgentSample = parts[0];
-                    d.IpSample = parts[1];
+                    activeIds = tracker.GetActiveDeviceIds();
                 }
-                else
-                {
-                    d.AgentSample = d.DeviceId;
-                    d.IpSample = null;
-                }
+            }
+            catch { }
 
-                // Consider device active if last seen within past 30 minutes
-                if (d.LastSeen.HasValue && (now - d.LastSeen.Value).TotalMinutes <= 30)
+            var activeDevices = new List<TourismCMS.Models.DeviceItemViewModel>();
+            if (activeIds.Any())
+            {
+                foreach (var key in activeIds)
                 {
-                    d.IsActive = true;
-                    d.StatusLabel = "Đang hoạt động";
-                }
-                else
-                {
-                    d.IsActive = false;
-                    d.StatusLabel = d.LastSeen.HasValue ? $"Hoạt động lần cuối: {d.LastSeen.Value:dd/MM/yyyy HH:mm}" : "Không rõ";
+                    // find the latest visit log that matches this active key (starts with key)
+                    var best = await _context.VisitLogs.AsNoTracking()
+                        .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(key))
+                        .OrderByDescending(v => v.VisitTime)
+                        .FirstOrDefaultAsync();
+
+                    if (best != null)
+                    {
+                        var item = new TourismCMS.Models.DeviceItemViewModel
+                        {
+                            DeviceId = best.DeviceId,
+                            FirstSeen = await _context.VisitLogs.Where(v => v.DeviceId == best.DeviceId).MinAsync(v => (DateTime?)v.VisitTime),
+                            LastSeen = best.VisitTime,
+                            TotalVisits = await _context.VisitLogs.CountAsync(v => v.DeviceId == best.DeviceId),
+                            DistinctPoiCount = await _context.VisitLogs.Where(v => v.DeviceId == best.DeviceId && v.Poiid != null).Select(v => v.Poiid).Distinct().CountAsync(),
+                            AgentSample = (best.DeviceId ?? string.Empty).Split(" | ").FirstOrDefault(),
+                            IpSample = (best.DeviceId ?? string.Empty).Split(" | ").Skip(1).FirstOrDefault(),
+                            IsActive = true,
+                            StatusLabel = "Đang hoạt động"
+                        };
+
+                        activeDevices.Add(item);
+                    }
                 }
             }
 
-            return View(devices);
+            var vm = new TourismCMS.Models.DevicesPageViewModel
+            {
+                ActiveDevices = activeDevices,
+                AllDevices = devices,
+                TotalUniqueDevices = devices.Select(d => d.DeviceId).Distinct().Count()
+            };
+
+            return View(vm);
+        }
+
+        // Return partial view for active devices only (used by SignalR client to refresh area)
+        [HttpGet("/Admin/DevicesActivePartial")]
+        public async Task<IActionResult> DevicesActivePartial()
+        {
+            // Use in-memory tracker to determine active device keys and build partial from latest VisitLogs
+            var activeDevices = new List<TourismCMS.Models.DeviceItemViewModel>();
+
+            try
+            {
+                var tracker = HttpContext.RequestServices.GetService(typeof(TourismCMS.Services.DeviceTracker)) as TourismCMS.Services.DeviceTracker;
+                var activeKeys = tracker?.GetActiveDeviceIds() ?? new List<string>();
+
+                foreach (var key in activeKeys)
+                {
+                    var best = await _context.VisitLogs.AsNoTracking()
+                        .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(key))
+                        .OrderByDescending(v => v.VisitTime)
+                        .FirstOrDefaultAsync();
+
+                    if (best != null)
+                    {
+                        var item = new TourismCMS.Models.DeviceItemViewModel
+                        {
+                            DeviceId = best.DeviceId,
+                            FirstSeen = await _context.VisitLogs.Where(v => v.DeviceId == best.DeviceId).MinAsync(v => (DateTime?)v.VisitTime),
+                            LastSeen = best.VisitTime,
+                            TotalVisits = await _context.VisitLogs.CountAsync(v => v.DeviceId == best.DeviceId),
+                            DistinctPoiCount = await _context.VisitLogs.Where(v => v.DeviceId == best.DeviceId && v.Poiid != null).Select(v => v.Poiid).Distinct().CountAsync(),
+                            AgentSample = (best.DeviceId ?? string.Empty).Split(" | ").FirstOrDefault(),
+                            IpSample = (best.DeviceId ?? string.Empty).Split(" | ").Skip(1).FirstOrDefault(),
+                            IsActive = true,
+                            StatusLabel = "Đang hoạt động"
+                        };
+
+                        item.FirstSeen = item.FirstSeen?.ToLocalTime();
+                        item.LastSeen = item.LastSeen?.ToLocalTime();
+
+                        activeDevices.Add(item);
+                    }
+                }
+            }
+            catch
+            {
+                // fallback: return empty list
+            }
+
+            return PartialView("_ActiveDevicesPartial", activeDevices);
+        }
+
+        // Debug: return current in-memory tracker keys (for troubleshooting why devices appear active)
+        [HttpGet("/Admin/DeviceTrackerKeys")]
+        public IActionResult DeviceTrackerKeys()
+        {
+            try
+            {
+                var tracker = HttpContext.RequestServices.GetService(typeof(TourismCMS.Services.DeviceTracker)) as TourismCMS.Services.DeviceTracker;
+                var keys = tracker?.GetActiveDeviceIds() ?? new List<string>();
+                return Json(new { keys = keys, count = keys.Count });
+            }
+            catch
+            {
+                return Json(new { keys = new List<string>(), count = 0 });
+            }
+        }
+
+        // Admin action: clear active devices (remove from tracker and optionally delete VisitLogs that match)
+        [HttpPost("/Admin/ClearActiveDevices")]
+        public async Task<IActionResult> ClearActiveDevices()
+        {
+            try
+            {
+                var tracker = HttpContext.RequestServices.GetService(typeof(TourismCMS.Services.DeviceTracker)) as TourismCMS.Services.DeviceTracker;
+                var keys = tracker?.GetActiveDeviceIds() ?? new List<string>();
+                foreach (var k in keys)
+                {
+                    try { tracker?.Remove(k); } catch { }
+                }
+
+                // also remove VisitLogs that start with these keys to ensure they don't reappear
+                foreach (var k in keys)
+                {
+                    try
+                    {
+                        var matches = await _context.VisitLogs.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(k)).ToListAsync();
+                        if (matches.Any())
+                        {
+                            _context.VisitLogs.RemoveRange(matches);
+                        }
+                    }
+                    catch { }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false });
+            }
         }
 
         // Device details by encoded device id (url encoded)

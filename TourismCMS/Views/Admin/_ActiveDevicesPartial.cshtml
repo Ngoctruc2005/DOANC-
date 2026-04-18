@@ -1,0 +1,34 @@
+@model List<TourismCMS.Models.DeviceItemViewModel>
+
+<div class="card mb-3" id="activeDevicesContainerCard">
+    <div class="card-body">
+        <h6>Thiết bị đang hoạt động (@Model?.Count ?? 0)</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tên thiết bị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr><td class="text-center text-muted">Không có thiết bị đang hoạt động</td></tr>
+                }
+                else
+                {
+                    foreach (var d in Model)
+                    {
+                        <tr>
+                            <td class="text-break">
+                                <div class="fw-semibold">@Html.Raw(System.Net.WebUtility.HtmlEncode(d.AgentSample ?? "-"))</div>
+                                <div class="text-muted small mt-1"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(d.DeviceId ?? "-"))</code></div>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

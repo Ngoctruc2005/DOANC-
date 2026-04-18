@@ -29,6 +29,9 @@ builder.Services.AddControllersWithViews(options =>
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
+// SignalR for real-time device updates
+builder.Services.AddSignalR();
+
 // Kết nối SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -71,6 +74,9 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=POIs}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Map SignalR hub for device updates
+app.MapHub<TourismCMS.Services.DeviceHub>("/devicehub");
 
 app.MapGet("/api/menus", [Microsoft.AspNetCore.Authorization.AllowAnonymous] async (ApplicationDbContext db) => Microsoft.AspNetCore.Http.Results.Ok(await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(db.Menus)));
 
