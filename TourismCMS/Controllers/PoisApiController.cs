@@ -132,14 +132,54 @@ namespace TourismCMS.Controllers
                 _db.VisitLogs.Add(visit);
                 await _db.SaveChangesAsync();
 
+                // Upsert device summary in Devices table
+                try
+                {
+                    var deviceId = visit.DeviceId ?? string.Empty;
+                    var agent = deviceId.Split(new[] { " | " }, System.StringSplitOptions.None).FirstOrDefault() ?? deviceId;
+                    var existing = await _db.Devices.FindAsync(deviceId);
+                    if (existing == null)
+                    {
+                        existing = new TourismCMS.Models.Device
+                        {
+                            DeviceId = deviceId,
+                            AgentSample = agent,
+                            FirstSeen = visit.VisitTime,
+                            LastSeen = visit.VisitTime,
+                            TotalVisits = 1,
+                            IsActive = false
+                        };
+                        _db.Devices.Add(existing);
+                    }
+                    else
+                    {
+                        existing.LastSeen = visit.VisitTime;
+                        existing.TotalVisits = existing.TotalVisits + 1;
+                    }
+
+                    await _db.SaveChangesAsync();
+                }
+                catch { }
+
                 // mark device active in tracker (skip known emulator/device farm names)
                 try
                 {
                     var agent = visit.DeviceId?.Split(new[] { " | " }, StringSplitOptions.None).FirstOrDefault() ?? string.Empty;
-                    if (!IsEmulatorAgent(agent))
-                    {
-                        _tracker.MarkActive(visit.DeviceId);
-                    }
+                        if (!IsEmulatorAgent(agent))
+                        {
+                            _tracker.MarkActive(visit.DeviceId);
+                            // also update Devices.IsActive flag
+                            try
+                            {
+                                var d = await _db.Devices.FindAsync(visit.DeviceId);
+                                if (d != null)
+                                {
+                                    d.IsActive = true;
+                                    await _db.SaveChangesAsync();
+                                }
+                            }
+                            catch { }
+                        }
                 }
                 catch { }
 
@@ -222,7 +262,7 @@ namespace TourismCMS.Controllers
 
             if (string.IsNullOrEmpty(normalized)) return BadRequest();
 
-            // Remove tracker entries and VisitLogs that match the normalized agent prefix
+                // Remove tracker entries that match the normalized agent prefix
             try
             {
                 var activeKeys = _tracker.GetActiveDeviceIds();
@@ -247,26 +287,30 @@ namespace TourismCMS.Controllers
 
             try
             {
-                var matchesQuery = _db.VisitLogs.AsQueryable();
-                if (!string.IsNullOrEmpty(normalized))
+                // Do not delete VisitLogs. Instead, mark matching Devices.IsActive = false
+                try
                 {
-                    if (System.Guid.TryParse(normalized, out _))
+                    var devicesQuery = _db.Devices.AsQueryable();
+                    if (!string.IsNullOrEmpty(normalized))
                     {
-                        // match exact uuid prefix or equality
-                        matchesQuery = matchesQuery.Where(v => v.DeviceId != null && (v.DeviceId.Equals(normalized) || v.DeviceId.StartsWith(normalized + " |")));
+                        if (System.Guid.TryParse(normalized, out _))
+                        {
+                            devicesQuery = devicesQuery.Where(d => d.DeviceId.Equals(normalized) || d.DeviceId.StartsWith(normalized + " |"));
+                        }
+                        else
+                        {
+                            devicesQuery = devicesQuery.Where(d => d.DeviceId.StartsWith(normalized));
+                        }
                     }
-                    else
-                    {
-                        matchesQuery = matchesQuery.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase));
-                    }
-                }
 
-                var matches = await matchesQuery.ToListAsync();
-                if (matches.Any())
-                {
-                    _db.VisitLogs.RemoveRange(matches);
-                    await _db.SaveChangesAsync();
+                    var matchedDevices = await devicesQuery.ToListAsync();
+                    foreach (var md in matchedDevices)
+                    {
+                        md.IsActive = false;
+                    }
+                    if (matchedDevices.Any()) await _db.SaveChangesAsync();
                 }
+                catch { }
             }
             catch { }
 
@@ -357,6 +401,36 @@ namespace TourismCMS.Controllers
 
                 _db.VisitLogs.Add(visit);
                 await _db.SaveChangesAsync();
+
+                // Upsert device summary
+                try
+                {
+                    var deviceId = visit.DeviceId ?? string.Empty;
+                    var agent = deviceId.Split(new[] { " | " }, System.StringSplitOptions.None).FirstOrDefault() ?? deviceId;
+                    var existing = await _db.Devices.FindAsync(deviceId);
+                    if (existing == null)
+                    {
+                        existing = new TourismCMS.Models.Device
+                        {
+                            DeviceId = deviceId,
+                            AgentSample = agent,
+                            FirstSeen = visit.VisitTime,
+                            LastSeen = visit.VisitTime,
+                            TotalVisits = 1,
+                            IsActive = true
+                        };
+                        _db.Devices.Add(existing);
+                    }
+                    else
+                    {
+                        existing.LastSeen = visit.VisitTime;
+                        existing.TotalVisits = existing.TotalVisits + 1;
+                        existing.IsActive = true;
+                    }
+
+                    await _db.SaveChangesAsync();
+                }
+                catch { }
 
                 // mark device active in tracker (use fullDeviceId stored)
                 _tracker.MarkActive(visit.DeviceId);

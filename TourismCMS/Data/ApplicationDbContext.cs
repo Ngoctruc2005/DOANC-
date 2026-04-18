@@ -30,6 +30,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<VisitLog> VisitLogs { get; set; }
 
+    public virtual DbSet<TourismCMS.Models.Device> Devices { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<PoiOwnerRegistration> PoiOwnerRegistrations { get; set; }
@@ -54,6 +56,18 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.AdminUsers)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("FK__AdminUser__RoleI__4CA06362");
+        });
+
+        modelBuilder.Entity<TourismCMS.Models.Device>(entity =>
+        {
+            entity.HasKey(e => e.DeviceId).HasName("PK_Devices_DeviceId");
+            entity.ToTable("Devices");
+            entity.Property(e => e.DeviceId).HasMaxLength(200).IsUnicode(false).HasColumnName("DeviceID");
+            entity.Property(e => e.AgentSample).HasMaxLength(200).IsUnicode(false);
+            entity.Property(e => e.FirstSeen).HasColumnType("datetime");
+            entity.Property(e => e.LastSeen).HasColumnType("datetime");
+            entity.Property(e => e.TotalVisits);
+            entity.Property(e => e.IsActive);
         });
 
         // Ensure EF Core does not try to map the Radius property (column was removed from DB)

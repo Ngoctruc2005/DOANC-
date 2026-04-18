@@ -16,7 +16,6 @@
                 <thead>
                     <tr>
                         <th>Thời gian</th>
-                        <th>Quán</th>
                         <th>User-Agent / Raw</th>
                         <th>IP</th>
                     </tr>
@@ -26,7 +25,6 @@
                 {
                     <tr>
                         <td>@(v.VisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                        <td>@(v.PoiName ?? "-")</td>
                         <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? v.RawDeviceId ?? "-"))</td>
                         <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.Ip ?? "-"))</td>
                     </tr>

@@ -323,7 +323,12 @@ namespace TourismCMS.Controllers
                     TotalVisits = g.Count(),
                     FirstSeen = g.Min(x => x.VisitTime),
                     LastSeen = g.Max(x => x.VisitTime),
-                    DistinctPoiCount = g.Select(x => x.Poiid).Where(id => id != null).Distinct().Count()
+                    DistinctPoiCount = g.Select(x => x.Poiid).Where(id => id != null).Distinct().Count(),
+                    // try to extract a readable agent sample from the stored DeviceId
+                    AgentSample = (g.Key ?? string.Empty).Split(" | ").FirstOrDefault(),
+                    IpSample = (g.Key ?? string.Empty).Split(" | ").Skip(1).FirstOrDefault(),
+                    IsActive = false,
+                    StatusLabel = ""
                 })
                 .OrderByDescending(d => d.LastSeen)
                 .ToListAsync();
@@ -389,17 +394,18 @@ namespace TourismCMS.Controllers
         // List all devices that have visited the app
         public async Task<IActionResult> Devices()
         {
-            var devices = await _context.VisitLogs
+            // Read persisted Devices table for stable list of all devices
+            var devices = await _context.Devices
                 .AsNoTracking()
-                .Where(v => !string.IsNullOrEmpty(v.DeviceId))
-                .GroupBy(v => v.DeviceId)
-                .Select(g => new TourismCMS.Models.DeviceItemViewModel
+                .Select(d => new TourismCMS.Models.DeviceItemViewModel
                 {
-                    DeviceId = g.Key!,
-                    TotalVisits = g.Count(),
-                    FirstSeen = g.Min(x => x.VisitTime),
-                    LastSeen = g.Max(x => x.VisitTime),
-                    DistinctPoiCount = g.Select(x => x.Poiid).Where(id => id != null).Distinct().Count()
+                    DeviceId = d.DeviceId,
+                    AgentSample = d.AgentSample,
+                    FirstSeen = d.FirstSeen,
+                    LastSeen = d.LastSeen,
+                    TotalVisits = d.TotalVisits,
+                    IsActive = d.IsActive,
+                    StatusLabel = d.IsActive ? "Đang hoạt động" : string.Empty
                 })
                 .OrderByDescending(d => d.LastSeen)
                 .ToListAsync();
@@ -451,7 +457,7 @@ namespace TourismCMS.Controllers
             {
                 ActiveDevices = activeDevices,
                 AllDevices = devices,
-                TotalUniqueDevices = devices.Select(d => d.DeviceId).Distinct().Count()
+                TotalUniqueDevices = await _context.Devices.AsNoTracking().CountAsync()
             };
 
             return View(vm);
@@ -506,6 +512,28 @@ namespace TourismCMS.Controllers
             return PartialView("_ActiveDevicesPartial", activeDevices);
         }
 
+        // Return partial view for all devices (separate from active devices)
+        [HttpGet("/Admin/AllDevicesPartial")]
+        public async Task<IActionResult> AllDevicesPartial()
+        {
+            var devices = await _context.Devices
+                .AsNoTracking()
+                .Select(d => new TourismCMS.Models.DeviceItemViewModel
+                {
+                    DeviceId = d.DeviceId,
+                    AgentSample = d.AgentSample,
+                    LastSeen = d.LastSeen,
+                    IsActive = d.IsActive
+                })
+                .OrderByDescending(d => d.LastSeen)
+                .ToListAsync();
+
+            // convert times to local in the partial
+            devices.ForEach(d => d.LastSeen = d.LastSeen?.ToLocalTime());
+
+            return PartialView("_AllDevicesPartial", devices);
+        }
+
         // Debug: return current in-memory tracker keys (for troubleshooting why devices appear active)
         [HttpGet("/Admin/DeviceTrackerKeys")]
         public IActionResult DeviceTrackerKeys()
@@ -535,21 +563,9 @@ namespace TourismCMS.Controllers
                     try { tracker?.Remove(k); } catch { }
                 }
 
-                // also remove VisitLogs that start with these keys to ensure they don't reappear
-                foreach (var k in keys)
-                {
-                    try
-                    {
-                        var matches = await _context.VisitLogs.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(k)).ToListAsync();
-                        if (matches.Any())
-                        {
-                            _context.VisitLogs.RemoveRange(matches);
-                        }
-                    }
-                    catch { }
-                }
-
-                await _context.SaveChangesAsync();
+                // Do NOT delete VisitLogs here — keep historical device records in the database.
+                // Only clear in-memory tracker keys so devices remain archived in "All devices" view.
+                await Task.CompletedTask;
 
                 return Ok(new { success = true });
             }

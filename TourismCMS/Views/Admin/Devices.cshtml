@@ -48,6 +48,8 @@
 </div>
 @* Partial removed — keep only the first (central) table. The card above has id 'activeDevicesContainerCard' so SignalR can replace it. *@
 
+@* Render all devices using a separate partial so it is independent from active devices *@
+@await Html.PartialAsync("_AllDevicesPartial", Model.AllDevices)
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js" integrity="" crossorigin="anonymous"></script>
     <script>
