@@ -16,7 +16,7 @@
 <!-- Active devices -->
 <div class="card mb-3" id="activeDevicesContainerCard">
     <div class="card-body">
-        <h6>Thiết bị đang hoạt động (@Model.ActiveDeviceCount)</h6>
+        <h6>Thiết bị đang hoạt động (@((Model?.ActiveDeviceCount) ?? 0))</h6>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -53,7 +53,16 @@
     <script>
         (function(){
             const conn = new signalR.HubConnectionBuilder().withUrl('/devicehub').build();
-            conn.on('DeviceListChanged', function(){
+            conn.on('DeviceListChanged', function(activeCount){
+                // if server sent active count, update header immediately
+                try {
+                    const container = document.getElementById('activeDevicesContainerCard');
+                    if (typeof activeCount !== 'undefined' && container) {
+                        const h6 = container.querySelector('h6');
+                        if (h6) h6.textContent = `Thiết bị đang hoạt động (${activeCount})`;
+                    }
+                } catch (e) { /* ignore */ }
+
                 // refresh only the active devices partial
                 fetch('/Admin/DevicesActivePartial')
                     .then(r => r.text())

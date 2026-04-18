@@ -23,6 +23,15 @@ namespace TourismCMS.Controllers
             _tracker = tracker;
         }
 
+        private static bool IsEmulatorAgent(string agent)
+        {
+            if (string.IsNullOrWhiteSpace(agent)) return false;
+            var lower = agent.ToLowerInvariant();
+            // common emulator identifiers
+            var emulatorIndicators = new[] { "emulator", "genymotion", "android-sdk", "sdk_gphone", "google_sdk", "android x86", "simulator" };
+            return emulatorIndicators.Any(ind => lower.Contains(ind));
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetPois()
@@ -123,8 +132,16 @@ namespace TourismCMS.Controllers
                 _db.VisitLogs.Add(visit);
                 await _db.SaveChangesAsync();
 
-                // mark device active in tracker
-                _tracker.MarkActive(visit.DeviceId);
+                // mark device active in tracker (skip known emulator/device farm names)
+                try
+                {
+                    var agent = visit.DeviceId?.Split(new[] { " | " }, StringSplitOptions.None).FirstOrDefault() ?? string.Empty;
+                    if (!IsEmulatorAgent(agent))
+                    {
+                        _tracker.MarkActive(visit.DeviceId);
+                    }
+                }
+                catch { }
 
                 // notify connected admin clients via SignalR that active devices changed
                 try
@@ -132,7 +149,8 @@ namespace TourismCMS.Controllers
                     var hub = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>)) as Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>;
                     if (hub != null)
                     {
-                        await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { });
+                        var activeCount = _tracker.GetActiveDeviceIds()?.Count ?? 0;
+                        await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { activeCount });
                     }
                 }
                 catch { }
@@ -210,9 +228,18 @@ namespace TourismCMS.Controllers
                 var activeKeys = _tracker.GetActiveDeviceIds();
                 foreach (var k in activeKeys)
                 {
-                    if (!string.IsNullOrEmpty(k) && k.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase))
+                    // if we have a uuid, match keys that start with "uuid |" to avoid removing other devices with similar agent names
+                    if (!string.IsNullOrEmpty(k))
                     {
-                        _tracker.Remove(k);
+                        if (!string.IsNullOrEmpty(normalized) && System.Guid.TryParse(normalized, out _))
+                        {
+                            if (k.Equals(normalized, System.StringComparison.OrdinalIgnoreCase) || k.StartsWith(normalized + " |", System.StringComparison.OrdinalIgnoreCase))
+                                _tracker.Remove(k);
+                        }
+                        else if (k.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase))
+                        {
+                            _tracker.Remove(k);
+                        }
                     }
                 }
             }
@@ -220,11 +247,18 @@ namespace TourismCMS.Controllers
 
             try
             {
-                // If normalized is a uuid (short GUID-like) we match by exact uuid prefix; otherwise match by agent prefix
                 var matchesQuery = _db.VisitLogs.AsQueryable();
                 if (!string.IsNullOrEmpty(normalized))
                 {
-                    matchesQuery = matchesQuery.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase));
+                    if (System.Guid.TryParse(normalized, out _))
+                    {
+                        // match exact uuid prefix or equality
+                        matchesQuery = matchesQuery.Where(v => v.DeviceId != null && (v.DeviceId.Equals(normalized) || v.DeviceId.StartsWith(normalized + " |")));
+                    }
+                    else
+                    {
+                        matchesQuery = matchesQuery.Where(v => v.DeviceId != null && v.DeviceId.StartsWith(normalized, System.StringComparison.OrdinalIgnoreCase));
+                    }
                 }
 
                 var matches = await matchesQuery.ToListAsync();
