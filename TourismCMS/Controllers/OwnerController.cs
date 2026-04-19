@@ -132,31 +132,38 @@ public class OwnerController : Controller
             .ToListAsync();
 
         var now = DateTime.Now;
-        foreach (var d in devices)
-        {
-            var parts = (d.DeviceId ?? string.Empty).Split(" | ");
-            if (parts.Length >= 2)
+            foreach (var d in devices)
             {
-                d.AgentSample = parts[0];
-                d.IpSample = parts[1];
-            }
-            else
-            {
-                d.AgentSample = d.DeviceId;
-                d.IpSample = null;
-            }
+                // parse DeviceId parts and select a friendly agent sample (skip GUIDs, IPs, plain version tokens)
+                var parts = (d.DeviceId ?? string.Empty).Split(" | ");
+                string chosen = null;
+                foreach (var p in parts)
+                {
+                    var t = (p ?? string.Empty).Trim();
+                    if (string.IsNullOrEmpty(t)) continue;
+                    if (System.Guid.TryParse(t, out _)) continue;
+                    if (System.Net.IPAddress.TryParse(t, out _)) continue;
+                    if (System.Text.RegularExpressions.Regex.IsMatch(t, "^[0-9]+(\\.[0-9]+)*$")) continue;
+                    chosen = t;
+                    break;
+                }
+                if (chosen == null) chosen = parts.FirstOrDefault() ?? d.DeviceId;
+                d.AgentSample = chosen;
 
-            if (d.LastSeen.HasValue && (now - d.LastSeen.Value).TotalMinutes <= 30)
-            {
-                d.IsActive = true;
-                d.StatusLabel = "Đang hoạt động";
+                var last = parts.LastOrDefault();
+                d.IpSample = (!string.IsNullOrEmpty(last) && System.Net.IPAddress.TryParse(last.Trim(), out _)) ? last.Trim() : null;
+
+                if (d.LastSeen.HasValue && (now - d.LastSeen.Value).TotalMinutes <= 30)
+                {
+                    d.IsActive = true;
+                    d.StatusLabel = "Đang hoạt động";
+                }
+                else
+                {
+                    d.IsActive = false;
+                    d.StatusLabel = d.LastSeen.HasValue ? $"Hoạt động lần cuối: {d.LastSeen.Value:dd/MM/yyyy HH:mm}" : "Không rõ";
+                }
             }
-            else
-            {
-                d.IsActive = false;
-                d.StatusLabel = d.LastSeen.HasValue ? $"Hoạt động lần cuối: {d.LastSeen.Value:dd/MM/yyyy HH:mm}" : "Không rõ";
-            }
-        }
 
         return View(devices);
     }

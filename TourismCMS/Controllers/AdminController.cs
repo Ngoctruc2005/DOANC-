@@ -609,15 +609,33 @@ namespace TourismCMS.Controllers
                 if (!string.IsNullOrEmpty(v.DeviceId))
                 {
                     var parts = v.DeviceId.Split(" | ");
-                    if (parts.Length >= 2)
+                    // choose a human-friendly agent part: skip GUIDs, IPs and purely numeric tokens
+                    string chosen = null;
+                    foreach (var p in parts)
                     {
-                        dv.DeviceAgent = parts[0];
-                        dv.Ip = parts[1];
+                        var t = (p ?? string.Empty).Trim();
+                        if (string.IsNullOrEmpty(t)) continue;
+                        // skip guid
+                        if (System.Guid.TryParse(t, out _)) continue;
+                        // skip ip
+                        if (System.Net.IPAddress.TryParse(t, out _)) continue;
+                        // skip pure version numbers like 1.0
+                        if (System.Text.RegularExpressions.Regex.IsMatch(t, "^[0-9]+(\\.[0-9]+)*$")) continue;
+                        chosen = t;
+                        break;
                     }
-                    else
+
+                    if (chosen == null)
                     {
-                        dv.DeviceAgent = v.DeviceId;
+                        // fallback to first part
+                        chosen = parts.FirstOrDefault() ?? v.DeviceId;
                     }
+
+                    dv.DeviceAgent = chosen;
+
+                    // try to extract IP as last part if available
+                    var last = parts.LastOrDefault();
+                    if (!string.IsNullOrEmpty(last) && System.Net.IPAddress.TryParse(last.Trim(), out _)) dv.Ip = last.Trim();
                 }
 
                 return dv;
@@ -654,15 +672,21 @@ namespace TourismCMS.Controllers
                 if (!string.IsNullOrEmpty(v.DeviceId))
                 {
                     var parts = v.DeviceId.Split(" | ");
-                    if (parts.Length >= 2)
+                    string chosen = null;
+                    foreach (var p in parts)
                     {
-                        dv.DeviceAgent = parts[0];
-                        dv.Ip = parts[1];
+                        var t = (p ?? string.Empty).Trim();
+                        if (string.IsNullOrEmpty(t)) continue;
+                        if (System.Guid.TryParse(t, out _)) continue;
+                        if (System.Net.IPAddress.TryParse(t, out _)) continue;
+                        if (System.Text.RegularExpressions.Regex.IsMatch(t, "^[0-9]+(\\.[0-9]+)*$")) continue;
+                        chosen = t;
+                        break;
                     }
-                    else
-                    {
-                        dv.DeviceAgent = v.DeviceId;
-                    }
+                    if (chosen == null) chosen = parts.FirstOrDefault() ?? v.DeviceId;
+                    dv.DeviceAgent = chosen;
+                    var last = parts.LastOrDefault();
+                    if (!string.IsNullOrEmpty(last) && System.Net.IPAddress.TryParse(last.Trim(), out _)) dv.Ip = last.Trim();
                 }
 
                 return dv;

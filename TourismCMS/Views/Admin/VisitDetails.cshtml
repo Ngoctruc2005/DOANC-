@@ -31,7 +31,11 @@
                         <tr>
                             <td>@(v.VisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                             <td class="text-break">
-                                <div class="fw-semibold">@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? "-"))</div>
+                                <div class="fw-semibold">
+                                    <a asp-action="DeviceDetails" asp-controller="Admin" asp-route-id="@System.Net.WebUtility.UrlEncode(v.RawDeviceId ?? string.Empty)">
+                                        @Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? "-"))
+                                    </a>
+                                </div>
                                 <div class="text-muted small mt-1"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.RawDeviceId ?? "-"))</code></div>
                             </td>
                         </tr>

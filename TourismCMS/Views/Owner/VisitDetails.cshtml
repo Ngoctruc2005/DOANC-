@@ -14,9 +14,7 @@
                 <thead>
                     <tr>
                         <th>Thời gian</th>
-                        <th>Thiết bị (DeviceId)</th>
-                        <th>User-Agent / Parsed</th>
-                        <th>IP</th>
+                        <th>Tên thiết bị</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,9 +28,10 @@
                     {
                         <tr>
                             <td>@(v.VisitTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.RawDeviceId ?? "-"))</td>
-                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? "-"))</td>
-                            <td>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.Ip ?? "-"))</td>
+                            <td class="text-break" style="min-width:220px;">
+                                <div class="fw-semibold">@Html.Raw(System.Net.WebUtility.HtmlEncode(v.DeviceAgent ?? "-"))</div>
+                                <div class="small mt-1" style="color:#ff2b84;"><code>@Html.Raw(System.Net.WebUtility.HtmlEncode(v.RawDeviceId ?? "-"))</code></div>
+                            </td>
                         </tr>
                     }
                 }
