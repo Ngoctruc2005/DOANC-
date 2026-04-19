@@ -313,9 +313,11 @@ namespace TourismCMS.Controllers
         public async Task<IActionResult> DeviceCounts()
         {
             // Build device list (each distinct DeviceId is treated as one device)
+            // Only consider visit logs that are app-level (Poiid == null).
+            // This excludes QR-scan visits which set Poiid to the scanned POI.
             var devices = await _context.VisitLogs
                 .AsNoTracking()
-                .Where(v => !string.IsNullOrEmpty(v.DeviceId))
+                .Where(v => !string.IsNullOrEmpty(v.DeviceId) && v.Poiid == null)
                 .GroupBy(v => v.DeviceId)
                 .Select(g => new TourismCMS.Models.DeviceItemViewModel
                 {
@@ -428,8 +430,9 @@ namespace TourismCMS.Controllers
                 foreach (var key in activeIds)
                 {
                     // find the latest visit log that matches this active key (starts with key)
+                    // only consider app-level logs (Poiid == null) when resolving active device details
                     var best = await _context.VisitLogs.AsNoTracking()
-                        .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(key))
+                        .Where(v => v.DeviceId != null && v.DeviceId.StartsWith(key) && v.Poiid == null)
                         .OrderByDescending(v => v.VisitTime)
                         .FirstOrDefaultAsync();
 

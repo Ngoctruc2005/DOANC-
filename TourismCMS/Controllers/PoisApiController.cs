@@ -161,39 +161,10 @@ namespace TourismCMS.Controllers
                 }
                 catch { }
 
-                // mark device active in tracker (skip known emulator/device farm names)
-                try
-                {
-                    var agent = visit.DeviceId?.Split(new[] { " | " }, StringSplitOptions.None).FirstOrDefault() ?? string.Empty;
-                        if (!IsEmulatorAgent(agent))
-                        {
-                            _tracker.MarkActive(visit.DeviceId);
-                            // also update Devices.IsActive flag
-                            try
-                            {
-                                var d = await _db.Devices.FindAsync(visit.DeviceId);
-                                if (d != null)
-                                {
-                                    d.IsActive = true;
-                                    await _db.SaveChangesAsync();
-                                }
-                            }
-                            catch { }
-                        }
-                }
-                catch { }
-
-                // notify connected admin clients via SignalR that active devices changed
-                try
-                {
-                    var hub = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>)) as Microsoft.AspNetCore.SignalR.IHubContext<TourismCMS.Services.DeviceHub>;
-                    if (hub != null)
-                    {
-                        var activeCount = _tracker.GetActiveDeviceIds()?.Count ?? 0;
-                        await hub.Clients.All.SendCoreAsync("DeviceListChanged", new object[] { activeCount });
-                    }
-                }
-                catch { }
+                // NOTE: Do NOT mark devices as active or update Devices.IsActive for QR-scan visits.
+                // QR visits (PostVisit) should not affect the in-memory active device tracker or the
+                // "active devices" table shown in the admin UI. This keeps the active device list
+                // representative of app-level sessions only.
 
                 var count = await _db.VisitLogs.CountAsync(v => v.Poiid == poi.Poiid);
                 return Ok(new { success = true, visitId = visit.VisitId, visits = count });
